@@ -2,8 +2,10 @@ package server
 
 import (
 	"net/http"
+	"path/filepath"
 
 	"github.com/ducksouplab/mastok/helpers"
+	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,9 +20,25 @@ func init() {
 	otreeRestKey = helpers.GetenvOr("MASTOK_OTREE_REST_KEY", "key")
 }
 
+func createTemplateRenderer() multitemplate.Renderer {
+	renderer := multitemplate.NewRenderer()
+
+	includes, err := filepath.Glob(projectRoot + "server/templates/includes/*.tmpl")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for _, include := range includes {
+		renderer.AddFromFiles(filepath.Base(include), projectRoot+"server/templates/layout.tmpl", projectRoot+include)
+	}
+
+	// first parameter is the exact name to be reused inside handler
+	return renderer
+}
+
 func NewRouter() *gin.Engine {
 	r := gin.Default()
-	r.LoadHTMLGlob(projectRoot + "server/templates/*")
+	r.HTMLRender = createTemplateRenderer()
 	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
 		authBasicLogin: authBasicPassword,
 	}))

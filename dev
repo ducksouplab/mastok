@@ -1,0 +1,2 @@
+#!/bin/sh
+go build && MASTOK_ENV=DEV ./mastok

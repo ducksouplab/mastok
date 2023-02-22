@@ -1,0 +1,35 @@
+FROM golang/1.20.1-bullseye AS builder
+
+WORKDIR /build
+
+# for js /test/play/ app
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+RUN apt-get update && apt-get install -y yarn
+
+# layer with deps
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+# compile server and front
+RUN go build
+RUN yarn
+RUN MASTOK_ENV=BUILD_FRONT ./mastok
+
+FROM golang/1.20.1-bullseye AS final
+
+RUN apt-get update && apt-get upgrade -y
+
+WORKDIR /app
+
+COPY --from=builder /build/mastok .
+# check .dockerignore to see generated scripts are excluded first...
+COPY front/static ./front/static
+# ... but added from build
+COPY --from=builder /build/front/static/assets/scripts ./front/static/assets/scripts
+ENV GIN_MODE=release
+
+# write date and then append err to file if CONTAINER_STDERR_FILE exists
+SHELL ["/bin/bash", "-c"]
+CMD if [[ -z "${CONTAINER_STDERR_FILE}" ]]; then ./mastok; else (date 1>&2; ./mastok) 2>>${CONTAINER_STDERR_FILE}; fi

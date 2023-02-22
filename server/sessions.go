@@ -46,8 +46,9 @@ func addSessionsRoutes(g *gin.RouterGroup) {
 				}
 				sessions[i].Id = sc.Config.Id
 			}
+			// reverse since oTree returns by chronogical create, we want latest first
 			c.HTML(http.StatusOK, "sessions.tmpl", gin.H{
-				"Sessions": sessions,
+				"Sessions": reverse(sessions),
 			})
 		}
 	})

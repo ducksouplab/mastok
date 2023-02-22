@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/ducksouplab/mastok/helpers"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
 )
@@ -29,7 +30,7 @@ func createTemplateRenderer() multitemplate.Renderer {
 	}
 
 	for _, include := range includes {
-		renderer.AddFromFiles(filepath.Base(include), projectRoot+"server/templates/layout.tmpl", projectRoot+include)
+		renderer.AddFromFiles(filepath.Base(include), projectRoot+"server/templates/layout.tmpl", include)
 	}
 
 	// first parameter is the exact name to be reused inside handler
@@ -38,6 +39,7 @@ func createTemplateRenderer() multitemplate.Renderer {
 
 func NewRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(gzip.Gzip(gzip.DefaultCompression))
 	r.HTMLRender = createTemplateRenderer()
 	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
 		authBasicLogin: authBasicPassword,

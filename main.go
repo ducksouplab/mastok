@@ -1,17 +1,15 @@
 package main
 
 import (
-	"github.com/ducksouplab/mastok/helpers"
-	"github.com/ducksouplab/mastok/server"
+	"github.com/ducksouplab/mastok/config"
+	"github.com/ducksouplab/mastok/models"
+	"github.com/ducksouplab/mastok/router"
 )
 
-var port string
-
-func init() {
-	port = helpers.GetenvOr("MASTOK_PORT", "8190")
-}
-
 func main() {
-	r := server.NewRouter()
-	r.Run(":" + port)
+	// DB
+	models.ConnectAndMigrate()
+	// HTTP server
+	r := router.NewRouter()
+	r.Run(":" + config.OwnPort)
 }

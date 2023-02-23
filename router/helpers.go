@@ -1,4 +1,4 @@
-package server
+package router
 
 func reverse[T any](s []T) []T {
 	a := make([]T, len(s))

@@ -1,0 +1,39 @@
+{{define "content"}}
+<div class="row">
+  <div class="col-5">
+    <h1>New campaign</h1>
+    {{ .Error }}
+    <form action="/campaigns" method="POST">
+      <div class="mb-3">
+        <label for="namespace" class="form-label">Unique namespace*</label>
+        <div class="input-group">
+          <span class="input-group-text" id="basic-addon1">mk#</span>
+          <input type="text" name="namespace" id="namespace" tabindex="0" class="form-control" pattern="[a-zA-Z0-9]+" minlength="2" maxlength="64" required>
+        </div>
+        <div class="form-text">only letters and numbers</div>
+      </div>
+      <div class="mb-3">
+        <label for="title" class="form-label">Title (or add. info)</label>
+        <input type="text" name="title" id="title" class="form-control" maxlength="128">
+      </div>
+      <div class="mb-3">
+        <label for="experiment" class="form-label">Experiment*</label>
+        <select name="experiment_config" class="form-select" aria-label="Default select example" required>
+          {{range .Experiments}}
+            <option value="{{ .Id }}">{{ .Name }}</option>
+          {{end}}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="per_session" class="form-label">Participants per session*</label>
+        <input type="number" name="per_session" id="per_session" min=1 max=32 class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="session_max" class="form-label">Max number of sessions*</label>
+        <input type="number" name="session_max" id="session_max" min=1 max=32 class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+  </div>
+</div>
+{{end}}

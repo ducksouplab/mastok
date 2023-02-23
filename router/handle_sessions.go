@@ -1,10 +1,11 @@
-package server
+package router
 
 import (
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/ducksouplab/mastok/otree"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,10 +28,10 @@ func (s session) CreatedAt() string {
 	return time.Unix(int64(s.CreatedAtFloat), 0).UTC().Format("2006-01-02 15:04:05")
 }
 
-func addSessionsRoutes(g *gin.RouterGroup) {
+func addSessionsRoutesTo(g *gin.RouterGroup) {
 	g.GET("/sessions", func(c *gin.Context) {
 		sessions := []session{}
-		err := getOtreeJSON("/api/sessions", &sessions)
+		err := otree.GetOTreeJSON("/api/sessions", &sessions)
 
 		if err != nil {
 			log.Println(err)
@@ -39,7 +40,7 @@ func addSessionsRoutes(g *gin.RouterGroup) {
 			for i := range sessions { // use index to write to sessions
 				code := sessions[i].Code
 				sc := nestedSessionDetails{}
-				err := getOtreeJSON("/api/sessions/"+code, &sc)
+				err := otree.GetOTreeJSON("/api/sessions/"+code, &sc)
 				if err != nil {
 					log.Println(err)
 					c.Status(http.StatusServiceUnavailable)

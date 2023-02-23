@@ -1,0 +1,27 @@
+{{define "content"}}
+<div class="row">
+	<div class="col">
+		<h1>Campaigns <a href="/campaigns/new" type="button" class="btn btn-primary float-end">New</a></h1>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Namespace</th>
+					<th>Title</th>
+					<th>Per session</th>
+					<th>Max sessions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{range .Campaigns}}
+				<tr>
+					<td>{{ .Namespace }}</td>
+					<td>{{ .Title }}</td>
+					<td>{{ .PerSession }}</td>
+					<td>{{ .SessionMax }}</td>
+				</tr>
+				{{end}}
+			</tbody>
+		</table>
+	</div>
+</div>
+{{end}}

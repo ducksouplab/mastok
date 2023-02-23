@@ -12,9 +12,9 @@ go build && MASTOK_ENV=DEV ./mastok
 
 Run all tests
 ```
-MASTOK_PROJECT_ROOT=`pwd` GIN_MODE=release go test ./...
+MASTOK_ENV=TEST MASTOK_PROJECT_ROOT=`pwd` GIN_MODE=release go test ./...
 # or script alias
-./test
+./testall
 ```
 
 ## Environment variables

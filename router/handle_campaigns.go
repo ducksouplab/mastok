@@ -11,7 +11,7 @@ import (
 func addCampaignsRoutesTo(g *gin.RouterGroup) {
 	g.GET("/campaigns", func(c *gin.Context) {
 		var campaigns []models.Campaign
-		if err := models.DB.Find(&campaigns).Error; err != nil {
+		if err := models.DB.Order("ID desc").Find(&campaigns).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}

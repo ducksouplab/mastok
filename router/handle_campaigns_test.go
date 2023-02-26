@@ -49,6 +49,10 @@ func TestCampaigns_CreateSuccess_ThenList(t *testing.T) {
 	// GET list
 	res = th.MastokGetRequestWithAuth(NewRouter(), "/campaigns")
 	assert.Contains(t, res.Body.String(), "namespace1")
+	// campaign automatically created with state "Waiting"
+	assert.Contains(t, res.Body.String(), "Waiting")
+	// when there is at least one campaign, there should be a Control button
+	assert.Contains(t, res.Body.String(), "Supervise")
 }
 
 func TestCampaigns_CreateFail_Duplicate(t *testing.T) {

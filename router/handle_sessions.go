@@ -24,7 +24,7 @@ type nestedSessionDetails struct {
 	} `json:"config"`
 }
 
-func (s session) CreatedAt() string {
+func (s session) FormatCreatedAt() string {
 	return time.Unix(int64(s.CreatedAtFloat), 0).UTC().Format("2006-01-02 15:04:05")
 }
 

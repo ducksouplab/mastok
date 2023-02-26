@@ -5,19 +5,25 @@
 		<table class="table">
 			<thead>
 				<tr>
+					<th>Creation</th>
 					<th>Namespace</th>
 					<th>Title</th>
 					<th>Per session</th>
 					<th>Max sessions</th>
+					<th>State</th>
+					<th></th>
 				</tr>
 			</thead>
 			<tbody>
 				{{range .Campaigns}}
 				<tr>
+					<td>{{ .FormatCreatedAt }}</td>
 					<td>{{ .Namespace }}</td>
 					<td>{{ .Title }}</td>
 					<td>{{ .PerSession }}</td>
 					<td>{{ .SessionMax }}</td>
+					<td>{{ .State }}</td>
+					<td><a href="/campaigns/control/{{ .ID }}" class="float-end">Supervise</a></td>
 				</tr>
 				{{end}}
 			</tbody>

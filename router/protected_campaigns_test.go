@@ -13,12 +13,12 @@ func init() {
 	th.ReinitTestDB()
 }
 
-func campaignFormData(namespace, experimentConfig, perSession, sessionMax string) url.Values {
+func campaignFormData(namespace, experimentConfig, perSession, sessionsMax string) url.Values {
 	data := url.Values{}
 	data.Set("namespace", namespace)
 	data.Set("experiment_config", experimentConfig)
 	data.Set("per_session", perSession)
-	data.Set("session_max", sessionMax)
+	data.Set("sessions_max", sessionsMax)
 	return data
 }
 
@@ -37,22 +37,26 @@ func TestCampaigns_ShowNew(t *testing.T) {
 	assert.Contains(t, res.Body.String(), "Create")
 }
 
-func TestCampaigns_CreateSuccess_ThenList(t *testing.T) {
+func TestCampaigns_CreateSuccess_ThenList_ThenSupervise(t *testing.T) {
 	th.InterceptOtreeSessionConfigs()
 	defer th.InterceptOff()
 	// fill campaign form
 	data := campaignFormData("namespace1", "config1", "8", "4")
+	router := NewRouter()
 	// POST
-	res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
+	res := th.MastokPostRequestWithAuth(router, "/campaigns", data)
 	t.Log(res.Body.String())
 	assert.Equal(t, res.Code, 302)
 	// GET list
-	res = th.MastokGetRequestWithAuth(NewRouter(), "/campaigns")
+	res = th.MastokGetRequestWithAuth(router, "/campaigns")
 	assert.Contains(t, res.Body.String(), "namespace1")
 	// campaign automatically created with state "Waiting"
 	assert.Contains(t, res.Body.String(), "Waiting")
 	// when there is at least one campaign, there should be a Control button
 	assert.Contains(t, res.Body.String(), "Supervise")
+	// GET supervise
+	// res = th.MastokGetRequestWithAuth(router, "/campaigns/supervise/mk:namespace1")
+	// assert.Contains(t, res.Body.String(), "Supervising campaign mk:namespace1")
 }
 
 func TestCampaigns_CreateFail_Duplicate(t *testing.T) {
@@ -75,7 +79,7 @@ func TestCampaigns_CreateFail_InvalidCharacter(t *testing.T) {
 	data := campaignFormData("namespace#", "config1", "8", "4")
 	// POST
 	res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
-	t.Log(res.Body.String())
+	// t.Log(res.Body.String())
 	assert.Equal(t, res.Code, 422)
 }
 
@@ -86,7 +90,6 @@ func TestCampaigns_CreateFail_TooShort(t *testing.T) {
 	data := campaignFormData("n", "config1", "8", "4")
 	// POST
 	res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
-	t.Log(res.Body.String())
 	assert.Equal(t, res.Code, 422)
 }
 
@@ -97,6 +100,5 @@ func TestCampaigns_CreateFail_TooManyParticipants(t *testing.T) {
 	data := campaignFormData("namespacemany", "config1", "100", "4")
 	// POST
 	res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
-	t.Log(res.Body.String())
 	assert.Equal(t, res.Code, 422)
 }

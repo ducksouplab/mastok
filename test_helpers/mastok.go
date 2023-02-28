@@ -15,7 +15,7 @@ import (
 
 func ReinitTestDB() {
 	if config.OwnEnv == "TEST" {
-		os.Remove(config.ProjectRoot + "test.db")
+		os.Remove(config.OwnRoot + "test.db")
 		models.ConnectAndMigrate()
 		models.DB.Create(FIXTURE_CAMPAIGNS)
 	}

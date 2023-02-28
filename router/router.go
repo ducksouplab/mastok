@@ -13,13 +13,13 @@ import (
 func createTemplateRenderer() multitemplate.Renderer {
 	renderer := multitemplate.NewRenderer()
 
-	includes, err := filepath.Glob(config.ProjectRoot + "templates/includes/*.tmpl")
+	includes, err := filepath.Glob(config.OwnRoot + "templates/includes/*.tmpl")
 	if err != nil {
 		panic(err.Error())
 	}
 
 	for _, include := range includes {
-		renderer.AddFromFiles(filepath.Base(include), config.ProjectRoot+"templates/layout.tmpl", include)
+		renderer.AddFromFiles(filepath.Base(include), config.OwnRoot+"templates/layout.tmpl", include)
 	}
 
 	// first parameter is the exact name to be reused inside handler
@@ -31,16 +31,22 @@ func NewRouter() *gin.Engine {
 	r.Use(gzip.Gzip(gzip.DefaultCompression))
 	r.HTMLRender = createTemplateRenderer()
 
-	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
-		config.AuthBasicLogin: config.AuthBasicPassword,
+	// static assets
+	r.Static(config.OwnWebPrefix+"/assets", "./front/static/assets")
+	// public routes
+	publicGroup := r.Group(config.OwnWebPrefix)
+	addJoinRoutesTo(publicGroup)
+	// protect routes
+	authorizedGroup := r.Group(config.OwnWebPrefix, gin.BasicAuth(gin.Accounts{
+		config.OwnBasicLogin: config.OwnBasicPassword,
 	}))
-	authorized.GET("/", func(c *gin.Context) {
+	authorizedGroup.GET("/", func(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/dashboard")
 	})
-
-	addDashboardRoutesTo(authorized)
-	addCampaignsRoutesTo(authorized)
-	addSessionsRoutesTo(authorized)
+	// add routes
+	addDashboardRoutesTo(authorizedGroup)
+	addCampaignsRoutesTo(authorizedGroup)
+	addSessionsRoutesTo(authorizedGroup)
 
 	return r
 }

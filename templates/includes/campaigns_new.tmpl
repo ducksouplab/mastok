@@ -7,7 +7,7 @@
       <div class="mb-3">
         <label for="namespace" class="form-label">Unique namespace*</label>
         <div class="input-group">
-          <span class="input-group-text" id="basic-addon1">mk#</span>
+          <span class="input-group-text" id="basic-addon1">mk:</span>
           <input type="text" name="namespace" id="namespace" tabindex="0" class="form-control" pattern="[a-zA-Z0-9]+" minlength="2" maxlength="64" required>
         </div>
         <div class="form-text">only letters and numbers</div>
@@ -29,8 +29,8 @@
         <input type="number" name="per_session" id="per_session" min=1 max=32 class="form-control" required>
       </div>
       <div class="mb-3">
-        <label for="session_max" class="form-label">Max number of sessions*</label>
-        <input type="number" name="session_max" id="session_max" min=1 max=32 class="form-control" required>
+        <label for="sessions_max" class="form-label">Max number of sessions*</label>
+        <input type="number" name="sessions_max" id="sessions_max" min=1 max=32 class="form-control" required>
       </div>
       <button type="submit" class="btn btn-primary">Create</button>
     </form>

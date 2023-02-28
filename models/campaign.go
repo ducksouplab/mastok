@@ -4,7 +4,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const MASTOK_PREFIX = "mk#"
+const MASTOK_PREFIX = "mk:"
 
 type CampaignState int
 
@@ -23,12 +23,13 @@ func (s CampaignState) String() string {
 // Namespace min length is 2 + length(MASTOK_PREFIX)
 type Campaign struct {
 	gorm.Model
-	Namespace        string        `form:"namespace" binding:"required,alphanum,min=5,max=64" gorm:"uniqueIndex"`
+	Namespace        string        `form:"namespace" binding:"required,alphanum,min=2,max=64" gorm:"uniqueIndex"`
 	Title            string        `form:"title" binding:"max=128"`
 	ExperimentConfig string        `form:"experiment_config" binding:"required"`
 	PerSession       uint          `form:"per_session" binding:"required,gte=1,lte=32"`
-	SessionMax       uint          `form:"session_max" binding:"required,gte=1,lte=32"`
+	SessionsMax      uint          `form:"sessions_max" binding:"required,gte=1,lte=32"`
 	State            CampaignState `gorm:"default:0"`
+	SessionsStarted  uint          `gorm:"default:0"`
 }
 
 func (c *Campaign) BeforeCreate(tx *gorm.DB) (err error) {

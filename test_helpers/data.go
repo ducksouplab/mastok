@@ -8,7 +8,7 @@ var FIXTURE_CAMPAIGNS []models.Campaign = []models.Campaign{
 		Namespace:        "namespace",
 		ExperimentConfig: "config",
 		PerSession:       8,
-		SessionMax:       4,
+		SessionsMax:      4,
 	},
 }
 

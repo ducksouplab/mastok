@@ -21,9 +21,9 @@
 					<td>{{ .Namespace }}</td>
 					<td>{{ .Title }}</td>
 					<td>{{ .PerSession }}</td>
-					<td>{{ .SessionMax }}</td>
+					<td>{{ .SessionsMax }}</td>
 					<td>{{ .State }}</td>
-					<td><a href="/campaigns/control/{{ .ID }}" class="float-end">Supervise</a></td>
+					<td><a href="/campaigns/supervise/{{ .Namespace }}" class="float-end">Supervise</a></td>
 				</tr>
 				{{end}}
 			</tbody>

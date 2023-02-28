@@ -1,8 +1,6 @@
 package models
 
 import (
-	"log"
-
 	"github.com/ducksouplab/mastok/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -15,7 +13,6 @@ func ConnectAndMigrate() {
 	var err error
 
 	if config.OwnEnv == "TEST" {
-		log.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 		DB, err = gorm.Open(sqlite.Open(config.OwnRoot+"test.db"), &gorm.Config{})
 	} else if config.OwnEnv == "DEV" || config.DatabaseURL == "" {
 		DB, err = gorm.Open(sqlite.Open(config.OwnRoot+"local.db"), &gorm.Config{})

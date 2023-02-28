@@ -13,92 +13,128 @@ func init() {
 	th.ReinitTestDB()
 }
 
-func campaignFormData(namespace, experimentConfig, perSession, sessionsMax string) url.Values {
+func campaignFormData(namespace, slug, experimentConfig, perSession, sessionsMax string) url.Values {
 	data := url.Values{}
 	data.Set("namespace", namespace)
+	data.Set("slug", slug)
 	data.Set("experiment_config", experimentConfig)
 	data.Set("per_session", perSession)
 	data.Set("sessions_max", sessionsMax)
 	return data
 }
 
-func TestCampaigns_ShowList(t *testing.T) {
-	res := th.MastokGetRequestWithAuth(NewRouter(), "/campaigns")
+func TestCampaigns_Templates(t *testing.T) {
+	t.Run("shows campaigns list", func(t *testing.T) {
+		res := th.MastokGetRequestWithAuth(NewRouter(), "/campaigns")
 
-	assert.Contains(t, res.Body.String(), "New")
+		assert.Contains(t, res.Body.String(), "New")
+	})
+
+	t.Run("shows campaigns new form", func(t *testing.T) {
+		th.InterceptOtreeSessionConfigs()
+		defer th.InterceptOff()
+		res := th.MastokGetRequestWithAuth(NewRouter(), "/campaigns/new")
+
+		t.Log(res.Body.String())
+		t.Log("_____________________________________________________")
+		assert.Equal(t, 200, res.Code)
+		assert.Contains(t, res.Body.String(), "Create")
+	})
 }
 
-func TestCampaigns_ShowNew(t *testing.T) {
-	th.InterceptOtreeSessionConfigs()
-	defer th.InterceptOff()
-	res := th.MastokGetRequestWithAuth(NewRouter(), "/campaigns/new")
+func TestCampaigns_Integration(t *testing.T) {
 
-	assert.Equal(t, res.Code, 200)
-	assert.Contains(t, res.Body.String(), "Create")
-}
+	t.Run("creates then lists then supervises", func(t *testing.T) {
+		th.InterceptOtreeSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		data := campaignFormData("namespace1", "slug1", "config1", "8", "4")
+		router := NewRouter()
+		// POST
+		res := th.MastokPostRequestWithAuth(router, "/campaigns", data)
+		// t.Log(res.Body.String())
+		assert.Equal(t, 302, res.Code)
+		// GET list
+		res = th.MastokGetRequestWithAuth(router, "/campaigns")
+		assert.Contains(t, res.Body.String(), "namespace1")
+		// campaign automatically created with state "Waiting"
+		assert.Contains(t, res.Body.String(), "Waiting")
+		// when there is at least one campaign, there should be a Control button
+		assert.Contains(t, res.Body.String(), "Supervise")
+		// GET supervise
+		// res = th.MastokGetRequestWithAuth(router, "/campaigns/supervise/mk:namespace1")
+		// assert.Contains(t, res.Body.String(), "Supervising campaign mk:namespace1")
+	})
 
-func TestCampaigns_CreateSuccess_ThenList_ThenSupervise(t *testing.T) {
-	th.InterceptOtreeSessionConfigs()
-	defer th.InterceptOff()
-	// fill campaign form
-	data := campaignFormData("namespace1", "config1", "8", "4")
-	router := NewRouter()
-	// POST
-	res := th.MastokPostRequestWithAuth(router, "/campaigns", data)
-	t.Log(res.Body.String())
-	assert.Equal(t, res.Code, 302)
-	// GET list
-	res = th.MastokGetRequestWithAuth(router, "/campaigns")
-	assert.Contains(t, res.Body.String(), "namespace1")
-	// campaign automatically created with state "Waiting"
-	assert.Contains(t, res.Body.String(), "Waiting")
-	// when there is at least one campaign, there should be a Control button
-	assert.Contains(t, res.Body.String(), "Supervise")
-	// GET supervise
-	// res = th.MastokGetRequestWithAuth(router, "/campaigns/supervise/mk:namespace1")
-	// assert.Contains(t, res.Body.String(), "Supervising campaign mk:namespace1")
-}
+	t.Run("fails creating if duplicate namespace", func(t *testing.T) {
+		th.InterceptOtreeSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		data := campaignFormData("namespace2", "slug2", "config1", "8", "4")
+		dataDupNamespace := campaignFormData("namespace2", "slug2bis", "config2", "8", "4")
+		// POST
+		th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
+		res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", dataDupNamespace)
+		// t.Log(res.Body.String())
+		assert.Equal(t, 422, res.Code)
+	})
 
-func TestCampaigns_CreateFail_Duplicate(t *testing.T) {
-	th.InterceptOtreeSessionConfigs()
-	defer th.InterceptOff()
-	// fill campaign form
-	data := campaignFormData("ns1", "config1", "8", "4")
-	dataDupNamespace := campaignFormData("ns1", "config2", "8", "4")
-	// POST
-	th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
-	res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", dataDupNamespace)
-	t.Log(res.Body.String())
-	assert.Equal(t, res.Code, 422)
-}
+	t.Run("fails creating if duplicate slug", func(t *testing.T) {
+		th.InterceptOtreeSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		data := campaignFormData("namespace3", "slug3", "config1", "8", "4")
+		dataDupNamespace := campaignFormData("namespace3bis", "slug3", "config2", "8", "4")
+		// POST
+		th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
+		res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", dataDupNamespace)
+		// t.Log(res.Body.String())
+		assert.Equal(t, 422, res.Code)
+	})
 
-func TestCampaigns_CreateFail_InvalidCharacter(t *testing.T) {
-	th.InterceptOtreeSessionConfigs()
-	defer th.InterceptOff()
-	// fill campaign form
-	data := campaignFormData("namespace#", "config1", "8", "4")
-	// POST
-	res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
-	// t.Log(res.Body.String())
-	assert.Equal(t, res.Code, 422)
-}
+	t.Run("fails creating if invalid character", func(t *testing.T) {
+		th.InterceptOtreeSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		data := campaignFormData("namespace4#", "slug4", "config1", "8", "4")
+		// POST
+		res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
+		// t.Log(res.Body.String())
+		assert.Equal(t, 422, res.Code)
+	})
 
-func TestCampaigns_CreateFail_TooShort(t *testing.T) {
-	th.InterceptOtreeSessionConfigs()
-	defer th.InterceptOff()
-	// fill campaign form
-	data := campaignFormData("n", "config1", "8", "4")
-	// POST
-	res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
-	assert.Equal(t, res.Code, 422)
-}
+	t.Run("fails creating if namespace too short", func(t *testing.T) {
+		th.InterceptOtreeSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		data := campaignFormData("n", "slug5", "config1", "8", "4")
+		// POST
+		res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
+		assert.Equal(t, 422, res.Code)
+	})
 
-func TestCampaigns_CreateFail_TooManyParticipants(t *testing.T) {
-	th.InterceptOtreeSessionConfigs()
-	defer th.InterceptOff()
-	// fill campaign form
-	data := campaignFormData("namespacemany", "config1", "100", "4")
-	// POST
-	res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
-	assert.Equal(t, res.Code, 422)
+	t.Run("fails creating if too many participants per session", func(t *testing.T) {
+		th.InterceptOtreeSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		data := campaignFormData("namespace6", "slug6", "config1", "100", "4")
+		// POST
+		res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
+	t.Run("fails creating if missing slug", func(t *testing.T) {
+		th.InterceptOtreeSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		data := url.Values{}
+		data.Set("namespace", "nsnoslug")
+		data.Set("experiment_config", "config1")
+		data.Set("per_session", "8")
+		data.Set("sessions_max", "4")
+		// POST
+		res := th.MastokPostRequestWithAuth(NewRouter(), "/campaigns", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
 }

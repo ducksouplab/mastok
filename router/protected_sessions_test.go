@@ -53,7 +53,7 @@ func TestSessions_Show(t *testing.T) {
 
 	res := th.MastokGetRequestWithAuth(NewRouter(), "/sessions")
 
-	assert.Equal(t, res.Code, 200)
+	assert.Equal(t, 200, res.Code)
 	// presence of "session.config.id"
 	assert.Contains(t, res.Body.String(), "id1")
 	assert.Contains(t, res.Body.String(), "id2")
@@ -73,16 +73,18 @@ func TestSessions_Show(t *testing.T) {
 	assert.Contains(t, res.Body.String(), "SessionStartLinks/2")
 }
 
-func TestSessions_RejectUnauthorized(t *testing.T) {
-	th.InterceptOtreeGetJSON("/api/sessions", sessionsData)
-	defer th.InterceptOff()
+func TestSessions_Integration(t *testing.T) {
+	t.Run("rejects unauthorized user", func(t *testing.T) {
+		th.InterceptOtreeGetJSON("/api/sessions", sessionsData)
+		defer th.InterceptOff()
 
-	// incorrect basic auth
-	router := NewRouter()
-	res := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, "/sessions", nil)
-	req.Header.Add("Authorization", "Basic "+helpers.BasicAuth("mastok", "incorrect"))
-	router.ServeHTTP(res, req)
+		// incorrect basic auth
+		router := NewRouter()
+		res := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/sessions", nil)
+		req.Header.Add("Authorization", "Basic "+helpers.BasicAuth("mastok", "incorrect"))
+		router.ServeHTTP(res, req)
 
-	assert.Equal(t, res.Code, 401)
+		assert.Equal(t, 401, res.Code)
+	})
 }

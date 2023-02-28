@@ -7,12 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBoot(t *testing.T) {
-	th.InterceptOtreeSessionConfigs()
-	defer th.InterceptOff()
+func TestCache_Unit(t *testing.T) {
+	t.Run("populates experiments config cache from oTree", func(t *testing.T) {
+		th.InterceptOtreeSessionConfigs()
+		defer th.InterceptOff()
 
-	eCache := GetExperimentCache()
+		eCache := GetExperimentCache()
 
-	assert.Equal(t, eCache[0].Name, "chatroulette")
-	assert.Equal(t, eCache[1].Name, "rawroulette")
+		assert.Equal(t, "chatroulette", eCache[0].Name)
+		assert.Equal(t, "rawroulette", eCache[1].Name)
+	})
 }

@@ -8,12 +8,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestJoin_GuestAuthorized(t *testing.T) {
-	router := NewRouter()
+func TestJoin_Integration(t *testing.T) {
+	t.Run("accepts guest user on public page", func(t *testing.T) {
+		router := NewRouter()
 
-	res := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	router.ServeHTTP(res, req)
+		res := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/join/slug", nil)
+		router.ServeHTTP(res, req)
 
-	assert.Equal(t, res.Code, 401)
+		assert.Equal(t, 200, res.Code)
+	})
 }

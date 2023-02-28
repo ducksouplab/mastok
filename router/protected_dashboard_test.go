@@ -7,10 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDashboard_Show(t *testing.T) {
-	res := th.MastokGetRequestWithAuth(NewRouter(), "/dashboard")
+func TestDashboard_Templates(t *testing.T) {
+	t.Run("shows dashboard", func(t *testing.T) {
+		res := th.MastokGetRequestWithAuth(NewRouter(), "/dashboard")
 
-	assert.Equal(t, res.Code, 200)
-	assert.Contains(t, res.Body.String(), "campaigns")
-	assert.Contains(t, res.Body.String(), "sessions")
+		assert.Equal(t, 200, res.Code)
+		assert.Contains(t, res.Body.String(), "campaigns")
+		assert.Contains(t, res.Body.String(), "sessions")
+	})
 }

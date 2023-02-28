@@ -23,8 +23,9 @@ func (s CampaignState) String() string {
 // Namespace min length is 2 + length(MASTOK_PREFIX)
 type Campaign struct {
 	gorm.Model
-	Namespace        string        `form:"namespace" binding:"required,alphanum,min=2,max=64" gorm:"uniqueIndex"`
-	Title            string        `form:"title" binding:"max=128"`
+	Namespace        string        `form:"namespace" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
+	Slug             string        `form:"slug" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
+	Info             string        `form:"info" binding:"max=128"`
 	ExperimentConfig string        `form:"experiment_config" binding:"required"`
 	PerSession       uint          `form:"per_session" binding:"required,gte=1,lte=32"`
 	SessionsMax      uint          `form:"sessions_max" binding:"required,gte=1,lte=32"`

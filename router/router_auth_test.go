@@ -14,35 +14,37 @@ func basicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func TestBasicAuth_ForbidUnauthorized(t *testing.T) {
-	router := NewRouter()
+func TestBasicAuth_Integration(t *testing.T) {
+	t.Run("rejects guest user", func(t *testing.T) {
+		router := NewRouter()
 
-	res := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	router.ServeHTTP(res, req)
+		res := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/", nil)
+		router.ServeHTTP(res, req)
 
-	assert.Equal(t, res.Code, 401)
-}
+		assert.Equal(t, 401, res.Code)
+	})
 
-func TestBasicAuth_AcceptCorrectCredentials(t *testing.T) {
-	router := NewRouter()
+	t.Run("authorizes user with correct credentials", func(t *testing.T) {
+		router := NewRouter()
 
-	res := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Add("Authorization", "Basic "+basicAuth("mastok", "mastok"))
-	router.ServeHTTP(res, req)
+		res := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/", nil)
+		req.Header.Add("Authorization", "Basic "+basicAuth("mastok", "mastok"))
+		router.ServeHTTP(res, req)
 
-	assert.Equal(t, res.Code, 302)
-	assert.Equal(t, res.Header()["Location"][0], "/dashboard")
-}
+		assert.Equal(t, 302, res.Code)
+		assert.Equal(t, "/dashboard", res.Header()["Location"][0])
+	})
 
-func TestBasicAuth_RejectIncorrectCredentials(t *testing.T) {
-	router := NewRouter()
+	t.Run("rejects user with incorrect credentials", func(t *testing.T) {
+		router := NewRouter()
 
-	res := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Add("Authorization", "Basic "+basicAuth("mastok", "incorrect"))
-	router.ServeHTTP(res, req)
+		res := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/", nil)
+		req.Header.Add("Authorization", "Basic "+basicAuth("mastok", "incorrect"))
+		router.ServeHTTP(res, req)
 
-	assert.Equal(t, res.Code, 401)
+		assert.Equal(t, 401, res.Code)
+	})
 }

@@ -7,19 +7,28 @@ Build and run
 ```
 go build && MASTOK_ENV=DEV ./mastok
 # or script alias
-./dev
+make dev
 ```
 
 Run all tests
 ```
 MASTOK_ENV=TEST MASTOK_PROJECT_ROOT=`pwd` GIN_MODE=release go test ./...
 # or script alias
-./testall
+make test
 ```
 
 Build JS front files to `front/static` (and don't run mastok server)
 ```
 go build && MASTOK_ENV=BUILD_FRONT ./mastok
+# or script alias
+make front
+```
+
+Update go modules dependencies
+```
+go get -t -u ./... && go mod tidy
+# or script alias
+make deps
 ```
 
 ## Environment variables

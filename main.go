@@ -11,7 +11,7 @@ import (
 
 func main() {
 	if config.OwnEnv == "DEV" || config.OwnEnv == "BUILD_FRONT" {
-		go front.Build()
+		front.Build()
 	}
 	// command line mode...
 	if config.OwnEnv == "BUILD_FRONT" {

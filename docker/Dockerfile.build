@@ -2,11 +2,6 @@ FROM golang:1.20.1-bullseye AS builder
 
 WORKDIR /build
 
-# for js /test/play/ app
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-RUN apt-get update && apt-get install -y yarn
-
 # layer with deps
 COPY go.mod .
 COPY go.sum .
@@ -15,7 +10,7 @@ RUN go mod download
 # DuckSoup go source (test_helpers not needed)
 COPY main.go .
 COPY config ./config
-#COPY front/build.go ./front/build.go
+COPY front/build.go ./front/build.go
 COPY helpers ./helpers
 COPY models ./models
 COPY otree ./otree
@@ -24,8 +19,7 @@ COPY templates ./templates
 
 # compile server and front
 RUN go build
-# RUN yarn
-# RUN MASTOK_ENV=BUILD_FRONT ./mastok
+RUN MASTOK_ENV=BUILD_FRONT ./mastok
 
 FROM golang:1.20.1-bullseye AS final
 
@@ -35,9 +29,9 @@ WORKDIR /app
 
 COPY --from=builder /build/mastok .
 # check .dockerignore to see generated scripts are excluded first...
-#COPY front/static ./front/static
+COPY front/static ./front/static
 # ... but added from build
-#COPY --from=builder /build/front/static/assets/scripts ./front/static/assets/scripts
+COPY --from=builder /build/front/static/assets/scripts ./front/static/assets/scripts
 
 ENV GIN_MODE=release
 

@@ -29,16 +29,16 @@ The following environment variables, regarding Mastok's own configuration:
 - `MASTOK_ENV=DEV`:
     - load `.env` file to provide with a convenient way to define (other than `MASTOK_ENV`) environment variables
     - triggers automatic JS processing (thanks to [esbuild](https://esbuild.github.io/))
-- `MASTOK_WEB_PORT` (defaults to `8190`) to set the port Mastok listens to
+- `MASTOK_PORT` (defaults to `8190`) to set the port Mastok listens to
 - `MASTOK_ORIGIN` (defaults to `http://localhost:8190`) to set what origin is trusted for WebSocket communication. If Mastok is running on port 8190 on localhost, but is served (thanks to a proxy) and reachable at https://mymastok.com, the valid `MASTOK_ORIGIN` value is `https://mymastok.com`
 - `MASTOK_WEB_PREFIX` (defaults to `/`) if Mastok is served under a prefix path
-- `MASTOK_LOGIN` and `MASTOK_PASSWORD` (both defaults to `admin`) to define login/password for HTTP basic authentication
+- `MASTOK_LOGIN` and `MASTOK_PASSWORD` (both defaults to `mastok`) to define login/password for HTTP basic authentication
 
 And regarding connection to other services (no default values are provided):
 
 - `MASTOK_DATABASE_URL` (like `postgres://ps_user:pg_password@localhost/mastok`) to connect to the database 
 - `MASTOK_OTREE_URL` (like `http://localhost:8180/`) to reach oTree
-- `MASTOK_OTREE_REST_KEY` to connect to oTree API
+- `MASTOK_OTREE_REST_KEY` to authenticate to oTree API
 
 ## DuckSoup Docker image
 

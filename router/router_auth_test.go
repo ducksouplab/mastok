@@ -29,7 +29,7 @@ func TestBasicAuth_AcceptCorrectCredentials(t *testing.T) {
 
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Add("Authorization", "Basic "+basicAuth("admin", "admin"))
+	req.Header.Add("Authorization", "Basic "+basicAuth("mastok", "mastok"))
 	router.ServeHTTP(res, req)
 
 	assert.Equal(t, res.Code, 302)
@@ -41,7 +41,7 @@ func TestBasicAuth_RejectIncorrectCredentials(t *testing.T) {
 
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Add("Authorization", "Basic "+basicAuth("admin", "incorrect"))
+	req.Header.Add("Authorization", "Basic "+basicAuth("mastok", "incorrect"))
 	router.ServeHTTP(res, req)
 
 	assert.Equal(t, res.Code, 401)

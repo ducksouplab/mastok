@@ -81,7 +81,7 @@ func TestSessions_RejectUnauthorized(t *testing.T) {
 	router := NewRouter()
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/sessions", nil)
-	req.Header.Add("Authorization", "Basic "+helpers.BasicAuth("admin", "incorrect"))
+	req.Header.Add("Authorization", "Basic "+helpers.BasicAuth("mastok", "incorrect"))
 	router.ServeHTTP(res, req)
 
 	assert.Equal(t, res.Code, 401)

@@ -27,8 +27,8 @@ func createTemplateRenderer() multitemplate.Renderer {
 }
 
 func NewRouter() *gin.Engine {
-	r := gin.Default()
-	r.Use(gzip.Gzip(gzip.DefaultCompression))
+	r := gin.New()
+	r.Use(gzip.Gzip(gzip.DefaultCompression), gin.Recovery())
 	r.HTMLRender = createTemplateRenderer()
 
 	// static assets

@@ -1,22 +1,15 @@
 # Binaries for programs and plugins
 mastok
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
 
-# Test binary, built with `go test -c`
-*.test
+# conf & secrets
+.env
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+# front build assets
+front/static/assets/scripts
 
 # sqlite
 *.db
 
-# environment variables
-.env
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# yarn node
+node_modules
+yarn-error.log

@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ducksouplab/mastok/config"
+	"github.com/ducksouplab/mastok/env"
 	"github.com/ducksouplab/mastok/helpers"
 	th "github.com/ducksouplab/mastok/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -15,22 +15,22 @@ type resource map[string]any
 
 var sessionsData = []resource{
 	{
-		"admin_url":        config.OTreeURL + "/SessionStartLinks/1",
+		"admin_url":        env.OTreeURL + "/SessionStartLinks/1",
 		"code":             "code1",
 		"config_name":      "config1",
 		"created_at":       1676380785.2318387,
 		"label":            "",
 		"num_participants": 8,
-		"session_wide_url": config.OTreeURL + "/join/1",
+		"session_wide_url": env.OTreeURL + "/join/1",
 	},
 	{
-		"admin_url":        config.OTreeURL + "/SessionStartLinks/2",
+		"admin_url":        env.OTreeURL + "/SessionStartLinks/2",
 		"code":             "code2",
 		"config_name":      "config2",
 		"created_at":       1676380786.2318387,
 		"label":            "",
 		"num_participants": 4,
-		"session_wide_url": config.OTreeURL + "/join/2",
+		"session_wide_url": env.OTreeURL + "/join/2",
 	},
 }
 var sessionDetails1 = resource{

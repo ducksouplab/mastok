@@ -1,7 +1,7 @@
 package test_helpers
 
 import (
-	"github.com/ducksouplab/mastok/config"
+	"github.com/ducksouplab/mastok/env"
 	"github.com/h2non/gock"
 )
 
@@ -10,7 +10,7 @@ func InterceptOff() {
 }
 
 func InterceptOtreeGetJSON(path string, json any) {
-	gock.New(config.OTreeURL).
+	gock.New(env.OTreeURL).
 		Get(path).
 		Reply(200).
 		JSON(json)

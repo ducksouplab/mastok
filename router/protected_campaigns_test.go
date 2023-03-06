@@ -35,8 +35,7 @@ func TestCampaigns_Templates(t *testing.T) {
 		defer th.InterceptOff()
 		res := th.MastokGetRequestWithAuth(NewRouter(), "/campaigns/new")
 
-		t.Log(res.Body.String())
-		t.Log("_____________________________________________________")
+		// t.Log(res.Body.String())
 		assert.Equal(t, 200, res.Code)
 		assert.Contains(t, res.Body.String(), "Create")
 	})

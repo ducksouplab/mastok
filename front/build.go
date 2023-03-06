@@ -3,14 +3,14 @@ package front
 import (
 	"log"
 
-	"github.com/ducksouplab/mastok/config"
+	"github.com/ducksouplab/mastok/env"
 	"github.com/evanw/esbuild/pkg/api"
 )
 
 // API
 
 func Build() {
-	devEnv := config.OwnEnv == "DEV"
+	devEnv := env.Mode == "DEV"
 	logPlugin := api.Plugin{
 		Name: "log",
 		Setup: func(build api.PluginBuild) {

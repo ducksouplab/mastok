@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/ducksouplab/mastok/config"
+	"github.com/ducksouplab/mastok/env"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
@@ -13,13 +13,13 @@ import (
 func createTemplateRenderer() multitemplate.Renderer {
 	renderer := multitemplate.NewRenderer()
 
-	includes, err := filepath.Glob(config.OwnRoot + "templates/includes/*.tmpl")
+	includes, err := filepath.Glob(env.ProjectRoot + "templates/includes/*.tmpl")
 	if err != nil {
 		panic(err.Error())
 	}
 
 	for _, include := range includes {
-		renderer.AddFromFiles(filepath.Base(include), config.OwnRoot+"templates/layout.tmpl", include)
+		renderer.AddFromFiles(filepath.Base(include), env.ProjectRoot+"templates/layout.tmpl", include)
 	}
 
 	// first parameter is the exact name to be reused inside handler
@@ -28,7 +28,7 @@ func createTemplateRenderer() multitemplate.Renderer {
 
 func NewRouter() *gin.Engine {
 	var r *gin.Engine
-	if config.OwnEnv == "TEST" {
+	if env.Mode == "TEST" {
 		// don't use gin default request login and recovery
 		r = gin.New()
 	} else {
@@ -38,13 +38,13 @@ func NewRouter() *gin.Engine {
 	r.HTMLRender = createTemplateRenderer()
 
 	// static assets
-	r.Static(config.OwnWebPrefix+"/assets", "./front/static/assets")
+	r.Static(env.WebPrefix+"/assets", "./front/static/assets")
 	// public routes
-	publicGroup := r.Group(config.OwnWebPrefix)
+	publicGroup := r.Group(env.WebPrefix)
 	addJoinRoutesTo(publicGroup)
 	// protect routes
-	authorizedGroup := r.Group(config.OwnWebPrefix, gin.BasicAuth(gin.Accounts{
-		config.OwnBasicLogin: config.OwnBasicPassword,
+	authorizedGroup := r.Group(env.WebPrefix, gin.BasicAuth(gin.Accounts{
+		env.BasicLogin: env.BasicPassword,
 	}))
 	authorizedGroup.GET("/", func(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/dashboard")

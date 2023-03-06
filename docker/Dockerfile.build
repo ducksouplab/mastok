@@ -9,7 +9,7 @@ RUN go mod download
 
 # go source (test_helpers not needed)
 COPY main.go .
-COPY config ./config
+COPY env ./env
 COPY front/build.go ./front/build.go
 COPY helpers ./helpers
 COPY live ./live
@@ -23,7 +23,7 @@ COPY front/src ./front/src
 
 # compile server and front
 RUN go build
-RUN MASTOK_ENV=BUILD_FRONT ./mastok
+RUN MASTOK_MODE=BUILD_FRONT ./mastok
 
 FROM golang:1.20.1-bullseye AS final
 

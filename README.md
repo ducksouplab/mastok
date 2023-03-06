@@ -5,21 +5,21 @@
 Build and run
 
 ```
-go build && MASTOK_ENV=DEV ./mastok
+go build && MASTOK_MODE=DEV ./mastok
 # or script alias
 make dev
 ```
 
 Run all tests
 ```
-MASTOK_ENV=TEST MASTOK_PROJECT_ROOT=`pwd` GIN_MODE=release go test ./...
+MASTOK_MODE=TEST MASTOK_PROJECT_ROOT=`pwd` GIN_MODE=release go test ./...
 # or script alias
 make test
 ```
 
 Build JS front files to `front/static` (and don't run mastok server)
 ```
-go build && MASTOK_ENV=BUILD_FRONT ./mastok
+go build && MASTOK_MODE=BUILD_FRONT ./mastok
 # or script alias
 make front
 ```
@@ -35,8 +35,8 @@ make deps
 
 The following environment variables, regarding Mastok's own configuration:
 
-- `MASTOK_ENV=DEV`:
-    - load `.env` file to provide with a convenient way to define (other than `MASTOK_ENV`) environment variables
+- `MASTOK_MODE=DEV`:
+    - load `.env` file to provide with a convenient way to define (other than `MASTOK_MODE`) environment variables
     - triggers automatic JS processing (thanks to [esbuild](https://esbuild.github.io/))
 - `MASTOK_PORT` (defaults to `8190`) to set the port Mastok listens to
 - `MASTOK_ORIGIN` (defaults to `http://localhost:8190`) to set what origin is trusted for WebSocket communication. If Mastok is running on port 8190 on localhost, but is served (thanks to a proxy) and reachable at https://mymastok.com, the valid `MASTOK_ORIGIN` value is `https://mymastok.com`

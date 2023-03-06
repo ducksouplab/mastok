@@ -1,9 +1,12 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
-	"github.com/ducksouplab/mastok/config"
+	"github.com/ducksouplab/mastok/env"
+	"github.com/ducksouplab/mastok/helpers"
 	"github.com/gorilla/websocket"
 )
 
@@ -11,7 +14,8 @@ import (
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		return origin == config.OwnOrigin
+		fmt.Fprintf(os.Stdout, ">>>>>>>>>>>>>>>>>>>>>>>>>> %+v\n", r.Header)
+		return helpers.Contains(env.AllowedOrigins, origin)
 	},
 }
 

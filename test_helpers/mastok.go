@@ -7,15 +7,15 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ducksouplab/mastok/config"
+	"github.com/ducksouplab/mastok/env"
 	"github.com/ducksouplab/mastok/helpers"
 	"github.com/ducksouplab/mastok/models"
 	"github.com/gin-gonic/gin"
 )
 
 func ReinitTestDB() {
-	if config.OwnEnv == "TEST" {
-		os.Remove(config.OwnRoot + "test.db")
+	if env.Mode == "TEST" {
+		os.Remove(env.ProjectRoot + "test.db")
 		models.ConnectAndMigrate()
 		models.DB.Create(FIXTURE_CAMPAIGNS)
 	}

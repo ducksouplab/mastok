@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ducksouplab/mastok/helpers"
 	"github.com/ducksouplab/mastok/otree"
 	"github.com/gin-gonic/gin"
 )
@@ -49,7 +50,7 @@ func addSessionsRoutesTo(g *gin.RouterGroup) {
 			}
 			// reverse since oTree returns by chronogical create, we want latest first
 			c.HTML(http.StatusOK, "sessions.tmpl", gin.H{
-				"Sessions": reverse(sessions),
+				"Sessions": helpers.Reverse(sessions),
 			})
 		}
 	})

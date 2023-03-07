@@ -19,7 +19,7 @@ func wsSuperviseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("[router] supervise websocket upgrade success")
 
-	live.Supervise(conn, r.FormValue("namespace"))
+	live.RunSupervisor(conn, r.FormValue("namespace"))
 }
 
 func addCampaignsRoutesTo(g *gin.RouterGroup) {

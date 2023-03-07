@@ -33,6 +33,11 @@ type Campaign struct {
 	SessionsStarted  uint          `gorm:"default:0"`
 }
 
+func FindCampaignByNamespace(namespace string) (c *Campaign, err error) {
+	err = DB.First(&c, "namespace = ?", MASTOK_PREFIX+namespace).Error
+	return
+}
+
 func (c *Campaign) BeforeCreate(tx *gorm.DB) (err error) {
 	c.Namespace = MASTOK_PREFIX + c.Namespace
 	return

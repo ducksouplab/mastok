@@ -5,9 +5,11 @@ import (
 	"path/filepath"
 
 	"github.com/ducksouplab/mastok/env"
+	"github.com/ducksouplab/mastok/helpers"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 func createTemplateRenderer() multitemplate.Renderer {
@@ -26,14 +28,15 @@ func createTemplateRenderer() multitemplate.Renderer {
 	return renderer
 }
 
-func NewRouter() *gin.Engine {
-	var r *gin.Engine
-	if env.Mode == "TEST" {
-		// don't use gin default request login and recovery
-		r = gin.New()
-	} else {
-		r = gin.Default()
-	}
+// upgrader for websocket endpoints
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		return helpers.Contains(env.AllowedOrigins, origin)
+	},
+}
+
+func NewRouter(r *gin.Engine) *gin.Engine {
 	r.Use(gzip.Gzip(gzip.DefaultCompression))
 	r.HTMLRender = createTemplateRenderer()
 

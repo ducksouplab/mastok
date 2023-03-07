@@ -4,6 +4,8 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	"github.com/ducksouplab/mastok/env"
 )
 
 const TTL = 120
@@ -25,6 +27,9 @@ type experimentCache struct {
 
 func init() {
 	eCache = experimentCache{sync.Mutex{}, time.Now(), nil}
+	if env.Mode != "TEST" {
+		GetExperimentCache()
+	}
 }
 
 func notExpired(t time.Time) bool {

@@ -1,6 +1,7 @@
 package test_helpers
 
 import (
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -17,7 +18,9 @@ func ReinitTestDB() {
 	if env.Mode == "TEST" {
 		os.Remove(env.ProjectRoot + "test.db")
 		models.ConnectAndMigrate()
-		models.DB.Create(FIXTURE_CAMPAIGNS)
+		if err := models.DB.Create(FIXTURE_CAMPAIGNS).Error; err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 

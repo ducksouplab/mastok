@@ -15,9 +15,8 @@ func basicAuth(username, password string) string {
 }
 
 func TestBasicAuth_Integration(t *testing.T) {
+	router := getTestRouter()
 	t.Run("rejects guest user", func(t *testing.T) {
-		router := NewRouter()
-
 		res := httptest.NewRecorder()
 		req, _ := http.NewRequest(http.MethodGet, "/", nil)
 		router.ServeHTTP(res, req)
@@ -26,8 +25,6 @@ func TestBasicAuth_Integration(t *testing.T) {
 	})
 
 	t.Run("authorizes user with correct credentials", func(t *testing.T) {
-		router := NewRouter()
-
 		res := httptest.NewRecorder()
 		req, _ := http.NewRequest(http.MethodGet, "/", nil)
 		req.Header.Add("Authorization", "Basic "+basicAuth("mastok", "mastok"))
@@ -38,8 +35,6 @@ func TestBasicAuth_Integration(t *testing.T) {
 	})
 
 	t.Run("rejects user with incorrect credentials", func(t *testing.T) {
-		router := NewRouter()
-
 		res := httptest.NewRecorder()
 		req, _ := http.NewRequest(http.MethodGet, "/", nil)
 		req.Header.Add("Authorization", "Basic "+basicAuth("mastok", "incorrect"))

@@ -17,7 +17,7 @@ func wsJoinHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("[router] supervise websocket upgrade success")
 
-	live.Join(conn, r.FormValue("slug"))
+	live.RunParticipant(conn, r.FormValue("slug"))
 }
 
 func addJoinRoutesTo(g *gin.RouterGroup) {

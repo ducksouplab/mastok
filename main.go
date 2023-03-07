@@ -7,6 +7,7 @@ import (
 	"github.com/ducksouplab/mastok/front"
 	"github.com/ducksouplab/mastok/models"
 	"github.com/ducksouplab/mastok/router"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 	// ...or server mode, starts with DB
 	models.ConnectAndMigrate()
 	// then HTTP server
-	r := router.NewRouter()
+	r := router.NewRouter(gin.Default())
 	log.Println("[server] websocket origin allowed:", env.Origin)
 	log.Println("[server] listening port:", env.Port)
 	r.Run(":" + env.Port)

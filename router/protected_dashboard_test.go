@@ -9,7 +9,7 @@ import (
 
 func TestDashboard_Templates(t *testing.T) {
 	t.Run("shows dashboard", func(t *testing.T) {
-		res := th.MastokGetRequestWithAuth(NewRouter(), "/dashboard")
+		res := th.MastokGetRequestWithAuth(getTestRouter(), "/dashboard")
 
 		assert.Equal(t, 200, res.Code)
 		assert.Contains(t, res.Body.String(), "campaigns")

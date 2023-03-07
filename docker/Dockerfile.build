@@ -17,6 +17,7 @@ COPY models ./models
 COPY otree ./otree
 COPY router ./router
 COPY templates ./templates
+COPY types ./types
 
 # JS source
 COPY front/src ./front/src

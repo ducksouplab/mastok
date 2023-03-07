@@ -4,6 +4,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/ducksouplab/mastok/types"
 	"github.com/gorilla/websocket"
 )
 
@@ -12,20 +13,13 @@ type wsConn struct {
 	*websocket.Conn
 }
 
-type message struct {
-	Kind    string `json:"kind"`
-	Payload string `json:"payload"`
-}
-
 func newWsConn(conn *websocket.Conn) *wsConn {
 	return &wsConn{sync.Mutex{}, conn}
 }
 
-func (ws *wsConn) read() (message, error) {
-	ws.Lock()
-	defer ws.Unlock()
-
-	var m message
+func (ws *wsConn) read() (types.Message, error) {
+	// don't lock on read since ReadJSON will wait until a message arrives
+	var m types.Message
 	err := ws.ReadJSON(&m)
 	return m, err
 }

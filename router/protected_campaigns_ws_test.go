@@ -8,14 +8,24 @@ import (
 
 	"github.com/ducksouplab/mastok/env"
 	"github.com/ducksouplab/mastok/helpers"
+	"github.com/ducksouplab/mastok/types"
 	"github.com/gorilla/websocket"
 )
 
-func getHeaderForDialer() http.Header {
+func dial(t *testing.T, server *httptest.Server, path string) *websocket.Conn {
+	url := "ws" + strings.TrimPrefix(server.URL, "http") + path
 	header := http.Header{}
 	header.Add("Authorization", "Basic "+helpers.BasicAuth("mastok", "mastok"))
 	header.Add("Origin", env.Origin)
-	return header
+
+	ws, res, err := websocket.DefaultDialer.Dial(url, header)
+	if err != nil {
+		if err == websocket.ErrBadHandshake {
+			t.Fatalf("ws handshake on %s failed with status %d", url, res.StatusCode)
+		}
+		t.Fatalf("ws connection on %s failed %v", url, err)
+	}
+	return ws
 }
 
 func TestCampaignsWS(t *testing.T) {
@@ -25,25 +35,21 @@ func TestCampaignsWS(t *testing.T) {
 
 		// check test_helpers/data.go
 		namespace := "namespace"
-		wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws/campaigns/supervise?namespace=" + namespace
 
-		ws, res, err := websocket.DefaultDialer.Dial(wsURL, getHeaderForDialer())
-		if err != nil {
-			if err == websocket.ErrBadHandshake {
-				t.Logf("handshake failed with status %d", res.StatusCode)
-			}
-			t.Fatalf("could not open a ws connection on %s %v", wsURL, err)
-		}
+		ws := dial(t, server, "/ws/campaigns/supervise?namespace="+namespace)
 		defer ws.Close()
 
-		if err := ws.WriteMessage(websocket.TextMessage, []byte("coucou")); err != nil {
-			t.Fatalf("could not send message over ws connection %v", err)
+		changeState := types.Message{Kind: "State", Payload: "Running"}
+
+		if err := ws.WriteJSON(changeState); err != nil {
+			t.Fatalf("%v", err)
 		}
 
-		_, msg, err := ws.ReadMessage()
+		var reply types.Message
+		err := ws.ReadJSON(&reply)
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
-		t.Log(msg)
+		// assert something?
 	})
 }

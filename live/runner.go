@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/ducksouplab/mastok/models"
+	"github.com/ducksouplab/mastok/types"
 )
 
 type runner struct {
@@ -44,7 +45,7 @@ func (r *runner) loop() {
 			}
 		case state := <-r.stateCh:
 			for client := range r.clients {
-				client.signal <- state
+				client.signal <- types.Message{Kind: "State", Payload: state}
 			}
 		}
 	}

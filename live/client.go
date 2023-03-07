@@ -10,7 +10,7 @@ import (
 // client for campaign runner
 type client struct {
 	supervisor bool
-	ws         *wsConn
+	ws         *websocket.Conn
 	runner     *runner
 	signal     chan types.Message
 }
@@ -22,7 +22,8 @@ func (c *client) readLoop() {
 	}()
 
 	for {
-		m, err := c.ws.read()
+		var m types.Message
+		err := c.ws.ReadJSON(&m)
 
 		if err != nil {
 			log.Println(err)
@@ -40,20 +41,22 @@ func (c *client) writeLoop() {
 		state := <-c.signal
 
 		if state.Kind == "State" {
-			c.ws.write(state)
+			if err := c.ws.WriteJSON(state); err != nil {
+				log.Println(err)
+			}
 		}
 	}
 }
 
-func runClient(s bool, conn *websocket.Conn, namespace string) {
+func runClient(s bool, ws *websocket.Conn, namespace string) {
 	r, err := getRunner(namespace)
 	if err != nil {
-		conn.Close()
+		ws.Close()
 		return
 	}
 	c := &client{
 		supervisor: s,
-		ws:         newWsConn(conn),
+		ws:         ws,
 		runner:     r,
 		signal:     make(chan types.Message),
 	}
@@ -64,10 +67,10 @@ func runClient(s bool, conn *websocket.Conn, namespace string) {
 	go c.writeLoop()
 }
 
-func RunSupervisor(conn *websocket.Conn, namespace string) {
-	runClient(true, conn, namespace)
+func RunSupervisor(ws *websocket.Conn, namespace string) {
+	runClient(true, ws, namespace)
 }
 
-func RunParticipant(conn *websocket.Conn, namespace string) {
-	runClient(false, conn, namespace)
+func RunParticipant(ws *websocket.Conn, namespace string) {
+	runClient(false, ws, namespace)
 }

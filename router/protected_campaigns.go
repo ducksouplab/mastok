@@ -12,14 +12,14 @@ import (
 
 func wsSuperviseHandler(w http.ResponseWriter, r *http.Request) {
 	// upgrade HTTP request to Websocket
-	conn, err := upgrader.Upgrade(w, r, nil)
+	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("[router] supervise websocket upgrade failed")
 		return
 	}
 	log.Println("[router] supervise websocket upgrade success")
 
-	live.RunSupervisor(conn, r.FormValue("namespace"))
+	live.RunSupervisor(ws, r.FormValue("namespace"))
 }
 
 func addCampaignsRoutesTo(g *gin.RouterGroup) {

@@ -10,14 +10,14 @@ import (
 
 func wsJoinHandler(w http.ResponseWriter, r *http.Request) {
 	// upgrade HTTP request to Websocket
-	conn, err := upgrader.Upgrade(w, r, nil)
+	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("[router] supervise websocket upgrade failed")
 		return
 	}
 	log.Println("[router] supervise websocket upgrade success")
 
-	live.RunParticipant(conn, r.FormValue("slug"))
+	live.RunParticipant(ws, r.FormValue("slug"))
 }
 
 func addJoinRoutesTo(g *gin.RouterGroup) {

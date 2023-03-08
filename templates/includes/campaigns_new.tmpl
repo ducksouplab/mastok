@@ -6,10 +6,7 @@
     <form action="/campaigns" method="POST">
       <div class="mb-3">
         <label for="namespace" class="form-label">Unique namespace*</label>
-        <div class="input-group">
-          <span class="input-group-text" id="basic-addon1">mk:</span>
-          <input type="text" name="namespace" id="namespace" tabindex="0" class="form-control" pattern="[a-zA-Z0-9]+" minlength="2" maxlength="64" required>
-        </div>
+        <input type="text" name="namespace" id="namespace" tabindex="0" class="form-control" pattern="[a-zA-Z0-9]+" minlength="2" maxlength="64" required>
         <div class="form-text">Used to build oTree session IDs, only letters and numbers</div>
       </div>
       <div class="mb-3">

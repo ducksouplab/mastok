@@ -62,8 +62,8 @@ func TestCampaigns_Integration(t *testing.T) {
 		// when there is at least one campaign, there should be a Control button
 		assert.Contains(t, res.Body.String(), "Supervise")
 		// GET supervise
-		// res = th.MastokGetRequestWithAuth(router, "/campaigns/supervise/mk:namespace1")
-		// assert.Contains(t, res.Body.String(), "Supervising campaign mk:namespace1")
+		res = th.MastokGetRequestWithAuth(router, "/campaigns/supervise/namespace1")
+		assert.Contains(t, res.Body.String(), "Supervising")
 	})
 
 	t.Run("fails creating if duplicate namespace", func(t *testing.T) {

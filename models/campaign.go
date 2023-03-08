@@ -4,8 +4,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const MASTOK_PREFIX = "mk:"
-
 type CampaignState int
 
 const (
@@ -20,7 +18,6 @@ func (s CampaignState) String() string {
 }
 
 // Caution: validations are done when binding (in handlers), before and not related to gorm
-// Namespace min length is 2 + length(MASTOK_PREFIX)
 type Campaign struct {
 	gorm.Model
 	Namespace        string        `form:"namespace" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
@@ -34,12 +31,7 @@ type Campaign struct {
 }
 
 func FindCampaignByNamespace(namespace string) (c *Campaign, err error) {
-	err = DB.First(&c, "namespace = ?", MASTOK_PREFIX+namespace).Error
-	return
-}
-
-func (c *Campaign) BeforeCreate(tx *gorm.DB) (err error) {
-	c.Namespace = MASTOK_PREFIX + c.Namespace
+	err = DB.First(&c, "namespace = ?", namespace).Error
 	return
 }
 

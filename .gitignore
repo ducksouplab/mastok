@@ -9,6 +9,7 @@ front/static/assets/scripts
 
 # sqlite
 *.db
+*.db-journal
 
 # yarn node
 node_modules

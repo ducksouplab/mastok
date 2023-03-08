@@ -5,7 +5,15 @@ import "github.com/ducksouplab/mastok/models"
 // for DB
 var FIXTURE_CAMPAIGNS []models.Campaign = []models.Campaign{
 	{
-		Namespace:        "namespace",
+		Namespace:        "fixture_ns1",
+		Slug:             "fixture_slug1",
+		ExperimentConfig: "config",
+		PerSession:       8,
+		SessionsMax:      4,
+	},
+	{
+		Namespace:        "fixture_ns2",
+		Slug:             "fixture_slug2",
 		ExperimentConfig: "config",
 		PerSession:       8,
 		SessionsMax:      4,

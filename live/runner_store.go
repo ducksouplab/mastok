@@ -23,9 +23,18 @@ func newRunnerStore() runnerStore {
 	return runnerStore{sync.Mutex{}, make(map[string]*runner)}
 }
 
+func hasRunner(namespace string) (r *runner, ok bool) {
+	rs.Lock()
+	defer rs.Unlock()
+
+	r, ok = rs.index[namespace]
+	return
+}
+
+// get existing or initialize
 func getRunner(namespace string) (*runner, error) {
 	// already running
-	if r, ok := rs.index[namespace]; ok {
+	if r, ok := hasRunner(namespace); ok {
 		return r, nil
 	}
 	// load from DB
@@ -34,7 +43,18 @@ func getRunner(namespace string) (*runner, error) {
 		return nil, err
 	}
 	r := newRunner(campaign)
+
+	rs.Lock()
 	rs.index[namespace] = r
+	rs.Unlock()
+
 	go r.loop()
 	return r, nil
+}
+
+func deleteRunner(namespace string) {
+	rs.Lock()
+	defer rs.Unlock()
+
+	delete(rs.index, namespace)
 }

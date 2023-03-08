@@ -1,35 +1,36 @@
 package live
 
 import (
-	"sync"
-
 	"github.com/ducksouplab/mastok/models"
-	"github.com/ducksouplab/mastok/types"
 )
 
+// clients hold references to any (supervisor or participant) client
+// the currentPool holds count of participant clients
 type runner struct {
-	sync.Mutex
 	campaign *models.Campaign
+	poolSize int
 	clients  map[*client]bool
 	// manage broadcasting
 	registerCh   chan *client
 	unregisterCh chan *client
 	// actual events
-	stateCh      chan string
-	joinCh       chan string
-	newSessionCh chan string
+	updateStateCh chan string
+	joinPoolCh    chan *client
+	leavePoolCh   chan *client
+	newSessionCh  chan string
 }
 
 func newRunner(c *models.Campaign) *runner {
 	return &runner{
-		sync.Mutex{},
-		c,
-		make(map[*client]bool),
-		make(chan *client),
-		make(chan *client),
-		make(chan string),
-		make(chan string),
-		make(chan string),
+		campaign:      c,
+		poolSize:      0,
+		clients:       make(map[*client]bool),
+		registerCh:    make(chan *client),
+		unregisterCh:  make(chan *client),
+		updateStateCh: make(chan string),
+		joinPoolCh:    make(chan *client),
+		leavePoolCh:   make(chan *client),
+		newSessionCh:  make(chan string),
 	}
 }
 
@@ -41,11 +42,24 @@ func (r *runner) loop() {
 		case client := <-r.unregisterCh:
 			if _, ok := r.clients[client]; ok {
 				delete(r.clients, client)
-				close(client.signal)
+				if len(r.clients) == 0 {
+					deleteRunner(r.campaign.Namespace)
+					return
+				}
 			}
-		case state := <-r.stateCh:
+		case state := <-r.updateStateCh:
 			for client := range r.clients {
-				client.signal <- types.Message{Kind: "State", Payload: state}
+				client.stateCh <- state
+			}
+		case <-r.joinPoolCh:
+			r.poolSize += 1
+			for client := range r.clients {
+				client.poolSizeCh <- r.poolSize
+			}
+		case <-r.leavePoolCh:
+			r.poolSize -= 1
+			for client := range r.clients {
+				client.poolSizeCh <- r.poolSize
 			}
 		}
 	}

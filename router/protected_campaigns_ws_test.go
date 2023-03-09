@@ -8,7 +8,6 @@ import (
 
 	"github.com/ducksouplab/mastok/env"
 	"github.com/ducksouplab/mastok/helpers"
-	"github.com/ducksouplab/mastok/types"
 	"github.com/gorilla/websocket"
 )
 
@@ -39,13 +38,11 @@ func TestCampaignsWS(t *testing.T) {
 		ws := dial(t, server, "/ws/campaigns/supervise?namespace="+namespace)
 		defer ws.Close()
 
-		changeState := types.Message{Kind: "State", Payload: "Running"}
-
-		if err := ws.WriteJSON(changeState); err != nil {
+		if err := ws.WriteJSON("State:Running"); err != nil {
 			t.Fatalf("%v", err)
 		}
 
-		var reply types.Message
+		var reply string
 		err := ws.ReadJSON(&reply)
 		if err != nil {
 			t.Fatalf("%v", err)

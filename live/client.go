@@ -2,9 +2,7 @@ package live
 
 import (
 	"log"
-	"strconv"
-
-	"github.com/ducksouplab/mastok/types"
+	"strings"
 )
 
 type wsConn interface {
@@ -15,35 +13,47 @@ type wsConn interface {
 
 // client for campaign runner
 type client struct {
-	supervisor bool
-	ws         wsConn
-	runner     *runner
-	stateCh    chan string
-	poolSizeCh chan int
+	isSupervisor bool
+	ws           wsConn
+	runner       *runner
+	// updates from runner
+	signalCh chan string
 }
 
-func (c *client) writeMessage(kind, payload string) {
-	if err := c.ws.WriteJSON(types.Message{Kind: kind, Payload: payload}); err != nil {
+func (c *client) write(signal string) {
+	if err := c.ws.WriteJSON(signal); err != nil {
 		log.Println(err)
 	}
 }
 
+func (c *client) read() (kind, payload string, err error) {
+	var m string
+	err = c.ws.ReadJSON(&m)
+	if err != nil {
+		return
+	}
+	slice := strings.Split(m, ":")
+	kind = slice[0]
+	payload = slice[1]
+	return
+}
+
+func (c *client) stop() {
+	c.runner.unregisterCh <- c
+}
+
 func (c *client) readLoop() {
-	defer func() {
-		c.runner.leavePoolCh <- c
-		c.runner.unregisterCh <- c
-	}()
+	defer c.stop()
 
 	for {
-		var m types.Message
-		err := c.ws.ReadJSON(&m)
+		kind, payload, err := c.read()
 
 		if err != nil {
 			log.Println("[ws] ReadJSON error:", err)
 			return
-		} else if m.Kind == "State" {
-			c.runner.updateStateCh <- m.Payload
-		} else if m.Kind == "Join" {
+		} else if kind == "State" && c.isSupervisor {
+			c.runner.stateCh <- payload
+		} else if kind == "Join" {
 			c.runner.joinPoolCh <- c
 		}
 	}
@@ -52,34 +62,33 @@ func (c *client) readLoop() {
 // at most one writer to a connection since all writes happen in this goroutine
 // like in https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 func (c *client) writeLoop() {
-	for {
-		select {
-		case state := <-c.stateCh:
-			c.writeMessage("State", state)
-		case size := <-c.poolSizeCh:
-			c.writeMessage("PoolSize", strconv.Itoa(size))
+	defer c.stop()
+	for signal := range c.signalCh {
+		c.write(signal)
+		if !c.isSupervisor && (signal == "Participant:Disconnect" || signal == "State:Paused") {
+			return
 		}
 	}
 }
 
-func runClient(s bool, ws wsConn, namespace string) *client {
+func runClient(isSupervisor bool, ws wsConn, namespace string) *client {
 	r, err := getRunner(namespace)
 	if err != nil {
 		ws.Close()
 		return nil
 	}
 	c := &client{
-		supervisor: s,
-		ws:         ws,
-		runner:     r,
-		stateCh:    make(chan string),
-		poolSizeCh: make(chan int),
+		isSupervisor: isSupervisor,
+		ws:           ws,
+		runner:       r,
+		signalCh:     make(chan string, 256),
 	}
 	log.Println("[supervisor] running for: " + namespace)
 
-	c.runner.registerCh <- c
 	go c.readLoop()
 	go c.writeLoop()
+
+	c.runner.registerCh <- c
 	return c
 }
 
@@ -88,7 +97,5 @@ func RunSupervisor(ws wsConn, namespace string) *client {
 }
 
 func RunParticipant(ws wsConn, namespace string) *client {
-	p := runClient(false, ws, namespace)
-	p.runner.joinPoolCh <- p
-	return p
+	return runClient(false, ws, namespace)
 }

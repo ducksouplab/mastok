@@ -17,5 +17,5 @@ func InterceptOtreeGetJSON(path string, json any) {
 }
 
 func InterceptOtreeSessionConfigs() {
-	InterceptOtreeGetJSON("/api/session_configs", SESSION_CONFIGS)
+	InterceptOtreeGetJSON("/api/session_configs", OTREE_GET_SESSION_CONFIGS)
 }

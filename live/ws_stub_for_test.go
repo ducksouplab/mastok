@@ -69,13 +69,13 @@ func (ws *wsStub) hasReceived(test string) bool {
 	return false
 }
 
-func (ws *wsStub) hasReceivedPrefix(prefix string) bool {
+func (ws *wsStub) hasReceivedPrefix(prefix string) (found string, ok bool) {
 	for _, write := range ws.writes {
 		if strings.HasPrefix(write, prefix) {
-			return true
+			return write, true
 		}
 	}
-	return false
+	return "", false
 }
 
 func (ws *wsStub) loop() {

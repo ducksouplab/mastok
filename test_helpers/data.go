@@ -39,6 +39,14 @@ var FIXTURE_CAMPAIGNS []models.Campaign = []models.Campaign{
 		SessionsMax:      4,
 		State:            models.Waiting,
 	},
+	{
+		Namespace:        "fixture_ns5_launched",
+		Slug:             "fixture_slug5",
+		ExperimentConfig: "config",
+		PerSession:       4,
+		SessionsMax:      4,
+		State:            models.Running,
+	},
 }
 
 // for oTree

@@ -1,13 +1,17 @@
 package live
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/ducksouplab/mastok/env"
+	"github.com/ducksouplab/mastok/models"
+	th "github.com/ducksouplab/mastok/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRunner_Integration(t *testing.T) {
-	t.Run("runner is shared per campaign", func(t *testing.T) {
+	t.Run("is shared per campaign", func(t *testing.T) {
 		ns := "fixture_ns1"
 		defer tearDown(ns)
 
@@ -28,5 +32,35 @@ func TestRunner_Integration(t *testing.T) {
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			return ws2.lastWrite() == "PoolSize:2"
 		}), "participant should receive PoolSize:2")
+	})
+
+	t.Run("creates oTree session", func(t *testing.T) {
+		ns := "fixture_ns5_launched"
+		perSession := uint(4)
+		defer tearDown(ns)
+
+		// the fixture data is what we expected
+		campaign, _ := models.FindCampaignByNamespace(ns)
+		assert.Equal(t, perSession, campaign.PerSession)
+		assert.Equal(t, "Running", campaign.State)
+
+		// fills the pool
+		th.InterceptOtreePostSession()
+		th.InterceptOtreeGetSession("/api/sessions/")
+		defer th.InterceptOff()
+		wsSlice := makeWSStubs(int(perSession))
+		for _, ws := range wsSlice {
+			RunParticipant(ws, ns)
+		}
+
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			found, ok := wsSlice[0].hasReceivedPrefix("SessionStart:")
+			if ok {
+				url := strings.TrimPrefix(found, "SessionStart:")
+				//http://localhost:8180/InitializeParticipant/brutjmj7
+				return strings.HasPrefix(url, env.OTreeURL+"/InitializeParticipant/")
+			}
+			return false
+		}), "participant should receive SessionState with oTree URL")
 	})
 }

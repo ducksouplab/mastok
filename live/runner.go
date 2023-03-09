@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/ducksouplab/mastok/models"
+	"github.com/ducksouplab/mastok/otree"
 )
 
 // clients hold references to any (supervisor or participant) client
@@ -35,13 +36,36 @@ func newRunner(c *models.Campaign) *runner {
 	}
 }
 
-func (r *runner) done() chan struct{} {
+func (r *runner) isDone() chan struct{} {
 	return r.doneCh
 }
 
 func (r *runner) stop() {
 	deleteRunner(r.campaign.Namespace)
 	close(r.doneCh)
+}
+
+func (r *runner) sessionStart() (sessionCode string, participantCodes []string, err error) {
+	args := otree.SessionArgs{
+		ConfigName:      r.campaign.ExperimentConfig,
+		NumParticipants: int(r.campaign.PerSession),
+		Config: otree.NestedConfig{
+			Id: "mk:" + r.campaign.Namespace,
+		},
+	}
+	s := otree.Session{}
+	// GET code
+	if err = otree.PostOTreeJSON("/api/sessions/", args, &s); err != nil {
+		return
+	}
+	sessionCode = s.Code
+	// GET more details (participant codes) and override s
+	err = otree.GetOTreeJSON("/api/sessions/"+s.Code, &s)
+
+	for _, p := range s.Participants {
+		participantCodes = append(participantCodes, p.Code)
+	}
+	return
 }
 
 func (r *runner) loop() {
@@ -60,8 +84,19 @@ func (r *runner) loop() {
 					}
 					// starts session when pool is full
 					if r.poolSize == r.campaign.PerSession {
-						for client := range r.clients {
-							client.signalCh <- "StartSession:" + "url"
+						sessionCode, participantCodes, err := r.sessionStart()
+						if err != nil {
+							log.Println("[runner] oTree session creation failed")
+						} else {
+							participantIndex := 0
+							for client := range r.clients {
+								if client.isSupervisor {
+									client.signalCh <- "SessionStart:" + otree.SupervisorStartURL(sessionCode)
+								} else {
+									client.signalCh <- "SessionStart:" + otree.ParticipantStartURL(participantCodes[participantIndex])
+									participantIndex++
+								}
+							}
 						}
 					}
 				}
@@ -92,7 +127,6 @@ func (r *runner) loop() {
 		case state := <-r.stateCh:
 			r.campaign.State = state
 			models.DB.Save(r.campaign)
-			log.Printf(">>>>>>>>>>>>>> %v", state)
 			for client := range r.clients {
 				client.signalCh <- "State:" + state
 			}

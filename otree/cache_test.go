@@ -9,7 +9,7 @@ import (
 
 func TestCache_Unit(t *testing.T) {
 	t.Run("populates experiments config cache from oTree", func(t *testing.T) {
-		th.InterceptOtreeSessionConfigs()
+		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 
 		eCache := GetExperimentCache()

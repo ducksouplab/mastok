@@ -26,7 +26,8 @@ func TestClient_Integration(t *testing.T) {
 		RunParticipant(ws, ns)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws.hasReceivedPrefix("State:")
+			_, ok := ws.hasReceivedPrefix("State:")
+			return ok
 		}), "participant should receive State")
 	})
 
@@ -65,29 +66,9 @@ func TestClient_Integration(t *testing.T) {
 
 		// the other quits
 		ws2.Close()
-		<-sharedRunner.done()
+		<-sharedRunner.isDone()
 		_, ok = hasRunner(ns)
 		assert.Equal(t, false, ok)
-	})
-
-	t.Run("starts session when pool is full", func(t *testing.T) {
-		ns := "fixture_ns1"
-		defer tearDown(ns)
-
-		// 4 participants
-		wsSlice := makeWSStubs(4)
-		for _, ws := range wsSlice {
-			RunParticipant(ws, ns)
-		}
-		// the fixture data is what we expected
-		runner, _ := hasRunner(ns)
-		assert.Equal(t, uint(4), runner.campaign.PerSession)
-		assert.Equal(t, "Running", runner.campaign.State)
-		// StartSession is sent
-		lastWS := wsSlice[len(wsSlice)-1]
-		assert.True(t, retryUntil(shortDuration, func() bool {
-			return lastWS.lastWrite() == "StartSession:url"
-		}), "participant should receive StartSession")
 	})
 
 	t.Run("prevents participant from changing state", func(t *testing.T) {
@@ -104,7 +85,7 @@ func TestClient_Integration(t *testing.T) {
 		// no one should have received the State update
 		for _, ws := range wsSlice {
 			assert.False(t, retryUntil(shortDuration, func() bool {
-				return ws.hasReceivedPrefix("State:Paused")
+				return ws.hasReceived("State:Paused")
 			}), "participant should not receive State:Paused")
 		}
 	})
@@ -128,9 +109,8 @@ func TestClient_Integration(t *testing.T) {
 		// every participants received the new state
 		supWs.push("State:Paused")
 		for _, ws := range wsSlice {
-			assert.True(t, retryUntil(durationWithDBOps, func() bool {
-				t.Log(ws.writes)
-				return ws.hasReceivedPrefix("State:Paused")
+			assert.True(t, retryUntil(longerDuration, func() bool {
+				return ws.hasReceived("State:Paused")
 			}), "participant should receive State:Paused")
 		}
 		// participants have been disconnected
@@ -151,13 +131,13 @@ func TestClient_Integration(t *testing.T) {
 		// supervisor changes state and quits
 		supWs1.push("State:Running")
 		supWs1.Close()
-		<-s.runner.done()
+		<-s.runner.isDone()
 
 		// other supervisor connects
 		supWs2 := newWSStub()
 		RunSupervisor(supWs2, ns)
-		assert.True(t, retryUntil(shortDuration, func() bool {
-			return supWs2.hasReceivedPrefix("State:Running")
+		assert.True(t, retryUntil(longerDuration, func() bool {
+			return supWs2.hasReceived("State:Running")
 		}), "State should be persisted")
 	})
 }

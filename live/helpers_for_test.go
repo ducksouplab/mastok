@@ -6,6 +6,11 @@ import (
 	th "github.com/ducksouplab/mastok/test_helpers"
 )
 
+const (
+	shortDuration  = 10 * time.Millisecond
+	longerDuration = 50 * time.Millisecond // for instance if there are DB writes
+)
+
 func init() {
 	// CAUTION: currently DB is not reinitialized after each test, but at a package level
 	th.ReinitTestDB()
@@ -23,14 +28,9 @@ func tearDown(namespace string) {
 		for client := range sharedRunner.clients {
 			client.ws.Close()
 		}
-		<-sharedRunner.done()
+		<-sharedRunner.isDone()
 	}
 }
-
-const (
-	shortDuration     = 10 * time.Millisecond
-	durationWithDBOps = 40 * time.Millisecond
-)
 
 // from https://quii.gitbook.io/learn-go-with-tests/build-an-application/websockets
 func retryUntil(d time.Duration, f func() bool) bool {

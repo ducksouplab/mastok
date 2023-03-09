@@ -32,7 +32,7 @@ func TestCampaigns_Templates(t *testing.T) {
 	})
 
 	t.Run("shows campaigns new form", func(t *testing.T) {
-		th.InterceptOtreeSessionConfigs()
+		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		res := th.MastokGetRequestWithAuth(router, "/campaigns/new")
 
@@ -46,7 +46,7 @@ func TestCampaigns_Integration(t *testing.T) {
 	router := getTestRouter()
 
 	t.Run("creates then lists then supervises", func(t *testing.T) {
-		th.InterceptOtreeSessionConfigs()
+		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
 		data := campaignFormData("namespace1", "slug1", "config1", "8", "4")
@@ -67,7 +67,7 @@ func TestCampaigns_Integration(t *testing.T) {
 	})
 
 	t.Run("fails creating if duplicate namespace", func(t *testing.T) {
-		th.InterceptOtreeSessionConfigs()
+		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
 		data := campaignFormData("namespace2", "slug2", "config1", "8", "4")
@@ -80,7 +80,7 @@ func TestCampaigns_Integration(t *testing.T) {
 	})
 
 	t.Run("fails creating if duplicate slug", func(t *testing.T) {
-		th.InterceptOtreeSessionConfigs()
+		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
 		data := campaignFormData("namespace3", "slug3", "config1", "8", "4")
@@ -93,7 +93,7 @@ func TestCampaigns_Integration(t *testing.T) {
 	})
 
 	t.Run("fails creating if invalid character", func(t *testing.T) {
-		th.InterceptOtreeSessionConfigs()
+		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
 		data := campaignFormData("namespace4#", "slug4", "config1", "8", "4")
@@ -104,7 +104,7 @@ func TestCampaigns_Integration(t *testing.T) {
 	})
 
 	t.Run("fails creating if namespace too short", func(t *testing.T) {
-		th.InterceptOtreeSessionConfigs()
+		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
 		data := campaignFormData("n", "slug5", "config1", "8", "4")
@@ -114,7 +114,7 @@ func TestCampaigns_Integration(t *testing.T) {
 	})
 
 	t.Run("fails creating if too many participants per session", func(t *testing.T) {
-		th.InterceptOtreeSessionConfigs()
+		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
 		data := campaignFormData("namespace6", "slug6", "config1", "100", "4")
@@ -124,7 +124,7 @@ func TestCampaigns_Integration(t *testing.T) {
 	})
 
 	t.Run("fails creating if missing slug", func(t *testing.T) {
-		th.InterceptOtreeSessionConfigs()
+		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
 		data := url.Values{}

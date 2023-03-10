@@ -27,16 +27,16 @@ func TestRunner_Integration(t *testing.T) {
 		assert.Same(t, runner, p2.runner, "participants runner should be the same")
 		// clients write PoolSize
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws1.lastWrite() == "PoolSize:2"
-		}), "participant should receive PoolSize:2")
+			return ws1.lastWrite() == "PoolSize:2/4"
+		}), "participant should receive PoolSize:2/4")
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws2.lastWrite() == "PoolSize:2"
-		}), "participant should receive PoolSize:2")
+			return ws2.lastWrite() == "PoolSize:2/4"
+		}), "participant should receive PoolSize:2/4")
 	})
 
 	t.Run("creates oTree session", func(t *testing.T) {
 		ns := "fixture_ns5_launched"
-		perSession := uint(4)
+		perSession := 4
 		defer tearDown(ns)
 
 		// the fixture data is what we expected
@@ -48,12 +48,12 @@ func TestRunner_Integration(t *testing.T) {
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession("/api/sessions/")
 		defer th.InterceptOff()
-		wsSlice := makeWSStubs(int(perSession))
+		wsSlice := makeWSStubs(perSession)
 		for _, ws := range wsSlice {
 			RunParticipant(ws, ns)
 		}
 
-		assert.True(t, retryUntil(shortDuration, func() bool {
+		assert.True(t, retryUntil(longerDuration, func() bool {
 			found, ok := wsSlice[0].hasReceivedPrefix("SessionStart:")
 			if ok {
 				url := strings.TrimPrefix(found, "SessionStart:")

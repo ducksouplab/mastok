@@ -15,12 +15,12 @@
         <div class="form-text">Used to share campaign URL, only letters and numbers</div>
       </div>
       <div class="mb-3">
-        <label for="info" class="form-label">Additional ignfo</label>
+        <label for="info" class="form-label">Additional info</label>
         <input type="text" name="info" id="info" class="form-control" maxlength="128">
       </div>
       <div class="mb-3">
-        <label for="experiment" class="form-label">Experiment*</label>
-        <select name="experiment_config" class="form-select" aria-label="Default select example" required>
+        <label for="config" class="form-label">Experiment*</label>
+        <select name="config" id="config" class="form-select" aria-label="Default select example" required>
           {{range .Experiments}}
             <option value="{{ .Id }}">{{ .Name }}</option>
           {{end}}
@@ -31,8 +31,13 @@
         <input type="number" name="per_session" id="per_session" min=1 max=32 class="form-control" required>
       </div>
       <div class="mb-3">
-        <label for="sessions_max" class="form-label">Max number of sessions*</label>
-        <input type="number" name="sessions_max" id="sessions_max" min=1 max=32 class="form-control" required>
+        <label for="max_sessions" class="form-label">Total number of sessions for the campaign*</label>
+        <input type="number" name="max_sessions" id="max_sessions" min=1 max=32 class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="concurrent_sessions" class="form-label">Number of sessions run concurrently*</label>
+        <input type="number" name="concurrent_sessions" id="concurrent_sessions" value=1 min=1 max=32 class="form-control" required>
+        <div class="form-text">Leave 1 if you don't want to run several sessions at the same time</div>
       </div>
       <button type="submit" class="btn btn-primary">Create</button>
     </form>

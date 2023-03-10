@@ -9,6 +9,7 @@
 					<th>Namespace</th>
 					<th>Per session</th>
 					<th>Max sessions</th>
+					<th>Concurrent sessions</th>
 					<th>State</th>
 					<th></th>
 				</tr>
@@ -19,7 +20,8 @@
 					<td>{{ .FormatCreatedAt }}</td>
 					<td>{{ .Namespace }}</td>
 					<td>{{ .PerSession }}</td>
-					<td>{{ .SessionsMax }}</td>
+					<td>{{ .MaxSessions }}</td>
+					<td>{{ .ConcurrentSessions }}</td>
 					<td>{{ .State }}</td>
 					<td><a href="/campaigns/supervise/{{ .Namespace }}" class="float-end">Supervise</a></td>
 				</tr>

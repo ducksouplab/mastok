@@ -31,15 +31,30 @@ func TestClient_Integration(t *testing.T) {
 		}), "participant should receive State")
 	})
 
-	t.Run("kicks participants if State is not Running", func(t *testing.T) {
-		ns := "fixture_ns3_waiting"
+	t.Run("kicks participants if State is Paused", func(t *testing.T) {
+		ns := "fixture_ns3_paused"
 		defer tearDown(ns)
 
 		ws := newWSStub()
 		p := RunParticipant(ws, ns)
 
 		// the fixture data is what we expected
-		assert.Equal(t, "Waiting", p.runner.campaign.State)
+		assert.Equal(t, "Paused", p.runner.campaign.State)
+
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			return ws.lastWrite() == "Participant:Disconnect"
+		}), "participant should receive Disconnect")
+	})
+
+	t.Run("kicks participants if State is Complete", func(t *testing.T) {
+		ns := "fixture_ns6_complete"
+		defer tearDown(ns)
+
+		ws := newWSStub()
+		p := RunParticipant(ws, ns)
+
+		// the fixture data is what we expected
+		assert.Equal(t, "Complete", p.runner.campaign.State)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			return ws.lastWrite() == "Participant:Disconnect"
@@ -104,7 +119,7 @@ func TestClient_Integration(t *testing.T) {
 		}
 		// the fixture data is what we expected
 		runner, _ := hasRunner(ns)
-		assert.Equal(t, uint(4), runner.campaign.PerSession)
+		assert.Equal(t, 4, runner.campaign.PerSession)
 		assert.Equal(t, "Running", runner.campaign.State)
 		// every participants received the new state
 		supWs.push("State:Paused")
@@ -115,18 +130,18 @@ func TestClient_Integration(t *testing.T) {
 		}
 		// participants have been disconnected
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return supWs.lastWrite() == "PoolSize:0"
-		}), "supervisor should receive PoolSize:0")
+			return supWs.lastWrite() == "PoolSize:0/4"
+		}), "supervisor should receive PoolSize:0/4")
 	})
 
 	t.Run("persists State after runner stopped", func(t *testing.T) {
-		ns := "fixture_ns4_waiting"
+		ns := "fixture_ns4_paused"
 		defer tearDown(ns)
 
 		supWs1 := newWSStub()
 		s := RunSupervisor(supWs1, ns)
 		// the fixture data is what we expected
-		assert.Equal(t, "Waiting", s.runner.campaign.State)
+		assert.Equal(t, "Paused", s.runner.campaign.State)
 
 		// supervisor changes state and quits
 		supWs1.push("State:Running")

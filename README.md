@@ -64,6 +64,10 @@ docker tag mastok ducksouplab/mastok
 docker push ducksouplab/mastok:latest
 ```
 
+## Types
+
+There are shared types in the otree package (representing oTree REST API in and outs) and in the models package (saved to DB), there share data thoses their names and format is chosen to be closer to their usage. There are conversion functions when needed.
+
 ## Credits
 
 This projects is in particular built upon [Gin](https://gin-gonic.com/), [GORM](https://gorm.io/), [esbuild](https://esbuild.github.io/) and [gorilla](https://github.com/gorilla/websocket) following this chat [example](https://github.com/gorilla/websocket/tree/master/examples/chat).

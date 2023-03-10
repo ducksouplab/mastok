@@ -1,4 +1,4 @@
-package otree
+package cache
 
 import (
 	"log"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ducksouplab/mastok/env"
+	"github.com/ducksouplab/mastok/otree"
 )
 
 const TTL = 120
@@ -28,7 +29,7 @@ type experimentCache struct {
 func init() {
 	eCache = experimentCache{sync.Mutex{}, time.Now(), nil}
 	if env.Mode != "TEST" {
-		GetExperimentCache()
+		GetSessions()
 	}
 }
 
@@ -36,14 +37,14 @@ func notExpired(t time.Time) bool {
 	return time.Since(t).Seconds() < TTL
 }
 
-func GetExperimentCache() []experiment {
+func GetSessions() []experiment {
 	// use cache
 	if eCache.list != nil && notExpired(eCache.updatedAt) {
 		return eCache.list
 	}
 	// or (re)fetch and update cache
 	list := []experiment{}
-	err := GetOTreeJSON("/api/session_configs", &list)
+	err := otree.GetOTreeJSON("/api/session_configs", &list)
 	if err != nil {
 		log.Fatal(err)
 	}

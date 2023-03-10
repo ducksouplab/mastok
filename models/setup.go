@@ -23,5 +23,5 @@ func ConnectAndMigrate() {
 		panic("failed to connect database")
 	}
 	// Migrate the schema
-	DB.AutoMigrate(&Campaign{})
+	DB.AutoMigrate(&Campaign{}, &Session{})
 }

@@ -12,14 +12,13 @@ import (
 // the currentPool holds count of participant clients
 type runner struct {
 	campaign *models.Campaign
-	poolSize uint
+	poolSize int
 	clients  map[*client]bool
 	// manage broadcasting
 	registerCh   chan *client
 	unregisterCh chan *client
 	// other incoming events
-	stateCh    chan string
-	joinPoolCh chan *client
+	stateCh chan string
 	// done
 	doneCh chan struct{}
 }
@@ -45,27 +44,20 @@ func (r *runner) stop() {
 	close(r.doneCh)
 }
 
-func (r *runner) sessionStart() (sessionCode string, participantCodes []string, err error) {
-	args := otree.SessionArgs{
-		ConfigName:      r.campaign.ExperimentConfig,
-		NumParticipants: int(r.campaign.PerSession),
-		Config: otree.NestedConfig{
-			Id: "mk:" + r.campaign.Namespace,
-		},
-	}
-	s := otree.Session{}
-	// GET code
-	if err = otree.PostOTreeJSON("/api/sessions/", args, &s); err != nil {
-		return
-	}
-	sessionCode = s.Code
-	// GET more details (participant codes) and override s
-	err = otree.GetOTreeJSON("/api/sessions/"+s.Code, &s)
+func (r *runner) stateSignal() string {
+	return "State:" + r.campaign.State
+}
 
-	for _, p := range s.Participants {
-		participantCodes = append(participantCodes, p.Code)
-	}
-	return
+func (r *runner) poolSizeSignal() string {
+	return "PoolSize:" + strconv.Itoa(r.poolSize) + "/" + strconv.Itoa(r.campaign.PerSession)
+}
+
+func (r *runner) sessionStartParticipantSignal(code string) string {
+	return "SessionStart:" + otree.ParticipantStartURL(code)
+}
+
+func (r *runner) sessionStartSupervisorSignal(code string) string {
+	return "SessionStart:" + otree.SupervisorStartURL(code)
 }
 
 func (r *runner) loop() {
@@ -74,26 +66,26 @@ func (r *runner) loop() {
 		case client := <-r.registerCh:
 			if r.campaign.State == "Running" || client.isSupervisor {
 				r.clients[client] = true
-				client.signalCh <- "State:" + r.campaign.State
+				client.signalCh <- r.stateSignal()
 
 				if !client.isSupervisor {
 					// increases pool
 					r.poolSize += 1
 					for client := range r.clients {
-						client.signalCh <- "PoolSize:" + strconv.FormatUint(uint64(r.poolSize), 10)
+						client.signalCh <- r.poolSizeSignal()
 					}
 					// starts session when pool is full
 					if r.poolSize == r.campaign.PerSession {
-						sessionCode, participantCodes, err := r.sessionStart()
+						sessionCode, participantCodes, err := models.NewSession(r.campaign)
 						if err != nil {
 							log.Println("[runner] oTree session creation failed")
 						} else {
 							participantIndex := 0
 							for client := range r.clients {
 								if client.isSupervisor {
-									client.signalCh <- "SessionStart:" + otree.SupervisorStartURL(sessionCode)
+									client.signalCh <- r.sessionStartSupervisorSignal(sessionCode)
 								} else {
-									client.signalCh <- "SessionStart:" + otree.ParticipantStartURL(participantCodes[participantIndex])
+									client.signalCh <- r.sessionStartParticipantSignal(participantCodes[participantIndex])
 									participantIndex++
 								}
 							}
@@ -114,7 +106,7 @@ func (r *runner) loop() {
 					r.poolSize -= 1
 					// tells everyone including supervisor
 					for c := range r.clients {
-						c.signalCh <- "PoolSize:" + strconv.FormatUint(uint64(r.poolSize), 10)
+						c.signalCh <- r.poolSizeSignal()
 					}
 				}
 				// actually deletes client
@@ -128,7 +120,7 @@ func (r *runner) loop() {
 			r.campaign.State = state
 			models.DB.Save(r.campaign)
 			for client := range r.clients {
-				client.signalCh <- "State:" + state
+				client.signalCh <- r.stateSignal()
 			}
 		}
 	}

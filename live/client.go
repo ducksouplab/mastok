@@ -53,8 +53,6 @@ func (c *client) readLoop() {
 			return
 		} else if kind == "State" && c.isSupervisor {
 			c.runner.stateCh <- payload
-		} else if kind == "Join" {
-			c.runner.joinPoolCh <- c
 		}
 	}
 }

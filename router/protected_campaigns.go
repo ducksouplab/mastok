@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ducksouplab/mastok/cache"
 	"github.com/ducksouplab/mastok/live"
 	"github.com/ducksouplab/mastok/models"
-	"github.com/ducksouplab/mastok/otree"
 	"github.com/gin-gonic/gin"
 )
 
@@ -35,7 +35,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 	})
 	g.GET("/campaigns/new", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "campaigns_new.tmpl", gin.H{
-			"Experiments": otree.GetExperimentCache(),
+			"Experiments": cache.GetSessions(),
 		})
 	})
 	g.GET("/campaigns/supervise/:namespace", func(c *gin.Context) {
@@ -50,7 +50,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		var campaign models.Campaign
 		if err := c.ShouldBind(&campaign); err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaigns_new.tmpl", gin.H{
-				"Experiments": otree.GetExperimentCache(),
+				"Experiments": cache.GetSessions(),
 				"Error":       err.Error(),
 			})
 			return
@@ -58,7 +58,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 
 		if err := models.DB.Create(&campaign).Error; err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaigns_new.tmpl", gin.H{
-				"Experiments": otree.GetExperimentCache(),
+				"Experiments": cache.GetSessions(),
 				"Error":       err.Error(),
 			})
 			return

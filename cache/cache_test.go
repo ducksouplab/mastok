@@ -1,4 +1,4 @@
-package otree
+package cache
 
 import (
 	"testing"
@@ -12,7 +12,7 @@ func TestCache_Unit(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 
-		eCache := GetExperimentCache()
+		eCache := GetSessions()
 
 		assert.Equal(t, "chatroulette", eCache[0].Name)
 		assert.Equal(t, "rawroulette", eCache[1].Name)

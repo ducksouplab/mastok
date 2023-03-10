@@ -9,6 +9,7 @@ RUN go mod download
 
 # go source (test_helpers not needed)
 COPY main.go .
+COPY cache ./cache
 COPY env ./env
 COPY front/build.go ./front/build.go
 COPY helpers ./helpers

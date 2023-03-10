@@ -115,7 +115,7 @@ var OTREE_GET_SESSION = resource{
 		"real_world_currency_per_point": 1.0,
 		"participation_fee":             0.0,
 		"doc":                           "",
-		"id":                            "mk:namespace",
+		"id":                            "mk:namespace:1",
 		"name":                          "chatroulette",
 		"display_name":                  "Chatroulette",
 		"app_sequence":                  []string{"chatroulette"},

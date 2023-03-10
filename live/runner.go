@@ -1,6 +1,7 @@
 package live
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
 
@@ -56,8 +57,9 @@ func (r *runner) sessionStartParticipantSignal(code string) string {
 	return "SessionStart:" + otree.ParticipantStartURL(code)
 }
 
-func (r *runner) sessionStartSupervisorSignal(code string) string {
-	return "SessionStart:" + otree.SupervisorStartURL(code)
+func (r *runner) sessionStartSupervisorSignal(session models.Session) string {
+	sessionMsh, _ := json.Marshal(session)
+	return "SessionStart:" + string(sessionMsh)
 }
 
 func (r *runner) loop() {
@@ -76,14 +78,14 @@ func (r *runner) loop() {
 					}
 					// starts session when pool is full
 					if r.poolSize == r.campaign.PerSession {
-						sessionCode, participantCodes, err := models.NewSession(r.campaign)
+						session, participantCodes, err := models.NewSession(r.campaign)
 						if err != nil {
 							log.Println("[runner] oTree session creation failed")
 						} else {
 							participantIndex := 0
 							for client := range r.clients {
 								if client.isSupervisor {
-									client.signalCh <- r.sessionStartSupervisorSignal(sessionCode)
+									client.signalCh <- r.sessionStartSupervisorSignal(session)
 								} else {
 									client.signalCh <- r.sessionStartParticipantSignal(participantCodes[participantIndex])
 									participantIndex++

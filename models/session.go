@@ -31,7 +31,7 @@ func convertFromOtree(o otree.Session) Session {
 	}
 }
 
-func NewSession(c *Campaign) (sessionCode string, participantCodes []string, err error) {
+func NewSession(c *Campaign) (session Session, participantCodes []string, err error) {
 	sessionId := "mk:" + c.Namespace + ":" + strconv.Itoa(c.StartedSessions+1)
 	args := otree.SessionArgs{
 		ConfigName:      c.Config,
@@ -45,7 +45,6 @@ func NewSession(c *Campaign) (sessionCode string, participantCodes []string, err
 	if err = otree.PostOTreeJSON("/api/sessions/", args, &o); err != nil {
 		return
 	}
-	sessionCode = o.Code
 	// GET more details (participant codes) and override s
 	err = otree.GetOTreeJSON("/api/sessions/"+o.Code, &o)
 	if err != nil {
@@ -55,8 +54,8 @@ func NewSession(c *Campaign) (sessionCode string, participantCodes []string, err
 		participantCodes = append(participantCodes, p.Code)
 	}
 	// save to campaign
-	s := convertFromOtree(o)
-	err = appendSessionToCampaign(c, s)
+	session = convertFromOtree(o)
+	err = appendSessionToCampaign(c, session)
 	if err != nil {
 		log.Println("[runner] add session to campaign failed: ", err)
 	}

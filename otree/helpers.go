@@ -14,11 +14,6 @@ func ParticipantStartURL(participantCode string) string {
 	return env.OTreeURL + "/InitializeParticipant/" + participantCode
 }
 
-// http://localhost:8180/SessionStartLinks/t1wlmb4v
-func SupervisorStartURL(sessionCode string) string {
-	return env.OTreeURL + "/SessionStartLinks/" + sessionCode
-}
-
 func GetOTreeJSON(path string, target any) error {
 	// request
 	req, _ := http.NewRequest(http.MethodGet, env.OTreeURL+path, nil)

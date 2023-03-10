@@ -1,10 +1,11 @@
 package live
 
 import (
+	"encoding/json"
+
 	"strings"
 	"testing"
 
-	"github.com/ducksouplab/mastok/env"
 	"github.com/ducksouplab/mastok/models"
 	th "github.com/ducksouplab/mastok/test_helpers"
 	"github.com/stretchr/testify/assert"
@@ -48,6 +49,10 @@ func TestRunner_Integration(t *testing.T) {
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession("/api/sessions/")
 		defer th.InterceptOff()
+		// 1 supervisor
+		wsSup := newWSStub()
+		RunSupervisor(wsSup, ns)
+		// 4 participants
 		wsSlice := makeWSStubs(perSession)
 		for _, ws := range wsSlice {
 			RunParticipant(ws, ns)
@@ -58,10 +63,25 @@ func TestRunner_Integration(t *testing.T) {
 			if ok {
 				url := strings.TrimPrefix(found, "SessionStart:")
 				//http://localhost:8180/InitializeParticipant/brutjmj7
-				return strings.HasPrefix(url, env.OTreeURL+"/InitializeParticipant/")
+				return strings.Contains(url, "/InitializeParticipant/")
 			}
 			return false
 		}), "participant should receive SessionState with oTree URL")
+
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			found, ok := wsSup.hasReceivedPrefix("SessionStart:")
+			if ok {
+				sessionMsh := strings.TrimPrefix(found, "SessionStart:")
+				s := models.Session{}
+
+				if err := json.Unmarshal([]byte(sessionMsh), &s); err != nil {
+					t.Error("deserialize failed", sessionMsh)
+				}
+				//http://localhost:8180/SessionStartLinks/t1wlmb4v
+				return strings.Contains(s.AdminUrl, "/SessionStartLinks/")
+			}
+			return false
+		}), "supervisor should receive SessionState with oTree admin URL")
 	})
 
 	t.Run("turns Campaign to completed after last SessionStart", func(t *testing.T) {

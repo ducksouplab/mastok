@@ -37,17 +37,19 @@ func TestRunner_Integration(t *testing.T) {
 
 	t.Run("creates oTree session", func(t *testing.T) {
 		ns := "fixture_ns5_launched"
+		sessionOtreeId := "mk:" + ns + ":1"
 		perSession := 4
 		defer tearDown(ns)
 
 		// the fixture data is what we expected
 		campaign, _ := models.FindCampaignByNamespace(ns)
 		assert.Equal(t, perSession, campaign.PerSession)
+		assert.Equal(t, 0, campaign.StartedSessions)
 		assert.Equal(t, "Running", campaign.State)
 
 		// fills the pool
 		th.InterceptOtreePostSession()
-		th.InterceptOtreeGetSession("/api/sessions/")
+		th.InterceptOtreeGetSession(sessionOtreeId)
 		defer th.InterceptOff()
 		// 1 supervisor
 		wsSup := newWSStub()
@@ -78,10 +80,10 @@ func TestRunner_Integration(t *testing.T) {
 					t.Error("deserialize failed", sessionMsh)
 				}
 				//http://localhost:8180/SessionStartLinks/t1wlmb4v
-				return strings.Contains(s.AdminUrl, "/SessionStartLinks/")
+				return strings.Contains(s.AdminUrl, "/SessionStartLinks/") && s.OtreeId == sessionOtreeId
 			}
 			return false
-		}), "supervisor should receive SessionState with oTree admin URL")
+		}), "supervisor should receive SessionState with oTree admin URL and oTree id like mk:namespace:#")
 	})
 
 	t.Run("turns Campaign to completed after last SessionStart", func(t *testing.T) {
@@ -97,7 +99,7 @@ func TestRunner_Integration(t *testing.T) {
 
 		// fills the pool
 		th.InterceptOtreePostSession()
-		th.InterceptOtreeGetSession("/api/sessions/")
+		th.InterceptOtreeGetSession("mk:" + ns + ":4")
 		defer th.InterceptOff()
 		wsSlice := makeWSStubs(perSession)
 		for _, ws := range wsSlice {

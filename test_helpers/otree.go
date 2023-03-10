@@ -50,6 +50,6 @@ func InterceptOtreePostSession() {
 	InterceptOtreePostJSON("/api/sessions/", OTREE_POST_SESSION)
 }
 
-func InterceptOtreeGetSession(code string) {
-	InterceptOtreeGetPrefixJSON("/api/sessions/", OTREE_GET_SESSION)
+func InterceptOtreeGetSession(otreeId string) {
+	InterceptOtreeGetPrefixJSON("/api/sessions/", fakeOtreeSession(otreeId))
 }

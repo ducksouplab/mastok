@@ -32,7 +32,7 @@ func convertFromOtree(o otree.Session) Session {
 }
 
 func NewSession(c *Campaign) (sessionCode string, participantCodes []string, err error) {
-	sessionId := "mk:" + c.Namespace + ":" + strconv.Itoa(c.SessionsStarted+1)
+	sessionId := "mk:" + c.Namespace + ":" + strconv.Itoa(c.StartedSessions+1)
 	args := otree.SessionArgs{
 		ConfigName:      c.Config,
 		NumParticipants: c.PerSession,
@@ -56,7 +56,7 @@ func NewSession(c *Campaign) (sessionCode string, participantCodes []string, err
 	}
 	// save to campaign
 	s := convertFromOtree(o)
-	err = appendSessionToCampaign(c, &s)
+	err = appendSessionToCampaign(c, s)
 	if err != nil {
 		log.Println("[runner] add session to campaign failed: ", err)
 	}

@@ -63,4 +63,38 @@ func TestRunner_Integration(t *testing.T) {
 			return false
 		}), "participant should receive SessionState with oTree URL")
 	})
+
+	t.Run("turns Campaign to completed after last SessionStart", func(t *testing.T) {
+		ns := "fixture_ns7_almost_completed"
+		perSession := 4
+		defer tearDown(ns)
+
+		// the fixture data is what we expected
+		campaign, _ := models.FindCampaignByNamespace(ns)
+		assert.Equal(t, perSession, campaign.PerSession)
+		assert.Equal(t, 3, campaign.StartedSessions)
+		assert.Equal(t, "Running", campaign.State)
+
+		// fills the pool
+		th.InterceptOtreePostSession()
+		th.InterceptOtreeGetSession("/api/sessions/")
+		defer th.InterceptOff()
+		wsSlice := makeWSStubs(perSession)
+		for _, ws := range wsSlice {
+			RunParticipant(ws, ns)
+		}
+
+		// assert inner state
+		assert.True(t, retryUntil(longerDuration, func() bool {
+			c, _ := models.FindCampaignByNamespace(ns)
+			return c.State == models.Completed && c.StartedSessions == 4
+		}), "campaign should be Completed")
+
+		// outer state: new participant can't connect
+		addWs := newWSStub()
+		RunParticipant(addWs, ns)
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			return addWs.lastWrite() == "Participant:Disconnect"
+		}), "participant should receive Disconnect")
+	})
 }

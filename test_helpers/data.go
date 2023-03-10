@@ -53,23 +53,23 @@ var FIXTURE_CAMPAIGNS []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		Namespace:          "fixture_ns6_complete",
+		Namespace:          "fixture_ns6_completed",
 		Slug:               "fixture_slug6",
 		Config:             "config",
 		PerSession:         8,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
-		State:              models.Complete,
+		State:              models.Completed,
 	},
 
 	{
-		Namespace:          "fixture_ns7_almost_complete",
+		Namespace:          "fixture_ns7_almost_completed",
 		Slug:               "fixture_slug7",
 		Config:             "config",
-		PerSession:         8,
+		PerSession:         4,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
-		SessionsStarted:    3,
+		StartedSessions:    3,
 		State:              models.Running,
 	},
 }

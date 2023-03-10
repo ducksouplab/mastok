@@ -46,15 +46,15 @@ func TestClient_Integration(t *testing.T) {
 		}), "participant should receive Disconnect")
 	})
 
-	t.Run("kicks participants if State is Complete", func(t *testing.T) {
-		ns := "fixture_ns6_complete"
+	t.Run("kicks participants if State is Completed", func(t *testing.T) {
+		ns := "fixture_ns6_completed"
 		defer tearDown(ns)
 
 		ws := newWSStub()
 		p := RunParticipant(ws, ns)
 
 		// the fixture data is what we expected
-		assert.Equal(t, "Complete", p.runner.campaign.State)
+		assert.Equal(t, "Completed", p.runner.campaign.State)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			return ws.lastWrite() == "Participant:Disconnect"

@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	Paused   string = "Paused"
-	Running  string = "Running"
-	Complete string = "Complete"
+	Paused    string = "Paused"
+	Running   string = "Running"
+	Completed string = "Completed"
 )
 
 // Caution: validations are done when binding (in handlers), before and not related to gorm
@@ -17,15 +17,16 @@ type Campaign struct {
 	Slug               string `form:"slug" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
 	Info               string `form:"info" binding:"max=128"`
 	Config             string `form:"config" binding:"required"`
+	State              string `gorm:"default:Paused"`
 	PerSession         int    `form:"per_session" binding:"required,gte=1,lte=32"`
 	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`
 	ConcurrentSessions int    `form:"concurrent_sessions" binding:"required,gte=1,lte=32" gorm:"default:1"`
-	State              string `gorm:"default:Paused"`
-	SessionsStarted    int    `gorm:"default:0"`
-	SessionCodes       string `gorm:"default:"`
+	StartedSessions    int    `gorm:"default:0"`
 	// relations
 	Sessions []Session
 }
+
+type fieldsMap map[string]interface{}
 
 func FindCampaignByNamespace(namespace string) (c *Campaign, err error) {
 	// err = DB.Preload("Sessions").First(&c, "namespace = ?", namespace).Error
@@ -33,8 +34,13 @@ func FindCampaignByNamespace(namespace string) (c *Campaign, err error) {
 	return
 }
 
-func appendSessionToCampaign(c *Campaign, s *Session) (err error) {
-	err = DB.Model(&c).Update("SessionsStarted", c.SessionsStarted+1).Association("Sessions").Append(s)
+func appendSessionToCampaign(c *Campaign, s Session) (err error) {
+	c.StartedSessions += 1
+	if c.StartedSessions == c.MaxSessions {
+		c.State = "Completed"
+	}
+	c.Sessions = append(c.Sessions, s)
+	err = DB.Save(c).Error
 	return
 }
 

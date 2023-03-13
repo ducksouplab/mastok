@@ -26,8 +26,6 @@ type Campaign struct {
 	Sessions []Session
 }
 
-type fieldsMap map[string]interface{}
-
 func FindCampaignByNamespace(namespace string) (c *Campaign, err error) {
 	// err = DB.Preload("Sessions").First(&c, "namespace = ?", namespace).Error
 	err = DB.First(&c, "namespace = ?", namespace).Error

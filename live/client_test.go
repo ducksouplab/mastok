@@ -8,7 +8,7 @@ import (
 
 func TestClient_Integration(t *testing.T) {
 	t.Run("has runner", func(t *testing.T) {
-		ns := "fixture_ns1"
+		ns := "fxt_live_ns1"
 		defer tearDown(ns)
 
 		ws := newWSStub()
@@ -19,7 +19,7 @@ func TestClient_Integration(t *testing.T) {
 	})
 
 	t.Run("receives state", func(t *testing.T) {
-		ns := "fixture_ns1"
+		ns := "fxt_live_ns1"
 		defer tearDown(ns)
 
 		ws := newWSStub()
@@ -32,7 +32,7 @@ func TestClient_Integration(t *testing.T) {
 	})
 
 	t.Run("kicks participants if State is Paused", func(t *testing.T) {
-		ns := "fixture_ns3_paused"
+		ns := "fxt_live_ns3_paused"
 		defer tearDown(ns)
 
 		ws := newWSStub()
@@ -47,7 +47,7 @@ func TestClient_Integration(t *testing.T) {
 	})
 
 	t.Run("kicks participants if State is Completed", func(t *testing.T) {
-		ns := "fixture_ns6_completed"
+		ns := "fxt_live_ns6_completed"
 		defer tearDown(ns)
 
 		ws := newWSStub()
@@ -62,7 +62,7 @@ func TestClient_Integration(t *testing.T) {
 	})
 
 	t.Run("cleans up runner when closed", func(t *testing.T) {
-		ns := "fixture_ns1"
+		ns := "fxt_live_ns1"
 		// no teardown since we are actually testing the effects of quitting (ws.Close())
 
 		// two clients
@@ -87,7 +87,7 @@ func TestClient_Integration(t *testing.T) {
 	})
 
 	t.Run("prevents participant from changing state", func(t *testing.T) {
-		ns := "fixture_ns1"
+		ns := "fxt_live_ns1"
 		defer tearDown(ns)
 
 		// 2 participants
@@ -106,7 +106,7 @@ func TestClient_Integration(t *testing.T) {
 	})
 
 	t.Run("aborts session when campaign is paused", func(t *testing.T) {
-		ns := "fixture_ns2_to_be_paused"
+		ns := "fxt_live_ns2_to_be_paused"
 		defer tearDown(ns)
 
 		// 1 supervisor
@@ -135,7 +135,7 @@ func TestClient_Integration(t *testing.T) {
 	})
 
 	t.Run("persists State after runner stopped", func(t *testing.T) {
-		ns := "fixture_ns4_paused"
+		ns := "fxt_live_ns4_paused"
 		defer tearDown(ns)
 
 		supWs1 := newWSStub()

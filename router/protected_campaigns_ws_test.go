@@ -33,7 +33,7 @@ func TestCampaignsWS(t *testing.T) {
 		defer server.Close()
 
 		// check test_helpers/data.go
-		namespace := "fixture_ns1"
+		namespace := "fxt_router_ns1"
 
 		ws := dial(t, server, "/ws/campaigns/supervise?namespace="+namespace)
 		defer ws.Close()

@@ -51,7 +51,7 @@ func TestSessions_Show(t *testing.T) {
 	th.InterceptOtreeGetJSON("/api/sessions/code2", sessionDetails2)
 	defer th.InterceptOff()
 
-	res := th.MastokGetRequestWithAuth(getTestRouter(), "/sessions")
+	res := MastokGetRequestWithAuth(getTestRouter(), "/sessions")
 
 	assert.Equal(t, 200, res.Code)
 	// presence of "session.config.id"

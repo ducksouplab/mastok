@@ -8,11 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func init() {
-	// CAUTION: currently DB is not reinitialized after each test, but at a package level
-	th.ReinitTestDB()
-}
-
 func campaignFormData(namespace, slug, config, perSession, maxSessions, concurrentSessions string) url.Values {
 	data := url.Values{}
 	data.Set("namespace", namespace)
@@ -27,7 +22,7 @@ func campaignFormData(namespace, slug, config, perSession, maxSessions, concurre
 func TestCampaigns_Templates(t *testing.T) {
 	router := getTestRouter()
 	t.Run("shows campaigns list", func(t *testing.T) {
-		res := th.MastokGetRequestWithAuth(router, "/campaigns")
+		res := MastokGetRequestWithAuth(router, "/campaigns")
 
 		assert.Contains(t, res.Body.String(), "New")
 	})
@@ -35,7 +30,7 @@ func TestCampaigns_Templates(t *testing.T) {
 	t.Run("shows campaigns new form", func(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
-		res := th.MastokGetRequestWithAuth(router, "/campaigns/new")
+		res := MastokGetRequestWithAuth(router, "/campaigns/new")
 
 		// t.Log(res.Body.String())
 		assert.Equal(t, 200, res.Code)
@@ -52,18 +47,18 @@ func TestCampaigns_Integration(t *testing.T) {
 		// fill campaign form
 		data := campaignFormData("namespace1", "slug1", "config1", "8", "4", "2")
 		// POST
-		res := th.MastokPostRequestWithAuth(router, "/campaigns", data)
+		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		// t.Log(res.Body.String())
 		assert.Equal(t, 302, res.Code)
 		// GET list
-		res = th.MastokGetRequestWithAuth(router, "/campaigns")
+		res = MastokGetRequestWithAuth(router, "/campaigns")
 		assert.Contains(t, res.Body.String(), "namespace1")
 		// campaign automatically created with state "Paused"
 		assert.Contains(t, res.Body.String(), "Paused")
 		// when there is at least one campaign, there should be a Control button
 		assert.Contains(t, res.Body.String(), "Supervise")
 		// GET supervise
-		res = th.MastokGetRequestWithAuth(router, "/campaigns/supervise/namespace1")
+		res = MastokGetRequestWithAuth(router, "/campaigns/supervise/namespace1")
 		assert.Contains(t, res.Body.String(), "Supervising")
 	})
 
@@ -74,8 +69,8 @@ func TestCampaigns_Integration(t *testing.T) {
 		data := campaignFormData("namespace2", "slug2", "config1", "8", "4", "2")
 		dataDupNamespace := campaignFormData("namespace2", "slug2bis", "config2", "8", "4", "2")
 		// POST
-		th.MastokPostRequestWithAuth(router, "/campaigns", data)
-		res := th.MastokPostRequestWithAuth(router, "/campaigns", dataDupNamespace)
+		MastokPostRequestWithAuth(router, "/campaigns", data)
+		res := MastokPostRequestWithAuth(router, "/campaigns", dataDupNamespace)
 		// t.Log(res.Body.String())
 		assert.Equal(t, 422, res.Code)
 	})
@@ -87,8 +82,8 @@ func TestCampaigns_Integration(t *testing.T) {
 		data := campaignFormData("namespace3", "slug3", "config1", "8", "4", "2")
 		dataDupNamespace := campaignFormData("namespace3bis", "slug3", "config2", "8", "4", "2")
 		// POST
-		th.MastokPostRequestWithAuth(router, "/campaigns", data)
-		res := th.MastokPostRequestWithAuth(router, "/campaigns", dataDupNamespace)
+		MastokPostRequestWithAuth(router, "/campaigns", data)
+		res := MastokPostRequestWithAuth(router, "/campaigns", dataDupNamespace)
 		// t.Log(res.Body.String())
 		assert.Equal(t, 422, res.Code)
 	})
@@ -99,7 +94,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		// fill campaign form
 		data := campaignFormData("namespace4#", "slug4", "config1", "8", "4", "2")
 		// POST
-		res := th.MastokPostRequestWithAuth(router, "/campaigns", data)
+		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		// t.Log(res.Body.String())
 		assert.Equal(t, 422, res.Code)
 	})
@@ -110,7 +105,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		// fill campaign form
 		data := campaignFormData("n", "slug5", "config1", "8", "4", "2")
 		// POST
-		res := th.MastokPostRequestWithAuth(router, "/campaigns", data)
+		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		assert.Equal(t, 422, res.Code)
 	})
 
@@ -120,7 +115,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		// fill campaign form
 		data := campaignFormData("namespace6", "slug6", "config1", "100", "4", "2")
 		// POST
-		res := th.MastokPostRequestWithAuth(router, "/campaigns", data)
+		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		assert.Equal(t, 422, res.Code)
 	})
 
@@ -135,7 +130,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		data.Set("max_sessions", "4")
 		data.Set("concurrent_sessions", "2")
 		// POST
-		res := th.MastokPostRequestWithAuth(router, "/campaigns", data)
+		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		assert.Equal(t, 422, res.Code)
 	})
 

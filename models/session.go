@@ -20,6 +20,8 @@ type Session struct {
 	AdminUrl       string
 }
 
+const OtreePrefix = "mk:"
+
 func convertFromOtree(o otree.Session) Session {
 	return Session{
 		Code:           o.Code,
@@ -31,15 +33,19 @@ func convertFromOtree(o otree.Session) Session {
 	}
 }
 
-func NewSession(c *Campaign) (session Session, participantCodes []string, err error) {
-	sessionId := "mk:" + c.Namespace + ":" + strconv.Itoa(c.StartedSessions+1)
-	args := otree.SessionArgs{
+func newSessionArgs(c *Campaign) otree.SessionArgs {
+	sessionId := OtreePrefix + c.Namespace + ":" + strconv.Itoa(c.StartedSessions+1)
+	return otree.SessionArgs{
 		ConfigName:      c.Config,
 		NumParticipants: c.PerSession,
 		Config: otree.NestedConfig{
 			Id: sessionId,
 		},
 	}
+}
+
+func CreateSession(c *Campaign) (session Session, participantCodes []string, err error) {
+	args := newSessionArgs(c)
 	o := otree.Session{}
 	// GET code
 	if err = otree.PostOTreeJSON("/api/sessions/", args, &o); err != nil {

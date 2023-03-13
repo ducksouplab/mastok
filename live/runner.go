@@ -78,7 +78,7 @@ func (r *runner) loop() {
 					}
 					// starts session when pool is full
 					if r.poolSize == r.campaign.PerSession {
-						session, participantCodes, err := models.NewSession(r.campaign)
+						session, participantCodes, err := models.CreateSession(r.campaign)
 						if err != nil {
 							log.Println("[runner] oTree session creation failed")
 						} else {

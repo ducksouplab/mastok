@@ -1,6 +1,8 @@
 package models
 
 import (
+	"os"
+
 	"github.com/ducksouplab/mastok/env"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -24,4 +26,12 @@ func ConnectAndMigrate() {
 	}
 	// Migrate the schema
 	DB.AutoMigrate(&Campaign{}, &Session{})
+}
+
+// not declared in a _test.go file to be callable from another test package
+func ReinitTestDB() {
+	if env.Mode == "TEST" {
+		os.Remove(env.ProjectRoot + "test.db")
+		ConnectAndMigrate()
+	}
 }

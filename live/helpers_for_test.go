@@ -1,20 +1,6 @@
 package live
 
-import (
-	"time"
-
-	th "github.com/ducksouplab/mastok/test_helpers"
-)
-
-const (
-	shortDuration  = 10 * time.Millisecond
-	longerDuration = 50 * time.Millisecond // for instance if there are DB writes
-)
-
-func init() {
-	// CAUTION: currently DB is not reinitialized after each test, but at a package level
-	th.ReinitTestDB()
-}
+import "time"
 
 func getRunnerStoreSize() int {
 	rs.Lock()

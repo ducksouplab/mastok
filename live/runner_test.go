@@ -35,7 +35,7 @@ func TestRunner_Integration(t *testing.T) {
 		}), "participant should receive PoolSize:2/4")
 	})
 
-	t.Run("creates oTree session", func(t *testing.T) {
+	t.Run("creates oTree session and sends relevant SessionStart to participants and supervisors", func(t *testing.T) {
 		ns := "fxt_live_ns5_launched"
 		perSession := 4
 		defer tearDown(ns)
@@ -51,8 +51,10 @@ func TestRunner_Integration(t *testing.T) {
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
 		// 1 supervisor
-		wsSup := newWSStub()
-		RunSupervisor(wsSup, ns)
+		wsSupSlice := makeWSStubs(2)
+		for _, wsSup := range wsSupSlice {
+			RunSupervisor(wsSup, ns)
+		}
 		// 4 participants
 		wsSlice := makeWSStubs(perSession)
 		for _, ws := range wsSlice {
@@ -60,17 +62,7 @@ func TestRunner_Integration(t *testing.T) {
 		}
 
 		assert.True(t, retryUntil(longerDuration, func() bool {
-			found, ok := wsSlice[0].hasReceivedPrefix("SessionStart:")
-			if ok {
-				url := strings.TrimPrefix(found, "SessionStart:")
-				//http://localhost:8180/InitializeParticipant/brutjmj7
-				return strings.Contains(url, "/InitializeParticipant/")
-			}
-			return false
-		}), "participant should receive SessionState with oTree URL")
-
-		assert.True(t, retryUntil(shortDuration, func() bool {
-			found, ok := wsSup.hasReceivedPrefix("SessionStart:")
+			found, ok := wsSupSlice[0].hasReceivedPrefix("SessionStart:")
 			if ok {
 				sessionMsh := strings.TrimPrefix(found, "SessionStart:")
 				s := models.Session{}
@@ -83,6 +75,22 @@ func TestRunner_Integration(t *testing.T) {
 			}
 			return false
 		}), "supervisor should receive SessionState with oTree admin URL and oTree id like mk:namespace:#")
+
+		urlsMap := map[string]bool{}
+		for _, ws := range wsSlice {
+			assert.True(t, retryUntil(shortDuration, func() bool {
+				found, ok := ws.hasReceivedPrefix("SessionStart:")
+				if ok {
+					url := strings.TrimPrefix(found, "SessionStart:")
+					t.Logf(">>>>>>>>>>>> url %v", url)
+					urlsMap[url] = true
+					//http://localhost:8180/InitializeParticipant/brutjmj7
+					return strings.Contains(url, "/InitializeParticipant/")
+				}
+				return false
+			}), "participant should receive SessionState with oTree starting link")
+		}
+		assert.Equal(t, len(wsSlice), len(urlsMap), "participants should received different oTree starting links")
 	})
 
 	t.Run("turns Campaign to completed after last SessionStart", func(t *testing.T) {

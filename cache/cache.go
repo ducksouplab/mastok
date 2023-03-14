@@ -27,6 +27,10 @@ type experimentCache struct {
 }
 
 func init() {
+	if env.AsCommandLine {
+		// don't load cache in command line mode
+		return
+	}
 	eCache = experimentCache{sync.Mutex{}, time.Now(), nil}
 	if env.Mode != "TEST" {
 		GetSessions()

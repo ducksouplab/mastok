@@ -70,26 +70,25 @@ func (r *runner) loop() {
 				r.clients[client] = true
 				client.signalCh <- r.stateSignal()
 
-				if !client.isSupervisor {
-					// increases pool
+				if !client.isSupervisor { // increases pool
 					r.poolSize += 1
-					for client := range r.clients {
-						client.signalCh <- r.poolSizeSignal()
-					}
-					// starts session when pool is full
-					if r.poolSize == r.campaign.PerSession {
-						session, participantCodes, err := models.CreateSession(r.campaign)
-						if err != nil {
-							log.Println("[runner] oTree session creation failed")
-						} else {
-							participantIndex := 0
-							for client := range r.clients {
-								if client.isSupervisor {
-									client.signalCh <- r.sessionStartSupervisorSignal(session)
-								} else {
-									client.signalCh <- r.sessionStartParticipantSignal(participantCodes[participantIndex])
-									participantIndex++
-								}
+				}
+				for client := range r.clients {
+					client.signalCh <- r.poolSizeSignal()
+				}
+				// starts session when pool is full
+				if r.poolSize == r.campaign.PerSession {
+					session, participantCodes, err := models.CreateSession(r.campaign)
+					if err != nil {
+						log.Println("[runner] oTree session creation failed")
+					} else {
+						participantIndex := 0
+						for client := range r.clients {
+							if client.isSupervisor {
+								client.signalCh <- r.sessionStartSupervisorSignal(session)
+							} else {
+								client.signalCh <- r.sessionStartParticipantSignal(participantCodes[participantIndex])
+								participantIndex++
 							}
 						}
 					}

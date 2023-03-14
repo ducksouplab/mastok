@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/ducksouplab/mastok/env"
 	"gorm.io/gorm"
 )
 
@@ -27,8 +28,12 @@ type Campaign struct {
 }
 
 func FindCampaignByNamespace(namespace string) (c *Campaign, err error) {
-	// err = DB.Preload("Sessions").First(&c, "namespace = ?", namespace).Error
 	err = DB.First(&c, "namespace = ?", namespace).Error
+	return
+}
+
+func FindCampaignByNamespaceWithSessions(namespace string) (c *Campaign, err error) {
+	err = DB.Preload("Sessions").First(&c, "namespace = ?", namespace).Error
 	return
 }
 
@@ -44,4 +49,8 @@ func appendSessionToCampaign(c *Campaign, s Session) (err error) {
 
 func (c *Campaign) FormatCreatedAt() string {
 	return c.CreatedAt.Format("2006-01-02 15:04:05")
+}
+
+func (c *Campaign) ShareURL() string {
+	return env.Origin + "/join/" + c.Slug
 }

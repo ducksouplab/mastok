@@ -1,6 +1,7 @@
 package router
 
 import (
+	"html/template"
 	"net/http"
 	"path/filepath"
 
@@ -21,7 +22,14 @@ func createTemplateRenderer() multitemplate.Renderer {
 	}
 
 	for _, include := range includes {
-		renderer.AddFromFiles(filepath.Base(include), env.ProjectRoot+"templates/layout.tmpl", include)
+		renderer.AddFromFilesFuncs(
+			filepath.Base(include),
+			template.FuncMap{
+				"webPrefix": func() string { return env.WebPrefix },
+			},
+			env.ProjectRoot+"templates/layout.tmpl",
+			include,
+		)
 	}
 
 	// first parameter is the exact name to be reused inside handler

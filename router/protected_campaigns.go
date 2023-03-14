@@ -39,8 +39,15 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		})
 	})
 	g.GET("/campaigns/supervise/:namespace", func(c *gin.Context) {
+		namespace := c.Param("namespace")
+		campaign, err := models.FindCampaignByNamespaceWithSessions(namespace)
+		if err != nil {
+			log.Printf("[router] find campaign failed for namespace %v: %v", namespace, err)
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
 		c.HTML(http.StatusOK, "campaigns_supervise.tmpl", gin.H{
-			"Namespace": c.Param("namespace"),
+			"Campaign": campaign,
 		})
 	})
 	g.GET("/ws/campaigns/supervise", func(c *gin.Context) {

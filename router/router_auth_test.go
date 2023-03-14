@@ -14,7 +14,7 @@ func basicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func TestBasicAuth_Integration(t *testing.T) {
+func TestBasicAuth_Unit(t *testing.T) {
 	router := getTestRouter()
 	t.Run("rejects guest user", func(t *testing.T) {
 		res := httptest.NewRecorder()

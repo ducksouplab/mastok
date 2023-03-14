@@ -82,7 +82,6 @@ func TestRunner_Integration(t *testing.T) {
 				found, ok := ws.hasReceivedPrefix("SessionStart:")
 				if ok {
 					url := strings.TrimPrefix(found, "SessionStart:")
-					t.Logf(">>>>>>>>>>>> url %v", url)
 					urlsMap[url] = true
 					//http://localhost:8180/InitializeParticipant/brutjmj7
 					return strings.Contains(url, "/InitializeParticipant/")

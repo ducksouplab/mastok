@@ -38,6 +38,23 @@ func TestCampaigns_Templates(t *testing.T) {
 	})
 }
 
+func TestCampaignsSupervise_Unit(t *testing.T) {
+	router := getTestRouter()
+
+	t.Run("does not find inexistent campaign", func(t *testing.T) {
+		ns := "inexistent_ns"
+		res := MastokGetRequestWithAuth(router, "/campaigns/supervise/"+ns)
+		assert.Equal(t, 404, res.Result().StatusCode)
+	})
+
+	t.Run("shows supervise page with campaign info", func(t *testing.T) {
+		ns := "fxt_router_ns1"
+		res := MastokGetRequestWithAuth(router, "/campaigns/supervise/"+ns)
+		assert.Contains(t, res.Body.String(), ns)
+		assert.Contains(t, res.Body.String(), "/join/fxt_router_ns1_slug")
+	})
+}
+
 func TestCampaigns_Integration(t *testing.T) {
 	router := getTestRouter()
 

@@ -1,7 +1,94 @@
+{{define "navcontents"}}
+<div class="navbar-text">
+	campaign {{ .Campaign.Namespace }}: <span class="state" id="state">...</span>
+</div>
+<input id="change-state" type="button" class="btn btn-outline-primary btn-sm" value="..." />
+{{end}}
+
 {{define "content"}}
 <div class="row">
+	<div class="col-4">
+		<table class="table table-sm">
+			<thead>
+			<tbody>
+				<tr>
+					<th scope="row">Namespace</th>
+					<td>{{ .Campaign.Namespace }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Per session</th>
+					<td>{{ .Campaign.PerSession }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Max sessions</th>
+					<td>{{ .Campaign.MaxSessions }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Started sessions</th>
+					<td>{{ .Campaign.StartedSessions }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Concurrent sessions</th>
+					<td>{{ .Campaign.ConcurrentSessions }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 	<div class="col">
-		<h1>Supervising campaign {{ .Campaign.Namespace }}</h1>
+		<div class="row mb-3">
+			<div class="col">
+				
+			</div>
+		</div>
+		<div class="row mb-3">
+			<div class="col card">
+				<div class="card-body">
+					<h5 class="card-title">Current pool</h5>
+					<div id="show-new" class="alert alert-success" role="alert" style="display: none">
+						New session started (page refreshing in 3 seconds)
+					</div>
+					<dl>
+						<div id="show-size">
+							<dt>Size</dt>
+							<dd><span id="pool-size">...</span></dd>
+						</div>
+						<dt>Share URL</dt>
+						<dd><code>{{ .Campaign.ShareURL }}</code></dd>
+						<dt>Additional info</dt>
+						<dd>{{ .Campaign.Info }}</dd>
+					</dl>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col card">
+				<div class="card-body">
+					<h5 class="card-title">Previous sessions started</h5>
+					{{if not .Campaign.Sessions}}
+						None
+					{{else}}
+						<table class="table">
+							<thead>
+								<tr>
+									<th>oTree Id</th>
+									<th>Created at</th>
+									<th>Admin URL</th>
+								</tr>
+							</thead>
+							<tbody>
+								{{range .Campaign.Sessions}}
+								<tr>
+									<td>{{ .OtreeId }}</td>
+									<td>{{ .OtreeCreatedAt }}</td>
+									<td><a href="{{ .AdminUrl }}" target="_blan">{{ .Code }}</a></td>
+								</tr>
+								{{end}}
+							</tbody>
+						</table>
+					{{end}}
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 

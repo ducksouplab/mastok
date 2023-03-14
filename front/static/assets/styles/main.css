@@ -1,0 +1,10 @@
+.navbar a {
+  font-size: 1.2em;
+  text-decoration: none;
+  padding: 0 10px;
+}
+
+.navbar .state {
+  text-transform: lowercase;
+  font-variant: small-caps;
+}

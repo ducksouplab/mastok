@@ -13,14 +13,16 @@ import (
 func main() {
 	if env.Mode == "DEV" || env.Mode == "BUILD_FRONT" {
 		front.Build()
+	} else if env.Mode == "RESET_DEV" {
+		models.ReinitDevDB()
 	}
-	// command line mode...
-	if env.Mode == "BUILD_FRONT" {
+	// command line mode, app stops
+	if env.AsCommandLine {
 		return
 	}
-	// ...or server mode, starts with DB
+	// main path
 	models.ConnectAndMigrate()
-	// then HTTP server
+	// HTTP server
 	r := router.NewRouter(gin.Default())
 	log.Println("[server] websocket origin allowed:", env.Origin)
 	log.Println("[server] listening port:", env.Port)

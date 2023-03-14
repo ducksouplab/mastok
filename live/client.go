@@ -94,6 +94,6 @@ func RunSupervisor(ws wsConn, namespace string) *client {
 	return runClient(true, ws, namespace)
 }
 
-func RunParticipant(ws wsConn, namespace string) *client {
-	return runClient(false, ws, namespace)
+func RunParticipant(ws wsConn, slug string) *client {
+	return runClient(false, ws, slug)
 }

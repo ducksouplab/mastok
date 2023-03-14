@@ -18,7 +18,7 @@ func TestClient_Integration(t *testing.T) {
 		assert.Equal(t, true, ok)
 	})
 
-	t.Run("receives state", func(t *testing.T) {
+	t.Run("receives State", func(t *testing.T) {
 		ns := "fxt_live_ns1"
 		defer tearDown(ns)
 
@@ -29,6 +29,32 @@ func TestClient_Integration(t *testing.T) {
 			_, ok := ws.hasReceivedPrefix("State:")
 			return ok
 		}), "participant should receive State")
+	})
+
+	t.Run("participant receives PoolSize", func(t *testing.T) {
+		ns := "fxt_live_ns1"
+		defer tearDown(ns)
+
+		ws := newWSStub()
+		RunParticipant(ws, ns)
+
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			_, ok := ws.hasReceivedPrefix("PoolSize:")
+			return ok
+		}), "participant should receive PoolSize")
+	})
+
+	t.Run("supervisor receives PoolSize", func(t *testing.T) {
+		ns := "fxt_live_ns1"
+		defer tearDown(ns)
+
+		ws := newWSStub()
+		RunSupervisor(ws, ns)
+
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			_, ok := ws.hasReceivedPrefix("PoolSize:")
+			return ok
+		}), "supervisor should receive PoolSize")
 	})
 
 	t.Run("kicks participants if State is Paused", func(t *testing.T) {

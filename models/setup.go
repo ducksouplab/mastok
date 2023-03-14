@@ -1,6 +1,7 @@
 package models
 
 import (
+	"log"
 	"os"
 
 	"github.com/ducksouplab/mastok/env"
@@ -33,5 +34,45 @@ func ReinitTestDB() {
 	if env.Mode == "TEST" {
 		os.Remove(env.ProjectRoot + "test.db")
 		ConnectAndMigrate()
+	}
+}
+
+func ReinitDevDB() {
+	if env.Mode == "RESET_DEV" {
+		os.Remove(env.ProjectRoot + "local.db")
+		ConnectAndMigrate()
+		var campaign = Campaign{
+			Namespace:          "dev_campaign_1",
+			Slug:               "dev_campaign_1_slug",
+			Config:             "chatroulette",
+			PerSession:         4,
+			MaxSessions:        2,
+			ConcurrentSessions: 1,
+			State:              Running,
+		}
+		var session = Session{
+			Code:           "nztdjo76",
+			OtreeId:        "mk:dev_campaign_1:1",
+			OtreeCreatedAt: "2023-02-16 09:38:08",
+			Size:           4,
+			AdminUrl:       "http://localhost:8180/SessionStartLinks/nztdjo76",
+		}
+		if err := DB.Create(&campaign).Error; err != nil {
+			log.Fatal(err)
+		}
+		appendSessionToCampaign(&campaign, session)
+
+		var otherCampaign = Campaign{
+			Namespace:          "dev_campaign_2",
+			Slug:               "dev_campaign_2_slug",
+			Config:             "chatroulette",
+			PerSession:         8,
+			MaxSessions:        4,
+			ConcurrentSessions: 2,
+			State:              Running,
+		}
+		if err := DB.Create(&otherCampaign).Error; err != nil {
+			log.Fatal(err)
+		}
 	}
 }

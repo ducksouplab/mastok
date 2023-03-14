@@ -27,7 +27,7 @@ func dial(t *testing.T, server *httptest.Server, path string) *websocket.Conn {
 	return ws
 }
 
-func TestCampaignsWS(t *testing.T) {
+func TestCampaignsSuperviseWS_Integration(t *testing.T) {
 	t.Run("websocket gives info about an existing campaign", func(t *testing.T) {
 		server := httptest.NewServer(getTestRouter())
 		defer server.Close()

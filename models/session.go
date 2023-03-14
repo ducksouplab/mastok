@@ -15,7 +15,6 @@ type Session struct {
 	Code           string
 	OtreeId        string
 	OtreeCreatedAt string
-	Config         string
 	Size           int
 	AdminUrl       string
 }
@@ -26,10 +25,8 @@ func convertFromOtree(o otree.Session) Session {
 	return Session{
 		Code:           o.Code,
 		OtreeId:        o.Config.Id,
-		OtreeCreatedAt: o.FormatCreatedAt(),
-		Config:         o.ConfigName,
-		Size:           o.NumParticipants,
-		AdminUrl:       o.AdminUrl,
+		OtreeCreatedAt: o.FormatCreatedAt(), Size: o.NumParticipants,
+		AdminUrl: o.AdminUrl,
 	}
 }
 

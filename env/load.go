@@ -8,6 +8,7 @@ import (
 )
 
 // own variables
+var AsCommandLine bool
 var BasicLogin, BasicPassword, Mode, Origin, Port, ProjectRoot, WebPrefix string
 var AllowedOrigins []string
 
@@ -21,6 +22,9 @@ func init() {
 		if err := godotenv.Load(".env"); err != nil {
 			log.Fatal(err)
 		}
+	}
+	if Mode == "BUILD_FRONT" || Mode == "RESET_DEV" {
+		AsCommandLine = true
 	}
 	Port = GetEnvOr("MASTOK_PORT", "8190")
 	Origin = GetEnvOr("MASTOK_ORIGIN", "http://localhost:8190")

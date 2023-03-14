@@ -2,24 +2,23 @@ package live
 
 import (
 	"errors"
-	"strings"
 )
 
 type wsStub struct {
 	doneCh    chan struct{}
-	toRead    chan string
-	writtenTo chan string
+	toRead    chan Message
+	writtenTo chan Message
 	// internal
-	writes []string
+	writes []Message
 }
 
 // API for the supervisor and participant clients
 func (ws *wsStub) ReadJSON(m any) error {
 	for {
 		select {
-		case read := <-ws.toRead:
-			p := m.(*string)
-			*p = read
+		case msg := <-ws.toRead:
+			pointer := m.(*Message)
+			*pointer = msg
 			return nil
 		case <-ws.doneCh:
 			return errors.New("ws stub closed")
@@ -28,10 +27,9 @@ func (ws *wsStub) ReadJSON(m any) error {
 }
 
 func (ws *wsStub) WriteJSON(m any) error {
-	ms := m.(string)
 	for {
 		select {
-		case ws.writtenTo <- ms:
+		case ws.writtenTo <- m.(Message):
 			return nil
 		case <-ws.doneCh:
 			return errors.New("ws stub closed")
@@ -48,34 +46,36 @@ func (ws *wsStub) Close() error {
 
 // to the other side of the websocket, we may push (for future ReadJSON)
 // or pull (what has been WriteJSON)
-func (ws *wsStub) push(m string) {
+func (ws *wsStub) push(m Message) {
 	ws.toRead <- m
 }
 
-func (ws *wsStub) lastWrite() string {
-	if length := len(ws.writes); length == 0 {
-		return ""
-	} else {
-		return ws.writes[length-1]
+func (ws *wsStub) isLastWriteLike(m Message) bool {
+	length := len(ws.writes)
+	if length == 0 {
+		return false
 	}
+	last := ws.writes[length-1]
+	return last.Kind == m.Kind && last.Payload == m.Payload
+
 }
 
-func (ws *wsStub) hasReceived(test string) bool {
+func (ws *wsStub) hasReceived(test Message) bool {
 	for _, write := range ws.writes {
-		if write == test {
+		if write.Kind == test.Kind && write.Payload == test.Payload {
 			return true
 		}
 	}
 	return false
 }
 
-func (ws *wsStub) hasReceivedPrefix(prefix string) (found string, ok bool) {
+func (ws *wsStub) hasReceivedKind(kind string) (found Message, ok bool) {
 	for _, write := range ws.writes {
-		if strings.HasPrefix(write, prefix) {
+		if write.Kind == kind {
 			return write, true
 		}
 	}
-	return "", false
+	return Message{}, false
 }
 
 func (ws *wsStub) loop() {
@@ -87,8 +87,8 @@ func (ws *wsStub) loop() {
 func newWSStub() *wsStub {
 	ws := &wsStub{
 		doneCh:    make(chan struct{}),
-		toRead:    make(chan string, 256),
-		writtenTo: make(chan string, 256),
+		toRead:    make(chan Message, 256),
+		writtenTo: make(chan Message, 256),
 	}
 	go ws.loop()
 	return ws

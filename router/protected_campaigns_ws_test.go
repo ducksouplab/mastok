@@ -8,6 +8,7 @@ import (
 
 	"github.com/ducksouplab/mastok/env"
 	"github.com/ducksouplab/mastok/helpers"
+	"github.com/ducksouplab/mastok/live"
 	"github.com/gorilla/websocket"
 )
 
@@ -38,11 +39,11 @@ func TestCampaignsSuperviseWS_Integration(t *testing.T) {
 		ws := dial(t, server, "/ws/campaigns/supervise?namespace="+namespace)
 		defer ws.Close()
 
-		if err := ws.WriteJSON("State:Running"); err != nil {
+		if err := ws.WriteJSON(live.Message{Kind: "State", Payload: "Running"}); err != nil {
 			t.Fatalf("%v", err)
 		}
 
-		var reply string
+		var reply live.Message
 		err := ws.ReadJSON(&reply)
 		if err != nil {
 			t.Fatalf("%v", err)

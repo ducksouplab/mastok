@@ -2,10 +2,14 @@ package live
 
 import (
 	"log"
-	"strings"
 
 	"github.com/ducksouplab/mastok/models"
 )
+
+type Message struct {
+	Kind    string `json:"kind"`
+	Payload any    `json:"payload"`
+}
 
 type wsConn interface {
 	ReadJSON(any) error
@@ -19,24 +23,17 @@ type client struct {
 	ws           wsConn
 	runner       *runner
 	// updates from runner
-	signalCh chan string
+	signalCh chan Message
 }
 
-func (c *client) write(signal string) {
+func (c *client) write(signal Message) {
 	if err := c.ws.WriteJSON(signal); err != nil {
 		log.Println(err)
 	}
 }
 
-func (c *client) read() (kind, payload string, err error) {
-	var m string
+func (c *client) read() (m Message, err error) {
 	err = c.ws.ReadJSON(&m)
-	if err != nil {
-		return
-	}
-	slice := strings.Split(m, ":")
-	kind = slice[0]
-	payload = slice[1]
 	return
 }
 
@@ -48,13 +45,13 @@ func (c *client) readLoop() {
 	defer c.stop()
 
 	for {
-		kind, payload, err := c.read()
+		m, err := c.read()
 
 		if err != nil {
 			log.Println("[ws] ReadJSON error:", err)
 			return
-		} else if kind == "State" && c.isSupervisor {
-			c.runner.stateCh <- payload
+		} else if m.Kind == "State" && c.isSupervisor {
+			c.runner.stateCh <- m.Payload.(string)
 		}
 	}
 }
@@ -65,7 +62,7 @@ func (c *client) writeLoop() {
 	defer c.stop()
 	for signal := range c.signalCh {
 		c.write(signal)
-		if signal == "Participant:Disconnect" {
+		if signal.Kind == "Participant" && signal.Payload == "Disconnect" {
 			return
 		}
 	}
@@ -92,7 +89,7 @@ func runClient(isSupervisor bool, ws wsConn, identifier string) *client {
 		isSupervisor: isSupervisor,
 		ws:           ws,
 		runner:       r,
-		signalCh:     make(chan string, 256),
+		signalCh:     make(chan Message, 256),
 	}
 	log.Println("[client] running for: " + identifier)
 

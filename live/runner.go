@@ -1,7 +1,6 @@
 package live
 
 import (
-	"encoding/json"
 	"log"
 	"strconv"
 
@@ -45,30 +44,44 @@ func (r *runner) stop() {
 	close(r.doneCh)
 }
 
-func (r *runner) stateSignal(c *client) string {
+func (r *runner) stateSignal(c *client) Message {
 	state := r.campaign.State
 	// hide internals to participants
 	if state != "Running" && !c.isSupervisor {
 		state = "Unavailable"
 	}
-	return "State:" + state
+	return Message{
+		Kind:    "State",
+		Payload: state,
+	}
 }
 
-func (r *runner) poolSizeSignal() string {
-	return "PoolSize:" + strconv.Itoa(r.poolSize) + "/" + strconv.Itoa(r.campaign.PerSession)
+func (r *runner) poolSizeSignal() Message {
+	return Message{
+		Kind:    "PoolSize",
+		Payload: strconv.Itoa(r.poolSize) + "/" + strconv.Itoa(r.campaign.PerSession),
+	}
 }
 
-func (r *runner) sessionStartParticipantSignal(code string) string {
-	return "SessionStart:" + otree.ParticipantStartURL(code)
+func (r *runner) sessionStartParticipantSignal(code string) Message {
+	return Message{
+		Kind:    "SessionStart",
+		Payload: otree.ParticipantStartURL(code),
+	}
 }
 
-func (r *runner) sessionStartSupervisorSignal(session models.Session) string {
-	sessionMsh, _ := json.Marshal(session)
-	return "SessionStart:" + string(sessionMsh)
+func (r *runner) sessionStartSupervisorSignal(session models.Session) Message {
+	return Message{
+		Kind:    "SessionStart",
+		Payload: session,
+	}
 }
 
-func participantDisconnectSignal() string {
-	return "Participant:Disconnect"
+func participantDisconnectSignal() Message {
+	return Message{
+		Kind:    "Participant",
+		Payload: "Disconnect",
+	}
 }
 
 func (r *runner) loop() {
@@ -139,7 +152,7 @@ func (r *runner) loop() {
 			for c := range r.clients {
 				newSignalState := r.stateSignal(c)
 				c.signalCh <- newSignalState
-				if newSignalState == "State:Unavailable" {
+				if newSignalState.Payload == "Unavailable" {
 					c.signalCh <- participantDisconnectSignal()
 				}
 			}

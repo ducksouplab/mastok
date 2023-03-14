@@ -1,8 +1,6 @@
 package live
 
 import (
-	"encoding/json"
-
 	"strings"
 	"testing"
 
@@ -29,10 +27,10 @@ func TestRunner_Integration(t *testing.T) {
 		assert.Same(t, runner, p2.runner, "participants runner should be the same")
 		// clients write PoolSize
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws1.lastWrite() == "PoolSize:2/4"
+			return ws1.isLastWriteLike(Message{"PoolSize", "2/4"})
 		}), "participant should receive PoolSize:2/4")
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws2.lastWrite() == "PoolSize:2/4"
+			return ws2.isLastWriteLike(Message{"PoolSize", "2/4"})
 		}), "participant should receive PoolSize:2/4")
 	})
 
@@ -90,16 +88,11 @@ func TestRunner_Integration(t *testing.T) {
 		}
 
 		assert.True(t, retryUntil(longerDuration, func() bool {
-			found, ok := wsSupSlice[0].hasReceivedPrefix("SessionStart:")
+			found, ok := wsSupSlice[0].hasReceivedKind("SessionStart")
 			if ok {
-				sessionMsh := strings.TrimPrefix(found, "SessionStart:")
-				s := models.Session{}
-
-				if err := json.Unmarshal([]byte(sessionMsh), &s); err != nil {
-					t.Error("deserialize failed", sessionMsh)
-				}
+				session := found.Payload.(models.Session)
 				//http://localhost:8180/SessionStartLinks/t1wlmb4v
-				return strings.Contains(s.AdminUrl, "/SessionStartLinks/")
+				return strings.Contains(session.AdminUrl, "/SessionStartLinks/")
 			}
 			return false
 		}), "supervisor should receive SessionState with oTree admin URL and oTree id like mk:namespace:#")
@@ -107,9 +100,9 @@ func TestRunner_Integration(t *testing.T) {
 		urlsMap := map[string]bool{}
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(shortDuration, func() bool {
-				found, ok := ws.hasReceivedPrefix("SessionStart:")
+				found, ok := ws.hasReceivedKind("SessionStart")
 				if ok {
-					url := strings.TrimPrefix(found, "SessionStart:")
+					url := found.Payload.(string)
 					urlsMap[url] = true
 					//http://localhost:8180/InitializeParticipant/brutjmj7
 					return strings.Contains(url, "/InitializeParticipant/")
@@ -151,7 +144,7 @@ func TestRunner_Integration(t *testing.T) {
 		addWs := newWSStub()
 		RunParticipant(addWs, slug)
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return addWs.lastWrite() == "Participant:Disconnect"
+			return addWs.isLastWriteLike(Message{"Participant", "Disconnect"})
 		}), "participant should receive Disconnect")
 	})
 }

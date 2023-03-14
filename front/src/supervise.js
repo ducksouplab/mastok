@@ -2,17 +2,9 @@ const state = {
   hasParticipants: false
 };
 
-const parseMessage = (data) => {
+const looseJSONParse = (str) => {
   try {
-    const msg = JSON.parse(data);
-    const kind = msg.split(":")[0];
-    let payloadStr = msg.replace(kind + ":", "");
-    console.log(kind, payloadStr)
-    if(!payloadStr.startsWith("{")) {
-      payloadStr = '"' + payloadStr + '"';
-    }
-    const payload = JSON.parse(payloadStr);
-    return [kind, payload];
+    return JSON.parse(str);
   } catch (error) {
     console.error(error);
   }
@@ -50,7 +42,7 @@ const start = function (namespace) {
   };
 
   ws.onmessage = (event) => {
-    const [kind, payload] = parseMessage(event.data);
+    const { kind, payload } = looseJSONParse(event.data)
     if(kind === 'State') {
       document.getElementById("state").innerHTML = payload;
       if(payload === "Paused") {

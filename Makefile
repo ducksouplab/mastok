@@ -1,6 +1,6 @@
 dev:
 	@go build && MASTOK_MODE=DEV ./mastok
-resetdev:
+newdev:
 	@go build && MASTOK_MODE=RESET_DEV ./mastok && MASTOK_MODE=DEV ./mastok
 buildfront:
 	@go build && MASTOK_MODE=BUILD_FRONT ./mastok
@@ -14,3 +14,7 @@ testv:
 	@clear && MASTOK_MODE=TEST MASTOK_PROJECT_ROOT=`pwd` GIN_MODE=release go test -p 1 -v ./...
 testj:
 	@clear && MASTOK_MODE=TEST MASTOK_PROJECT_ROOT=`pwd` GIN_MODE=release go test -p 1 -json ./...
+dockerbuild:
+	@docker build -f docker/Dockerfile.build -t mastok:latest . && docker tag mastok ducksouplab/mastok
+dockerpush:
+	@docker push ducksouplab/mastok:latest

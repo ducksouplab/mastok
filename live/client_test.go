@@ -27,7 +27,7 @@ func TestClient_Integration(t *testing.T) {
 		RunParticipant(ws, slug)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedPrefix("State:")
+			_, ok := ws.hasReceivedKind("State")
 			return ok
 		}), "participant should receive State")
 	})
@@ -41,7 +41,7 @@ func TestClient_Integration(t *testing.T) {
 		RunParticipant(ws, slug)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedPrefix("PoolSize:")
+			_, ok := ws.hasReceivedKind("PoolSize")
 			return ok
 		}), "participant should receive PoolSize")
 	})
@@ -54,7 +54,7 @@ func TestClient_Integration(t *testing.T) {
 		RunSupervisor(ws, ns)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedPrefix("PoolSize:")
+			_, ok := ws.hasReceivedKind("PoolSize")
 			return ok
 		}), "supervisor should receive PoolSize")
 	})
@@ -71,11 +71,11 @@ func TestClient_Integration(t *testing.T) {
 		assert.Equal(t, "Paused", p.runner.campaign.State)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			ok := ws.hasReceived("State:Unavailable")
+			ok := ws.hasReceived(Message{"State", "Unavailable"})
 			return ok
 		}), "participant should receive State:Unavailable")
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws.lastWrite() == "Participant:Disconnect"
+			return ws.isLastWriteLike(Message{"Participant", "Disconnect"})
 		}), "participant should receive Disconnect")
 	})
 
@@ -91,11 +91,11 @@ func TestClient_Integration(t *testing.T) {
 		assert.Equal(t, "Completed", p.runner.campaign.State)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			ok := ws.hasReceived("State:Unavailable")
+			ok := ws.hasReceived(Message{"State", "Unavailable"})
 			return ok
 		}), "participant should receive State:Unavailable")
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws.lastWrite() == "Participant:Disconnect"
+			return ws.isLastWriteLike(Message{"Participant", "Disconnect"})
 		}), "participant should receive Disconnect")
 	})
 
@@ -109,12 +109,12 @@ func TestClient_Integration(t *testing.T) {
 		for _, ws := range wsSlice {
 			RunParticipant(ws, slug)
 		}
-		wsSlice[0].push("State:Paused")
+		wsSlice[0].push(Message{"State", "Paused"})
 
 		// no one should have received the State update
 		for _, ws := range wsSlice {
 			assert.False(t, retryUntil(shortDuration, func() bool {
-				return ws.hasReceived("State:Paused")
+				return ws.hasReceived(Message{"State", "Paused"})
 			}), "participant should not receive State:Paused")
 		}
 	})
@@ -137,17 +137,16 @@ func TestClient_Integration(t *testing.T) {
 		assert.Equal(t, 4, runner.campaign.PerSession)
 		assert.Equal(t, "Running", runner.campaign.State)
 		// every participants received the new state
-		supWs.push("State:Paused")
+		supWs.push(Message{"State", "Paused"})
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longerDuration, func() bool {
-				return ws.hasReceived("State:Unavailable")
+				return ws.hasReceived(Message{"State", "Unavailable"})
 			}), "participant should receive State:Unavailable")
 		}
 		// participants have been disconnected
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			t.Log(">>>>")
-			t.Log(supWs.writes)
-			return supWs.lastWrite() == "PoolSize:0/4"
+
+			return supWs.isLastWriteLike(Message{"PoolSize", "0/4"})
 		}), "supervisor should receive PoolSize:0/4")
 	})
 
@@ -161,7 +160,7 @@ func TestClient_Integration(t *testing.T) {
 		assert.Equal(t, "Paused", s.runner.campaign.State)
 
 		// supervisor changes state and quits
-		supWs1.push("State:Running")
+		supWs1.push(Message{"State", "Running"})
 		supWs1.Close()
 		<-s.runner.isDone()
 
@@ -169,7 +168,7 @@ func TestClient_Integration(t *testing.T) {
 		supWs2 := newWSStub()
 		RunSupervisor(supWs2, ns)
 		assert.True(t, retryUntil(longerDuration, func() bool {
-			return supWs2.hasReceived("State:Running")
+			return supWs2.hasReceived(Message{"State", "Running"})
 		}), "State should be persisted")
 	})
 }

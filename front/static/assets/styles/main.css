@@ -14,6 +14,7 @@
 }
 
 input#share-url {
+  width: 100%;
   color: #d63384;
   font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
   padding: 0;

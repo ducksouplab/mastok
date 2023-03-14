@@ -13,13 +13,14 @@ const (
 	Completed string = "Completed"
 )
 
-// Caution: validations are done when binding (in handlers), before and not related to gorm
+// Caution: validations are done when binding (in routes), before and not related to gorm
 type Campaign struct {
 	gorm.Model
 	Namespace          string `form:"namespace" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
 	Slug               string `form:"slug" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
 	Info               string `form:"info" binding:"max=128"`
 	Config             string `form:"config" binding:"required"`
+	SessionMaxMinutes  int    `form:"session_max_minutes" binding:"required"`
 	State              string `gorm:"default:Paused"`
 	PerSession         int    `form:"per_session" binding:"required,gte=1,lte=32"`
 	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`

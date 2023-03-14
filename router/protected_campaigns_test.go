@@ -8,11 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func campaignFormData(namespace, slug, config, perSession, maxSessions, concurrentSessions string) url.Values {
+func campaignFormData(namespace, slug, config, sessionMaxMinutes, perSession, maxSessions, concurrentSessions string) url.Values {
 	data := url.Values{}
 	data.Set("namespace", namespace)
 	data.Set("slug", slug)
 	data.Set("config", config)
+	data.Set("session_max_minutes", sessionMaxMinutes)
 	data.Set("per_session", perSession)
 	data.Set("max_sessions", maxSessions)
 	data.Set("concurrent_sessions", concurrentSessions)
@@ -62,7 +63,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("namespace1", "slug1", "config1", "8", "4", "2")
+		data := campaignFormData("namespace1", "slug1", "config1", "15", "8", "4", "2")
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		// t.Log(res.Body.String())
@@ -83,8 +84,8 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("namespace2", "slug2", "config1", "8", "4", "2")
-		dataDupNamespace := campaignFormData("namespace2", "slug2bis", "config2", "8", "4", "2")
+		data := campaignFormData("namespace2", "slug2", "config1", "15", "8", "4", "2")
+		dataDupNamespace := campaignFormData("namespace2", "slug2bis", "config2", "15", "8", "4", "2")
 		// POST
 		MastokPostRequestWithAuth(router, "/campaigns", data)
 		res := MastokPostRequestWithAuth(router, "/campaigns", dataDupNamespace)
@@ -96,8 +97,8 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("namespace3", "slug3", "config1", "8", "4", "2")
-		dataDupNamespace := campaignFormData("namespace3bis", "slug3", "config2", "8", "4", "2")
+		data := campaignFormData("namespace3", "slug3", "config1", "15", "8", "4", "2")
+		dataDupNamespace := campaignFormData("namespace3bis", "slug3", "config2", "15", "8", "4", "2")
 		// POST
 		MastokPostRequestWithAuth(router, "/campaigns", data)
 		res := MastokPostRequestWithAuth(router, "/campaigns", dataDupNamespace)
@@ -109,7 +110,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("namespace4#", "slug4", "config1", "8", "4", "2")
+		data := campaignFormData("namespace4#", "slug4", "config1", "15", "8", "4", "2")
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		// t.Log(res.Body.String())
@@ -120,7 +121,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("n", "slug5", "config1", "8", "4", "2")
+		data := campaignFormData("n", "slug5", "config1", "15", "8", "4", "2")
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		assert.Equal(t, 422, res.Code)
@@ -130,7 +131,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("namespace6", "slug6", "config1", "100", "4", "2")
+		data := campaignFormData("namespace6", "slug6", "config1", "15", "100", "4", "2")
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		assert.Equal(t, 422, res.Code)

@@ -1,8 +1,6 @@
-const parseMessage = (data) => {
+const looseJSONParse = (str) => {
   try {
-    const msg = JSON.parse(data);
-    var i = msg.indexOf(':');
-    return [msg.slice(0,i), msg.slice(i+1)]; // split once around ":"
+    return JSON.parse(str);
   } catch (error) {
     console.error(error);
   }
@@ -36,8 +34,7 @@ const start = function (slug) {
   };
 
   ws.onmessage = (event) => {
-    const [kind, payload] = parseMessage(event.data);
-    console.log(kind, payload)
+    const {kind, payload} = looseJSONParse(event.data);
     if(kind === 'PoolSize') {
       document.getElementById("pool-size").innerHTML = payload;
     } else if(kind === 'SessionStart') {

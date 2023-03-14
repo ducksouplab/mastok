@@ -44,18 +44,17 @@ func ReinitDevDB() {
 		var campaign = Campaign{
 			Namespace:          "dev_campaign_1",
 			Slug:               "dev_campaign_1_slug",
-			Config:             "chatroulette",
+			OtreeExperimentId:  "CH",
 			PerSession:         4,
 			MaxSessions:        2,
 			ConcurrentSessions: 1,
 			State:              Running,
 		}
 		var session = Session{
-			Code:           "nztdjo76",
-			OtreeId:        "mk:dev_campaign_1:1",
-			OtreeCreatedAt: "2023-02-16 09:38:08",
-			Size:           4,
-			AdminUrl:       "http://localhost:8180/SessionStartLinks/nztdjo76",
+			Code:     "nztdjo76",
+			OtreeId:  "mk:dev_campaign_1:1",
+			Size:     4,
+			AdminUrl: "http://localhost:8180/SessionStartLinks/nztdjo76",
 		}
 		if err := DB.Create(&campaign).Error; err != nil {
 			log.Fatal(err)
@@ -65,7 +64,7 @@ func ReinitDevDB() {
 		var otherCampaign = Campaign{
 			Namespace:          "dev_campaign_2",
 			Slug:               "dev_campaign_2_slug",
-			Config:             "chatroulette",
+			OtreeExperimentId:  "CH",
 			PerSession:         8,
 			MaxSessions:        4,
 			ConcurrentSessions: 2,

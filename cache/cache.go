@@ -12,7 +12,7 @@ import (
 const TTL = 120
 
 var (
-	eCache experimentCache
+	expCache experimentCache
 )
 
 type experiment struct {
@@ -24,6 +24,7 @@ type experimentCache struct {
 	sync.Mutex
 	updatedAt time.Time
 	list      []experiment
+	namesMap  map[string]string
 }
 
 func init() {
@@ -31,9 +32,9 @@ func init() {
 		// don't load cache in command line mode
 		return
 	}
-	eCache = experimentCache{sync.Mutex{}, time.Now(), nil}
+	expCache = experimentCache{sync.Mutex{}, time.Now(), nil, make(map[string]string)}
 	if env.Mode != "TEST" {
-		GetSessions()
+		GetExperiments()
 	}
 }
 
@@ -41,10 +42,14 @@ func notExpired(t time.Time) bool {
 	return time.Since(t).Seconds() < TTL
 }
 
-func GetSessions() []experiment {
+func GetExperimentName(id string) string {
+	return expCache.namesMap[id]
+}
+
+func GetExperiments() []experiment {
 	// use cache
-	if eCache.list != nil && notExpired(eCache.updatedAt) {
-		return eCache.list
+	if expCache.list != nil && notExpired(expCache.updatedAt) {
+		return expCache.list
 	}
 	// or (re)fetch and update cache
 	list := []experiment{}
@@ -53,10 +58,14 @@ func GetSessions() []experiment {
 		log.Fatal(err)
 	}
 
-	eCache.Lock()
-	eCache.list = list
-	eCache.updatedAt = time.Now()
-	eCache.Unlock()
+	expCache.Lock()
+	expCache.list = list
+	expCache.namesMap = make(map[string]string)
+	for _, e := range list {
+		expCache.namesMap[e.Id] = e.Name
+	}
+	expCache.updatedAt = time.Now()
+	expCache.Unlock()
 
 	return list
 }

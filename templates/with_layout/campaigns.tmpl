@@ -7,6 +7,7 @@
 				<tr>
 					<th>Creation</th>
 					<th>Namespace</th>
+					<th>Experiment</th>
 					<th>Per session</th>
 					<th>Max sessions</th>
 					<th>Sessions started</th>
@@ -19,6 +20,7 @@
 				<tr>
 					<td>{{ .FormatCreatedAt }}</td>
 					<td>{{ .Namespace }}</td>
+					<td>{{ GetExperimentName .OtreeExperimentId }}</td>
 					<td>{{ .PerSession }}</td>
 					<td>{{ .MaxSessions }}</td>
 					<td>{{ .StartedSessions }}</td>

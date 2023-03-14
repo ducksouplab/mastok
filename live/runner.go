@@ -44,7 +44,7 @@ func (r *runner) stop() {
 	close(r.doneCh)
 }
 
-func (r *runner) stateSignal(c *client) Message {
+func (r *runner) stateMessage(c *client) Message {
 	state := r.campaign.State
 	// hide internals to participants
 	if state != "Running" && !c.isSupervisor {
@@ -56,28 +56,28 @@ func (r *runner) stateSignal(c *client) Message {
 	}
 }
 
-func (r *runner) poolSizeSignal() Message {
+func (r *runner) poolSizeMessage() Message {
 	return Message{
 		Kind:    "PoolSize",
 		Payload: strconv.Itoa(r.poolSize) + "/" + strconv.Itoa(r.campaign.PerSession),
 	}
 }
 
-func (r *runner) sessionStartParticipantSignal(code string) Message {
+func (r *runner) sessionStartParticipantMessage(code string) Message {
 	return Message{
 		Kind:    "SessionStart",
 		Payload: otree.ParticipantStartURL(code),
 	}
 }
 
-func (r *runner) sessionStartSupervisorSignal(session models.Session) Message {
+func (r *runner) sessionStartSupervisorMessage(session models.Session) Message {
 	return Message{
 		Kind:    "SessionStart",
 		Payload: session,
 	}
 }
 
-func participantDisconnectSignal() Message {
+func participantDisconnectMessage() Message {
 	return Message{
 		Kind:    "Participant",
 		Payload: "Disconnect",
@@ -90,17 +90,17 @@ func (r *runner) loop() {
 		case c := <-r.registerCh:
 			if r.campaign.State == "Running" || c.isSupervisor {
 				r.clients[c] = true
-				c.messageCh <- r.stateSignal(c)
+				c.messageCh <- r.stateMessage(c)
 
 				if c.isSupervisor {
 					// only inform supervisor client about the pool size
-					c.messageCh <- r.poolSizeSignal()
+					c.messageCh <- r.poolSizeMessage()
 				} else {
 					// it's a partcipant -> increases pool
 					r.poolSize += 1
 					// inform everyone (participants and supervisors) about the new pool size
 					for c := range r.clients {
-						c.messageCh <- r.poolSizeSignal()
+						c.messageCh <- r.poolSizeMessage()
 					}
 					// starts session when pool is full
 					if r.poolSize == r.campaign.PerSession {
@@ -111,10 +111,10 @@ func (r *runner) loop() {
 							participantIndex := 0
 							for c := range r.clients {
 								if c.isSupervisor {
-									c.messageCh <- r.sessionStartSupervisorSignal(session)
+									c.messageCh <- r.sessionStartSupervisorMessage(session)
 								} else {
-									c.messageCh <- r.sessionStartParticipantSignal(participantCodes[participantIndex])
-									c.messageCh <- participantDisconnectSignal()
+									c.messageCh <- r.sessionStartParticipantMessage(participantCodes[participantIndex])
+									c.messageCh <- participantDisconnectMessage()
 									participantIndex++
 								}
 							}
@@ -122,8 +122,8 @@ func (r *runner) loop() {
 					}
 				}
 			} else {
-				c.messageCh <- r.stateSignal(c)
-				c.messageCh <- participantDisconnectSignal()
+				c.messageCh <- r.stateMessage(c)
+				c.messageCh <- participantDisconnectMessage()
 				if len(r.clients) == 0 {
 					r.stop()
 					return
@@ -136,7 +136,7 @@ func (r *runner) loop() {
 					r.poolSize -= 1
 					// tells everyone including supervisor
 					for c := range r.clients {
-						c.messageCh <- r.poolSizeSignal()
+						c.messageCh <- r.poolSizeMessage()
 					}
 				}
 				// actually deletes client
@@ -150,10 +150,10 @@ func (r *runner) loop() {
 			r.campaign.State = state
 			models.DB.Save(r.campaign)
 			for c := range r.clients {
-				newSignalState := r.stateSignal(c)
-				c.messageCh <- newSignalState
-				if newSignalState.Payload == "Unavailable" {
-					c.messageCh <- participantDisconnectSignal()
+				newMessageState := r.stateMessage(c)
+				c.messageCh <- newMessageState
+				if newMessageState.Payload == "Unavailable" {
+					c.messageCh <- participantDisconnectMessage()
 				}
 			}
 		}

@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"time"
 
 	"github.com/ducksouplab/mastok/env"
 	"gorm.io/gorm"
@@ -19,12 +20,12 @@ type Campaign struct {
 	Namespace          string `form:"namespace" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
 	Slug               string `form:"slug" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
 	Info               string `form:"info" binding:"max=128"`
-	Config             string `form:"config" binding:"required"`
-	SessionMaxMinutes  int    `form:"session_max_minutes" binding:"required"`
-	State              string `gorm:"default:Paused"`
+	OtreeExperimentId  string `form:"otree_experiment_id" binding:"required"`
 	PerSession         int    `form:"per_session" binding:"required,gte=1,lte=32"`
 	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`
-	ConcurrentSessions int    `form:"concurrent_sessions" binding:"required,gte=1,lte=32" gorm:"default:1"`
+	SessionMaxMinutes  int    `form:"session_max_minutes" binding:"required"`
+	ConcurrentSessions int    `form:"concurrent_sessions" binding:"required,gte=1,lte=99" gorm:"default:1"`
+	State              string `gorm:"default:Paused"`
 	StartedSessions    int    `gorm:"default:0"`
 	// relations
 	Sessions []Session
@@ -57,6 +58,17 @@ func (c *Campaign) appendSession(s Session) (err error) {
 	}
 	c.Sessions = append(c.Sessions, s)
 	err = DB.Save(c).Error
+	return
+}
+
+func (c *Campaign) currentSessions() (count int) {
+	span := time.Duration(c.SessionMaxMinutes * int(time.Minute))
+	limit := time.Now().Add(-span)
+	for _, s := range c.Sessions {
+		if s.CreatedAt.After(limit) {
+			count++
+		}
+	}
 	return
 }
 

@@ -26,7 +26,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	{
 		Namespace:          "fxt_live_ns1",
 		Slug:               "fxt_live_ns1_slug",
-		Config:             "config",
+		OtreeExperimentId:  "XP",
 		PerSession:         4,
 		MaxSessions:        2,
 		ConcurrentSessions: 2,
@@ -35,7 +35,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	{
 		Namespace:          "fxt_live_ns2_to_be_paused",
 		Slug:               "fxt_live_ns2_to_be_paused_slug",
-		Config:             "config",
+		OtreeExperimentId:  "XP",
 		PerSession:         4,
 		MaxSessions:        2,
 		ConcurrentSessions: 2,
@@ -44,7 +44,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	{
 		Namespace:          "fxt_live_ns3_paused",
 		Slug:               "fxt_live_ns3_paused_slug",
-		Config:             "config",
+		OtreeExperimentId:  "XP",
 		PerSession:         8,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
@@ -53,7 +53,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	{
 		Namespace:          "fxt_live_ns4_paused",
 		Slug:               "fxt_live_ns4_paused_slug",
-		Config:             "config",
+		OtreeExperimentId:  "XP",
 		PerSession:         8,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
@@ -62,7 +62,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	{
 		Namespace:          "fxt_live_ns5_launched",
 		Slug:               "fxt_live_ns5_launched_slug",
-		Config:             "config",
+		OtreeExperimentId:  "XP",
 		PerSession:         4,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
@@ -71,7 +71,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	{
 		Namespace:          "fxt_live_ns6_completed",
 		Slug:               "fxt_live_ns6_completed_slug",
-		Config:             "config",
+		OtreeExperimentId:  "XP",
 		PerSession:         8,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
@@ -80,7 +80,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	{
 		Namespace:          "fxt_live_ns7_almost_completed",
 		Slug:               "fxt_live_ns7_almost_completed_slug",
-		Config:             "config",
+		OtreeExperimentId:  "XP",
 		PerSession:         4,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,

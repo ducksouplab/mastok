@@ -29,9 +29,9 @@ type NestedSessionDetails struct {
 
 // to create session on oTree API
 type SessionArgs struct {
-	ConfigName      string       `json:"session_config_name"`
-	NumParticipants int          `json:"num_participants"`
-	Config          NestedConfig `json:"modified_session_config_fields"`
+	SessionConfigName string       `json:"session_config_name"`
+	NumParticipants   int          `json:"num_participants"`
+	Config            NestedConfig `json:"modified_session_config_fields"`
 }
 
 func (s Session) FormatCreatedAt() string {

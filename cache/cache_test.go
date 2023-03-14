@@ -12,7 +12,7 @@ func TestCache_Unit(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 
-		eCache := GetSessions()
+		eCache := GetExperiments()
 
 		assert.Equal(t, "chatroulette", eCache[0].Name)
 		assert.Equal(t, "rawroulette", eCache[1].Name)

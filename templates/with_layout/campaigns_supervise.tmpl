@@ -18,6 +18,14 @@
 					<td>{{ .Campaign.Namespace }}</td>
 				</tr>
 				<tr>
+					<th scope="row">Slug</th>
+					<td>{{ .Campaign.Slug }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Experiment</th>
+					<td>{{ GetExperimentName .Campaign.OtreeExperimentId }}</td>
+				</tr>
+				<tr>
 					<th scope="row">Per session</th>
 					<td>{{ .Campaign.PerSession }}</td>
 				</tr>
@@ -26,8 +34,8 @@
 					<td>{{ .Campaign.MaxSessions }}</td>
 				</tr>
 				<tr>
-					<th scope="row">Started sessions</th>
-					<td>{{ .Campaign.StartedSessions }}</td>
+					<th scope="row">Duration (in minutes)</th>
+					<td>{{ .Campaign.SessionMaxMinutes }}</td>
 				</tr>
 				<tr>
 					<th scope="row">Concurrent sessions</th>
@@ -91,7 +99,7 @@
 								<tbody>
 									{{range .Campaign.Sessions}}
 									<tr>
-										<td>{{ .OtreeCreatedAt }}</td>
+										<td>{{ .FormatCreatedAt }}</td>
 										<td>{{ .OtreeId }}</td>
 										<td><a href="{{ .AdminUrl }}" target="_blan">{{ .Code }}</a></td>
 									</tr>
@@ -106,5 +114,5 @@
 	</div>
 </div>
 
-<script src="{{ webPrefix }}assets/scripts/supervise.js"></script>
+<script src="{{ WebPrefix }}assets/scripts/supervise.js"></script>
 {{end}}

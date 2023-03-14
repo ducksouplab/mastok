@@ -35,7 +35,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 	})
 	g.GET("/campaigns/new", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "campaigns_new.tmpl", gin.H{
-			"Experiments": cache.GetSessions(),
+			"Experiments": cache.GetExperiments(),
 		})
 	})
 	g.GET("/campaigns/supervise/:namespace", func(c *gin.Context) {
@@ -57,7 +57,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		var campaign models.Campaign
 		if err := c.ShouldBind(&campaign); err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaigns_new.tmpl", gin.H{
-				"Experiments": cache.GetSessions(),
+				"Experiments": cache.GetExperiments(),
 				"Error":       err.Error(),
 			})
 			return
@@ -65,7 +65,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 
 		if err := models.DB.Create(&campaign).Error; err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaigns_new.tmpl", gin.H{
-				"Experiments": cache.GetSessions(),
+				"Experiments": cache.GetExperiments(),
 				"Error":       err.Error(),
 			})
 			return

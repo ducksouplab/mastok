@@ -12,20 +12,19 @@ type Session struct {
 	gorm.Model
 	CampaignId uint
 	// otree Code
-	Code           string
-	OtreeId        string
-	OtreeCreatedAt string
-	Size           int
-	AdminUrl       string
+	Code     string
+	OtreeId  string
+	Size     int
+	AdminUrl string
 }
 
 const OtreePrefix = "mk:"
 
 func convertFromOtree(o otree.Session) Session {
 	return Session{
-		Code:           o.Code,
-		OtreeId:        o.Config.Id,
-		OtreeCreatedAt: o.FormatCreatedAt(), Size: o.NumParticipants,
+		Code:     o.Code,
+		OtreeId:  o.Config.Id,
+		Size:     o.NumParticipants,
 		AdminUrl: o.AdminUrl,
 	}
 }
@@ -33,8 +32,8 @@ func convertFromOtree(o otree.Session) Session {
 func newSessionArgs(c *Campaign) otree.SessionArgs {
 	sessionId := OtreePrefix + c.Namespace + ":" + strconv.Itoa(c.StartedSessions+1)
 	return otree.SessionArgs{
-		ConfigName:      c.Config,
-		NumParticipants: c.PerSession,
+		SessionConfigName: c.OtreeExperimentId,
+		NumParticipants:   c.PerSession,
 		Config: otree.NestedConfig{
 			Id: sessionId,
 		},
@@ -63,4 +62,8 @@ func CreateSession(c *Campaign) (session Session, participantCodes []string, err
 		log.Println("[runner] add session to campaign failed: ", err)
 	}
 	return
+}
+
+func (s *Session) FormatCreatedAt() string {
+	return s.CreatedAt.Format("2006-01-02 15:04:05")
 }

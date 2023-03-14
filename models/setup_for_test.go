@@ -18,7 +18,7 @@ var Fixtures []Campaign = []Campaign{
 	{
 		Namespace:          "fxt_models_ns1",
 		Slug:               "fxt_models_ns1_slug",
-		Config:             "config",
+		OtreeExperimentId:  "XP",
 		PerSession:         4,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
@@ -28,7 +28,7 @@ var Fixtures []Campaign = []Campaign{
 	{
 		Namespace:          "fxt_models_ns2_completed",
 		Slug:               "fxt_models_ns2_completed_slug",
-		Config:             "config",
+		OtreeExperimentId:  "XP",
 		PerSession:         4,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,

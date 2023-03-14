@@ -19,8 +19,8 @@
         <input type="text" name="info" id="info" class="form-control" maxlength="128">
       </div>
       <div class="mb-3">
-        <label for="config" class="form-label">Experiment*</label>
-        <select name="config" id="config" class="form-select" aria-label="Default select example" required>
+        <label for="otree_experiment_id" class="form-label">oTree Experiment*</label>
+        <select name="otree_experiment_id" id="otree_experiment_id" class="form-select" aria-label="Default select example" required>
           {{range .Experiments}}
             <option value="{{ .Id }}">{{ .Name }}</option>
           {{end}}
@@ -33,6 +33,11 @@
       <div class="mb-3">
         <label for="max_sessions" class="form-label">Total number of sessions for the campaign*</label>
         <input type="number" name="max_sessions" id="max_sessions" min=1 max=32 class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="session_max_minutes" class="form-label">Maximum duration of a session (in minutes)*</label>
+        <input type="number" name="session_max_minutes" id="session_max_minutes" min=1 max=99 class="form-control" required>
+        <div class="form-text">Information needed to manage concurrent sessions and participants reconnections</div>
       </div>
       <div class="mb-3">
         <label for="concurrent_sessions" class="form-label">Number of sessions run concurrently*</label>

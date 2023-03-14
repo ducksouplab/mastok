@@ -32,29 +32,25 @@ func hasRunner(namespace string) (r *runner, ok bool) {
 }
 
 // get existing or initialize
-func getRunner(namespace string) (*runner, error) {
+func getRunner(c *models.Campaign) (*runner, error) {
 	// already running
-	if r, ok := hasRunner(namespace); ok {
+	if r, ok := hasRunner(c.Namespace); ok {
 		return r, nil
 	}
-	// load from DB
-	campaign, err := models.FindCampaignByNamespace(namespace)
-	if err != nil {
-		return nil, err
-	}
-	r := newRunner(campaign)
+	// create runner
+	r := newRunner(c)
 
 	rs.Lock()
-	rs.index[namespace] = r
+	rs.index[c.Namespace] = r
 	rs.Unlock()
 
 	go r.loop()
 	return r, nil
 }
 
-func deleteRunner(namespace string) {
+func deleteRunner(c *models.Campaign) {
 	rs.Lock()
 	defer rs.Unlock()
 
-	delete(rs.index, namespace)
+	delete(rs.index, c.Namespace)
 }

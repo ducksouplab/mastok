@@ -58,7 +58,7 @@ func CreateSession(c *Campaign) (session Session, participantCodes []string, err
 	}
 	// save to campaign
 	session = convertFromOtree(o)
-	err = appendSessionToCampaign(c, session)
+	err = c.appendSession(session)
 	if err != nil {
 		log.Println("[runner] add session to campaign failed: ", err)
 	}

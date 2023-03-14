@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/ducksouplab/mastok/env"
 	"gorm.io/gorm"
 )
@@ -32,12 +34,22 @@ func FindCampaignByNamespace(namespace string) (c *Campaign, err error) {
 	return
 }
 
-func FindCampaignByNamespaceWithSessions(namespace string) (c *Campaign, err error) {
-	err = DB.Preload("Sessions").First(&c, "namespace = ?", namespace).Error
+func FindCampaignBySlug(slug string) (c *Campaign, err error) {
+	err = DB.First(&c, "slug = ?", slug).Error
 	return
 }
 
-func appendSessionToCampaign(c *Campaign, s Session) (err error) {
+func FindCampaignByNamespaceWithSessions(namespace string) (c *Campaign, err error) {
+	err = DB.Preload("Sessions", func(db *gorm.DB) *gorm.DB {
+		return db.Order("sessions.created_at DESC")
+	}).First(&c, "namespace = ?", namespace).Error
+	return
+}
+
+func (c *Campaign) appendSession(s Session) (err error) {
+	if c.State == Completed {
+		return errors.New("session can't be added to completed campaign")
+	}
 	c.StartedSessions += 1
 	if c.StartedSessions == c.MaxSessions {
 		c.State = "Completed"

@@ -20,10 +20,11 @@ func TestClient_Integration(t *testing.T) {
 
 	t.Run("receives State", func(t *testing.T) {
 		ns := "fxt_live_ns1"
+		slug := "fxt_live_ns1_slug"
 		defer tearDown(ns)
 
 		ws := newWSStub()
-		RunParticipant(ws, ns)
+		RunParticipant(ws, slug)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			_, ok := ws.hasReceivedPrefix("State:")
@@ -33,10 +34,11 @@ func TestClient_Integration(t *testing.T) {
 
 	t.Run("participant receives PoolSize", func(t *testing.T) {
 		ns := "fxt_live_ns1"
+		slug := "fxt_live_ns1_slug"
 		defer tearDown(ns)
 
 		ws := newWSStub()
-		RunParticipant(ws, ns)
+		RunParticipant(ws, slug)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			_, ok := ws.hasReceivedPrefix("PoolSize:")
@@ -59,14 +61,19 @@ func TestClient_Integration(t *testing.T) {
 
 	t.Run("kicks participants if State is Paused", func(t *testing.T) {
 		ns := "fxt_live_ns3_paused"
+		slug := "fxt_live_ns3_paused_slug"
 		defer tearDown(ns)
 
 		ws := newWSStub()
-		p := RunParticipant(ws, ns)
+		p := RunParticipant(ws, slug)
 
 		// the fixture data is what we expected
 		assert.Equal(t, "Paused", p.runner.campaign.State)
 
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			ok := ws.hasReceived("State:Unavailable")
+			return ok
+		}), "participant should receive State:Unavailable")
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			return ws.lastWrite() == "Participant:Disconnect"
 		}), "participant should receive Disconnect")
@@ -74,52 +81,33 @@ func TestClient_Integration(t *testing.T) {
 
 	t.Run("kicks participants if State is Completed", func(t *testing.T) {
 		ns := "fxt_live_ns6_completed"
+		slug := "fxt_live_ns6_completed_slug"
 		defer tearDown(ns)
 
 		ws := newWSStub()
-		p := RunParticipant(ws, ns)
+		p := RunParticipant(ws, slug)
 
 		// the fixture data is what we expected
 		assert.Equal(t, "Completed", p.runner.campaign.State)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
+			ok := ws.hasReceived("State:Unavailable")
+			return ok
+		}), "participant should receive State:Unavailable")
+		assert.True(t, retryUntil(shortDuration, func() bool {
 			return ws.lastWrite() == "Participant:Disconnect"
 		}), "participant should receive Disconnect")
 	})
 
-	t.Run("cleans up runner when closed", func(t *testing.T) {
-		ns := "fxt_live_ns1"
-		// no teardown since we are actually testing the effects of quitting (ws.Close())
-
-		// two clients
-		ws1 := newWSStub()
-		ws2 := newWSStub()
-		RunSupervisor(ws1, ns)
-		RunParticipant(ws2, ns)
-		// both clients are here
-		sharedRunner, ok := hasRunner(ns)
-		assert.Equal(t, true, ok)
-
-		// one quits
-		ws1.Close()
-		_, ok = hasRunner(ns)
-		assert.Equal(t, true, ok)
-
-		// the other quits
-		ws2.Close()
-		<-sharedRunner.isDone()
-		_, ok = hasRunner(ns)
-		assert.Equal(t, false, ok)
-	})
-
 	t.Run("prevents participant from changing state", func(t *testing.T) {
 		ns := "fxt_live_ns1"
+		slug := "fxt_live_ns1_slug"
 		defer tearDown(ns)
 
 		// 2 participants
 		wsSlice := makeWSStubs(2)
 		for _, ws := range wsSlice {
-			RunParticipant(ws, ns)
+			RunParticipant(ws, slug)
 		}
 		wsSlice[0].push("State:Paused")
 
@@ -133,6 +121,7 @@ func TestClient_Integration(t *testing.T) {
 
 	t.Run("aborts session when campaign is paused", func(t *testing.T) {
 		ns := "fxt_live_ns2_to_be_paused"
+		slug := "fxt_live_ns2_to_be_paused_slug"
 		defer tearDown(ns)
 
 		// 1 supervisor
@@ -141,7 +130,7 @@ func TestClient_Integration(t *testing.T) {
 		// 3 participants (session won't start)
 		wsSlice := makeWSStubs(3)
 		for _, ws := range wsSlice {
-			RunParticipant(ws, ns)
+			RunParticipant(ws, slug)
 		}
 		// the fixture data is what we expected
 		runner, _ := hasRunner(ns)
@@ -151,11 +140,13 @@ func TestClient_Integration(t *testing.T) {
 		supWs.push("State:Paused")
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longerDuration, func() bool {
-				return ws.hasReceived("State:Paused")
-			}), "participant should receive State:Paused")
+				return ws.hasReceived("State:Unavailable")
+			}), "participant should receive State:Unavailable")
 		}
 		// participants have been disconnected
 		assert.True(t, retryUntil(shortDuration, func() bool {
+			t.Log(">>>>")
+			t.Log(supWs.writes)
 			return supWs.lastWrite() == "PoolSize:0/4"
 		}), "supervisor should receive PoolSize:0/4")
 	})

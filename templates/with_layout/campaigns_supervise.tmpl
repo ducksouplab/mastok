@@ -1,0 +1,110 @@
+{{define "navcontents"}}
+<div class="d-flex">
+	<div class="navbar-text">
+		Campaign <span class="campaign">{{ .Campaign.Namespace }}</span> in <span class="state" id="state">...</span> state
+	</div>
+	<input id="change-state-container" type="button" class="btn btn-outline-primary btn-sm ms-2" value="..." />
+</div>
+{{end}}
+
+{{define "content"}}
+<div class="row">
+	<div class="col-4">
+		<table class="table table-sm">
+			<thead>
+			<tbody>
+				<tr>
+					<th scope="row">Namespace</th>
+					<td>{{ .Campaign.Namespace }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Per session</th>
+					<td>{{ .Campaign.PerSession }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Max sessions</th>
+					<td>{{ .Campaign.MaxSessions }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Started sessions</th>
+					<td>{{ .Campaign.StartedSessions }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Concurrent sessions</th>
+					<td>{{ .Campaign.ConcurrentSessions }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div class="col">
+		<div class="row mb-3">
+			<div class="col">
+				
+			</div>
+		</div>
+		<div class="row mb-3">
+			<div class="col">
+				<div class="card">
+					<div id="not-completed-container">
+						<div class="card-header">Current pool</div>
+						<div class="card-body">
+							<div id="new-container" class="alert alert-success" role="alert" style="display: none">
+								New session started (page refreshing in 3 seconds)
+							</div>
+							<dl>
+								<div id="size-container">
+									<dt>Size</dt>
+									<dd><span id="pool-size">...</span></dd>
+								</div>
+								<dt>Share URL</dt>
+								<dd><input id="share-url" readonly value="{{ .Campaign.ShareURL }}"></dd>
+								<dt>Additional info</dt>
+								<dd>{{ .Campaign.Info }}</dd>
+							</dl>
+						</div>
+					</div>
+					<div id="completed-container" style="display: none;">
+						<div class="card-header">Current pool closed</div>
+						<div class="card-body">
+							<p>Campaign has been completed</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col">
+				<div class="card">
+					<div class="card-header">Previous sessions started</div>
+					<div class="card-body">
+						{{if not .Campaign.Sessions}}
+							None
+						{{else}}
+							<table class="table">
+								<thead>
+									<tr>
+										<th>Created at</th>
+										<th>Session ID</th>
+										<th>oTree admin URL</th>
+									</tr>
+								</thead>
+								<tbody>
+									{{range .Campaign.Sessions}}
+									<tr>
+										<td>{{ .OtreeCreatedAt }}</td>
+										<td>{{ .OtreeId }}</td>
+										<td><a href="{{ .AdminUrl }}" target="_blan">{{ .Code }}</a></td>
+									</tr>
+									{{end}}
+								</tbody>
+							</table>
+						{{end}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="{{ webPrefix }}assets/scripts/supervise.js"></script>
+{{end}}

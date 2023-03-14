@@ -1,5 +1,7 @@
 dev:
 	@go build && MASTOK_MODE=DEV ./mastok
+resetdev:
+	@go build && MASTOK_MODE=RESET_DEV ./mastok && MASTOK_MODE=DEV ./mastok
 buildfront:
 	@go build && MASTOK_MODE=BUILD_FRONT ./mastok
 deps:
@@ -12,5 +14,3 @@ testv:
 	@clear && MASTOK_MODE=TEST MASTOK_PROJECT_ROOT=`pwd` GIN_MODE=release go test -p 1 -v ./...
 testj:
 	@clear && MASTOK_MODE=TEST MASTOK_PROJECT_ROOT=`pwd` GIN_MODE=release go test -p 1 -json ./...
-resetdev:
-	@go build && MASTOK_MODE=RESET_DEV ./mastok

@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 var Fixtures []models.Campaign = []models.Campaign{
 	{
 		Namespace:          "fxt_live_ns1",
-		Slug:               "fxt_live_ns1",
+		Slug:               "fxt_live_ns1_slug",
 		Config:             "config",
 		PerSession:         4,
 		MaxSessions:        2,

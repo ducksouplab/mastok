@@ -1,14 +1,34 @@
+const state = {
+  hasParticipants: false
+};
+
 const parseMessage = (data) => {
   try {
     const msg = JSON.parse(data);
     const kind = msg.split(":")[0];
-    const payloadStr = '"' + msg.replace(kind + ":", "") + '"';
+    let payloadStr = msg.replace(kind + ":", "");
+    console.log(kind, payloadStr)
+    if(!payloadStr.startsWith("{")) {
+      payloadStr = '"' + payloadStr + '"';
+    }
     const payload = JSON.parse(payloadStr);
     return [kind, payload];
   } catch (error) {
     console.error(error);
   }
 };
+
+const show = (id) => {
+  document.getElementById(id).style.display = '';
+}
+
+const hide = (id) => {
+  document.getElementById(id).style.display = 'none';
+}
+
+const updateHasParticipants = (payload) => {
+  state.hasParticipants = !payload.startsWith("0");
+}
 
 const start = function (namespace) {
   const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
@@ -34,28 +54,37 @@ const start = function (namespace) {
     if(kind === 'State') {
       document.getElementById("state").innerHTML = payload;
       if(payload === "Paused") {
-        document.getElementById("change-state").value = "Run";
-        document.getElementById("change-state").style.display = ''; // show
+        document.getElementById("change-state-container").value = "Run";
+        show("change-state-container");
       } else if(payload === "Running") {
-        document.getElementById("change-state").value = "Pause";
-        document.getElementById("change-state").style.display = ''; // show
+        document.getElementById("change-state-container").value = "Pause";
+        show("change-state-container");
       } else if(payload === "Completed") {
-        document.getElementById("change-state").style.display = 'none'; // hide
+        hide("not-completed-container");
+        hide("change-state-container");
+        show("completed-container");
       }
     } else if(kind === 'PoolSize') {
+      updateHasParticipants(payload);
       document.getElementById("pool-size").innerHTML = payload;
     } else if(kind === 'SessionStart') {
-      document.getElementById("show-size").style.display = 'none'; // hide
-      document.getElementById("show-new").style.display = ''; // start
+      hide("size-container");
+      show("new-container");
       setTimeout(() => window.location.reload(), 3000);
     }
   };
 
-  document.getElementById("change-state").addEventListener('click', (e) => {
+  document.getElementById("change-state-container").addEventListener('click', (e) => {
     if(e.target.value == "Run") {
       ws.send(JSON.stringify("State:Running"));
     } else if(e.target.value == "Pause") {
-      ws.send(JSON.stringify("State:Paused"));
+      if(state.hasParticipants) {
+        if (window.confirm("Participants in the pool will be disconnected, are you sure you want to pause campaign?")) {
+          ws.send(JSON.stringify("State:Paused"));
+        }
+      } else {
+        ws.send(JSON.stringify("State:Paused"));
+      }
     }
   });
 
@@ -70,4 +99,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const namespace = namespaceMatch[1];
     start(namespace);
   }
+  document.getElementById("share-url").addEventListener('click', (e) => {
+    e.target.select();
+  });
 });

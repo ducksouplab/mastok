@@ -76,7 +76,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		assert.Contains(t, res.Body.String(), "Supervise")
 		// GET supervise
 		res = MastokGetRequestWithAuth(router, "/campaigns/supervise/namespace1")
-		assert.Contains(t, res.Body.String(), "Supervising")
+		assert.Contains(t, res.Body.String(), "Current pool")
 	})
 
 	t.Run("fails creating if duplicate namespace", func(t *testing.T) {

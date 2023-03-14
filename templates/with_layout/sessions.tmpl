@@ -2,24 +2,24 @@
 <div class="row">
 	<div class="col">
 		<h1>Sessions</h1>
-		<p>Sessions created by Mastok have their oTree ID look like <em>mk:campaign_namespace:session_number</em></p>
+		<p>Sessions created by Mastok have their ID look like <em>mk:campaign_namespace:session_number</em></p>
 		<table class="table">
 			<thead>
 				<tr>
-					<th>oTree ID</th>
-					<th>type</th>
-					<th>participants</th>
-					<th>created at</th>
-					<th>oTree admin</th>
+					<th>Created at</th>
+					<th>Session ID</th>
+					<th>Type</th>
+					<th>Participants</th>
+					<th>oTree admin URL</th>
 				</tr>
 			</thead>
 			<tbody>
 				{{range .Sessions}}
 				<tr>
+					<td>{{ .FormatCreatedAt }}</td>
 					<td>{{ .Id }}</td>
 					<td>{{ .ConfigName }}</td>
 					<td>{{ .NumParticipants }}</td>
-					<td>{{ .FormatCreatedAt }}</td>
 					<td><a href="{{ .AdminUrl }}" target="_blank">{{ .Code }}</a></td>
 				</tr>
 				{{end}}

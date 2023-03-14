@@ -3,6 +3,8 @@ package live
 import (
 	"log"
 	"strings"
+
+	"github.com/ducksouplab/mastok/models"
 )
 
 type wsConn interface {
@@ -63,14 +65,25 @@ func (c *client) writeLoop() {
 	defer c.stop()
 	for signal := range c.signalCh {
 		c.write(signal)
-		if !c.isSupervisor && (signal == "Participant:Disconnect" || signal == "State:Paused") {
+		if signal == "Participant:Disconnect" {
 			return
 		}
 	}
 }
 
-func runClient(isSupervisor bool, ws wsConn, namespace string) *client {
-	r, err := getRunner(namespace)
+func runClient(isSupervisor bool, ws wsConn, identifier string) *client {
+	var campaign *models.Campaign
+	var err error
+	if isSupervisor {
+		campaign, err = models.FindCampaignByNamespace(identifier)
+	} else {
+		campaign, err = models.FindCampaignBySlug(identifier)
+	}
+	if err != nil {
+		return nil
+	}
+
+	r, err := getRunner(campaign)
 	if err != nil {
 		ws.Close()
 		return nil
@@ -81,7 +94,7 @@ func runClient(isSupervisor bool, ws wsConn, namespace string) *client {
 		runner:       r,
 		signalCh:     make(chan string, 256),
 	}
-	log.Println("[supervisor] running for: " + namespace)
+	log.Println("[client] running for: " + identifier)
 
 	go c.readLoop()
 	go c.writeLoop()
@@ -90,10 +103,12 @@ func runClient(isSupervisor bool, ws wsConn, namespace string) *client {
 	return c
 }
 
+// identified by namespace
 func RunSupervisor(ws wsConn, namespace string) *client {
 	return runClient(true, ws, namespace)
 }
 
+// identified by slug
 func RunParticipant(ws wsConn, slug string) *client {
 	return runClient(false, ws, slug)
 }

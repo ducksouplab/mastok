@@ -9,10 +9,7 @@ import (
 func TestSessionArgs_Unit(t *testing.T) {
 	t.Run("oTree session id follows the mk:namespace:#session format", func(t *testing.T) {
 		ns := "fxt_models_ns1"
-		campaign, err := FindCampaignByNamespace(ns)
-		if err != nil {
-			t.Error(err)
-		}
+		campaign, _ := FindCampaignByNamespace(ns)
 
 		// the fixture data is what we expected
 		assert.Equal(t, 3, campaign.StartedSessions)

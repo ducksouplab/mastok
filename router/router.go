@@ -16,19 +16,34 @@ import (
 func createTemplateRenderer() multitemplate.Renderer {
 	renderer := multitemplate.NewRenderer()
 
-	includes, err := filepath.Glob(env.ProjectRoot + "templates/includes/*.tmpl")
+	withLayouts, err := filepath.Glob(env.ProjectRoot + "templates/with_layout/*.tmpl")
 	if err != nil {
 		panic(err.Error())
 	}
 
-	for _, include := range includes {
+	for _, t := range withLayouts {
 		renderer.AddFromFilesFuncs(
-			filepath.Base(include),
+			filepath.Base(t),
 			template.FuncMap{
 				"webPrefix": func() string { return env.WebPrefix },
 			},
 			env.ProjectRoot+"templates/layout.tmpl",
-			include,
+			t,
+		)
+	}
+
+	withoutLayouts, err := filepath.Glob(env.ProjectRoot + "templates/without_layout/*.tmpl")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for _, t := range withoutLayouts {
+		renderer.AddFromFilesFuncs(
+			filepath.Base(t),
+			template.FuncMap{
+				"webPrefix": func() string { return env.WebPrefix },
+			},
+			t,
 		)
 	}
 

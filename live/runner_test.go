@@ -14,16 +14,17 @@ import (
 func TestRunner_Integration(t *testing.T) {
 	t.Run("is shared per campaign", func(t *testing.T) {
 		ns := "fxt_live_ns1"
+		slug := "fxt_live_ns1_slug"
 		defer tearDown(ns)
 
 		// first client
 		ws1 := newWSStub()
-		p1 := RunParticipant(ws1, ns)
+		p1 := RunParticipant(ws1, slug)
 		runner := p1.runner
 
 		// second client
 		ws2 := newWSStub()
-		p2 := RunParticipant(ws2, ns)
+		p2 := RunParticipant(ws2, slug)
 		// runner is shared
 		assert.Same(t, runner, p2.runner, "participants runner should be the same")
 		// clients write PoolSize
@@ -35,8 +36,35 @@ func TestRunner_Integration(t *testing.T) {
 		}), "participant should receive PoolSize:2/4")
 	})
 
+	t.Run("cleans up runner when closed", func(t *testing.T) {
+		ns := "fxt_live_ns1"
+		slug := "fxt_live_ns1_slug"
+		// no teardown since we are actually testing the effects of quitting (ws.Close())
+
+		// two clients
+		ws1 := newWSStub()
+		ws2 := newWSStub()
+		RunSupervisor(ws1, ns)
+		RunParticipant(ws2, slug)
+		// both clients are here
+		sharedRunner, ok := hasRunner(ns)
+		assert.Equal(t, true, ok)
+
+		// one quits
+		ws1.Close()
+		_, ok = hasRunner(ns)
+		assert.Equal(t, true, ok)
+
+		// the other quits
+		ws2.Close()
+		<-sharedRunner.isDone()
+		_, ok = hasRunner(ns)
+		assert.Equal(t, false, ok)
+	})
+
 	t.Run("creates oTree session and sends relevant SessionStart to participants and supervisors", func(t *testing.T) {
 		ns := "fxt_live_ns5_launched"
+		slug := "fxt_live_ns5_launched_slug"
 		perSession := 4
 		defer tearDown(ns)
 
@@ -58,7 +86,7 @@ func TestRunner_Integration(t *testing.T) {
 		// 4 participants
 		wsSlice := makeWSStubs(perSession)
 		for _, ws := range wsSlice {
-			RunParticipant(ws, ns)
+			RunParticipant(ws, slug)
 		}
 
 		assert.True(t, retryUntil(longerDuration, func() bool {
@@ -94,6 +122,7 @@ func TestRunner_Integration(t *testing.T) {
 
 	t.Run("turns Campaign to completed after last SessionStart", func(t *testing.T) {
 		ns := "fxt_live_ns7_almost_completed"
+		slug := "fxt_live_ns7_almost_completed_slug"
 		perSession := 4
 		defer tearDown(ns)
 
@@ -109,7 +138,7 @@ func TestRunner_Integration(t *testing.T) {
 		defer th.InterceptOff()
 		wsSlice := makeWSStubs(perSession)
 		for _, ws := range wsSlice {
-			RunParticipant(ws, ns)
+			RunParticipant(ws, slug)
 		}
 
 		// assert inner state
@@ -120,7 +149,7 @@ func TestRunner_Integration(t *testing.T) {
 
 		// outer state: new participant can't connect
 		addWs := newWSStub()
-		RunParticipant(addWs, ns)
+		RunParticipant(addWs, slug)
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			return addWs.lastWrite() == "Participant:Disconnect"
 		}), "participant should receive Disconnect")

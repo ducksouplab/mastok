@@ -1,3 +1,21 @@
+const parseMessage = (data) => {
+  try {
+    const msg = JSON.parse(data);
+    var i = msg.indexOf(':');
+    return [msg.slice(0,i), msg.slice(i+1)]; // split once around ":"
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const show = (id) => {
+  document.getElementById(id).style.display = '';
+}
+
+const hide = (id) => {
+  document.getElementById(id).style.display = 'none';
+}
+
 const start = function (slug) {
   const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
   // check if app is served under a prefix path (if not, pathPrefix is "/")
@@ -6,6 +24,8 @@ const start = function (slug) {
   // connect to ws endpoint
   const wsUrl = `${wsProtocol}://${window.location.host}${pathPrefix}ws/join?slug=${slug}`;
   const ws = new WebSocket(wsUrl);
+
+  // ws.onopen = (event) => {};
 
   ws.onclose = (event) => {
     console.log(event);
@@ -16,13 +36,24 @@ const start = function (slug) {
   };
 
   ws.onmessage = (event) => {
-    console.log(event);
+    const [kind, payload] = parseMessage(event.data);
+    console.log(kind, payload)
+    if(kind === 'PoolSize') {
+      document.getElementById("pool-size").innerHTML = payload;
+    } else if(kind === 'SessionStart') {
+      hide("size-container");
+      show("connecting-container");
+      setTimeout(() => {
+        document.location.href = payload;
+      }, 3000);
+    } else if(kind === 'State' && payload == "Unavailable") {
+      hide("active-container");
+      show("inactive-container");
+    } else if(kind === 'Participant' && payload == "Disconnect") {
+      ws.close();
+    }
   };
-
-  ws.onopen = (event) => {
-    console.log(event);
-  };
-};
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   const slugMatch = /join\/(.*)$/.exec(window.location.pathname);

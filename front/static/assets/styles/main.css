@@ -4,7 +4,19 @@
   padding: 0 10px;
 }
 
+.navbar .campaign {
+  font-weight: bold;
+}
+
 .navbar .state {
+  font-weight: bold;
   text-transform: lowercase;
-  font-variant: small-caps;
+}
+
+input#share-url {
+  color: #d63384;
+  font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  padding: 0;
+  border: 0 !important;
+  outline: none;
 }

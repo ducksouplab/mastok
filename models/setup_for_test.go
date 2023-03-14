@@ -25,4 +25,14 @@ var Fixtures []Campaign = []Campaign{
 		StartedSessions:    3,
 		State:              Running,
 	},
+	{
+		Namespace:          "fxt_models_ns2_completed",
+		Slug:               "fxt_models_ns2_completed_slug",
+		Config:             "config",
+		PerSession:         4,
+		MaxSessions:        4,
+		ConcurrentSessions: 2,
+		StartedSessions:    4,
+		State:              Completed,
+	},
 }

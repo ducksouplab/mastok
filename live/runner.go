@@ -90,17 +90,17 @@ func (r *runner) loop() {
 		case c := <-r.registerCh:
 			if r.campaign.State == "Running" || c.isSupervisor {
 				r.clients[c] = true
-				c.signalCh <- r.stateSignal(c)
+				c.messageCh <- r.stateSignal(c)
 
 				if c.isSupervisor {
 					// only inform supervisor client about the pool size
-					c.signalCh <- r.poolSizeSignal()
+					c.messageCh <- r.poolSizeSignal()
 				} else {
 					// it's a partcipant -> increases pool
 					r.poolSize += 1
 					// inform everyone (participants and supervisors) about the new pool size
 					for c := range r.clients {
-						c.signalCh <- r.poolSizeSignal()
+						c.messageCh <- r.poolSizeSignal()
 					}
 					// starts session when pool is full
 					if r.poolSize == r.campaign.PerSession {
@@ -111,10 +111,10 @@ func (r *runner) loop() {
 							participantIndex := 0
 							for c := range r.clients {
 								if c.isSupervisor {
-									c.signalCh <- r.sessionStartSupervisorSignal(session)
+									c.messageCh <- r.sessionStartSupervisorSignal(session)
 								} else {
-									c.signalCh <- r.sessionStartParticipantSignal(participantCodes[participantIndex])
-									c.signalCh <- participantDisconnectSignal()
+									c.messageCh <- r.sessionStartParticipantSignal(participantCodes[participantIndex])
+									c.messageCh <- participantDisconnectSignal()
 									participantIndex++
 								}
 							}
@@ -122,8 +122,8 @@ func (r *runner) loop() {
 					}
 				}
 			} else {
-				c.signalCh <- r.stateSignal(c)
-				c.signalCh <- participantDisconnectSignal()
+				c.messageCh <- r.stateSignal(c)
+				c.messageCh <- participantDisconnectSignal()
 				if len(r.clients) == 0 {
 					r.stop()
 					return
@@ -136,7 +136,7 @@ func (r *runner) loop() {
 					r.poolSize -= 1
 					// tells everyone including supervisor
 					for c := range r.clients {
-						c.signalCh <- r.poolSizeSignal()
+						c.messageCh <- r.poolSizeSignal()
 					}
 				}
 				// actually deletes client
@@ -151,9 +151,9 @@ func (r *runner) loop() {
 			models.DB.Save(r.campaign)
 			for c := range r.clients {
 				newSignalState := r.stateSignal(c)
-				c.signalCh <- newSignalState
+				c.messageCh <- newSignalState
 				if newSignalState.Payload == "Unavailable" {
-					c.signalCh <- participantDisconnectSignal()
+					c.messageCh <- participantDisconnectSignal()
 				}
 			}
 		}

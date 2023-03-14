@@ -23,11 +23,11 @@ type client struct {
 	ws           wsConn
 	runner       *runner
 	// updates from runner
-	signalCh chan Message
+	messageCh chan Message
 }
 
-func (c *client) write(signal Message) {
-	if err := c.ws.WriteJSON(signal); err != nil {
+func (c *client) write(m Message) {
+	if err := c.ws.WriteJSON(m); err != nil {
 		log.Println(err)
 	}
 }
@@ -60,9 +60,9 @@ func (c *client) readLoop() {
 // like in https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 func (c *client) writeLoop() {
 	defer c.stop()
-	for signal := range c.signalCh {
-		c.write(signal)
-		if signal.Kind == "Participant" && signal.Payload == "Disconnect" {
+	for m := range c.messageCh {
+		c.write(m)
+		if m.Kind == "Participant" && m.Payload == "Disconnect" {
 			return
 		}
 	}
@@ -89,7 +89,7 @@ func runClient(isSupervisor bool, ws wsConn, identifier string) *client {
 		isSupervisor: isSupervisor,
 		ws:           ws,
 		runner:       r,
-		signalCh:     make(chan Message, 256),
+		messageCh:    make(chan Message, 256),
 	}
 	log.Println("[client] running for: " + identifier)
 

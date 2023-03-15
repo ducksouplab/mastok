@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/ducksouplab/mastok/cache"
 	"github.com/ducksouplab/mastok/env"
 	"github.com/ducksouplab/mastok/helpers"
 	"github.com/gin-contrib/gzip"
@@ -26,8 +25,7 @@ func createTemplateRenderer() multitemplate.Renderer {
 		renderer.AddFromFilesFuncs(
 			filepath.Base(t),
 			template.FuncMap{
-				"WebPrefix":         func() string { return env.WebPrefix },
-				"GetExperimentName": cache.GetExperimentName,
+				"WebPrefix": func() string { return env.WebPrefix },
 			},
 			env.ProjectRoot+"templates/layout.tmpl",
 			t,

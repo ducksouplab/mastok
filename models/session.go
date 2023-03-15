@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ducksouplab/mastok/cache"
 	"github.com/ducksouplab/mastok/otree"
 	"gorm.io/gorm"
 )
@@ -35,7 +34,7 @@ func convertFromOtree(o otree.Session) Session {
 func newSessionArgs(c *Campaign) otree.SessionArgs {
 	sessionId := OtreePrefix + c.Namespace + ":" + strconv.Itoa(c.StartedSessions+1)
 	return otree.SessionArgs{
-		SessionConfigName: cache.GetExperimentName(c.OtreeExperimentId),
+		SessionConfigName: c.OtreeExperiment,
 		NumParticipants:   c.PerSession,
 		Config: otree.NestedConfig{
 			Id: sessionId,

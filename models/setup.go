@@ -55,7 +55,7 @@ func ReinitDevDB() {
 		var campaign = Campaign{
 			Namespace:          "dev_campaign_1",
 			Slug:               "dev_campaign_1_slug",
-			OtreeExperimentId:  "CH",
+			OtreeExperiment:    "chatroulette",
 			PerSession:         4,
 			MaxSessions:        2,
 			ConcurrentSessions: 1,
@@ -75,7 +75,7 @@ func ReinitDevDB() {
 		var otherCampaign = Campaign{
 			Namespace:          "dev_campaign_2",
 			Slug:               "dev_campaign_2_slug",
-			OtreeExperimentId:  "CH",
+			OtreeExperiment:    "chatroulette",
 			PerSession:         2,
 			MaxSessions:        4,
 			SessionDuration:    2,

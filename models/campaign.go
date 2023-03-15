@@ -26,7 +26,7 @@ type Campaign struct {
 	Namespace          string `form:"namespace" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
 	Slug               string `form:"slug" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
 	Info               string `form:"info" binding:"max=128"`
-	OtreeExperimentId  string `form:"otree_experiment_id" binding:"required"`
+	OtreeExperiment    string `form:"otree_experiment_id" binding:"required"`
 	PerSession         int    `form:"per_session" binding:"required,gte=1,lte=32"`
 	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`
 	SessionDuration    int    `form:"session_duration" binding:"required"`

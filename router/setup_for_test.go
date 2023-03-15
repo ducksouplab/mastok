@@ -28,7 +28,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	{
 		Namespace:          "fxt_router_ns1",
 		Slug:               "fxt_router_ns1_slug",
-		OtreeExperimentId:  "XP",
+		OtreeExperiment:    "xp_name",
 		PerSession:         4,
 		MaxSessions:        2,
 		ConcurrentSessions: 2,

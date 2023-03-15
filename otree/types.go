@@ -2,6 +2,11 @@ package otree
 
 import "time"
 
+type ExperimentConfig struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type NestedParticipant struct {
 	Code string `json:"code"`
 }

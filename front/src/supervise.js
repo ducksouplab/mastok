@@ -77,14 +77,14 @@ const start = function (namespace) {
 
   document.getElementById("change-state-container").addEventListener('click', (e) => {
     if(e.target.value == "Run") {
-      ws.send(JSON.stringify("State:Running"));
+      ws.send(JSON.stringify({ kind: "State", payload: "Running"}));
     } else if(e.target.value == "Pause") {
       if(state.hasParticipants) {
         if (window.confirm("Participants in the pool will be disconnected, are you sure you want to pause campaign?")) {
-          ws.send(JSON.stringify("State:Paused"));
+          ws.send(JSON.stringify({ kind: "State", payload: "Paused"}));
         }
       } else {
-        ws.send(JSON.stringify("State:Paused"));
+        ws.send(JSON.stringify({ kind: "State", payload: "Paused"}));
       }
     }
   });

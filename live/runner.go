@@ -92,7 +92,7 @@ func (r *runner) tickStateMessage() {
 	}
 	ticker := newTicker(models.SessionDurationUnit)
 	go ticker.loop(r)
-	r.updateStateTicker = r.updateStateTicker
+	r.updateStateTicker = ticker
 }
 
 func (r *runner) loop() {

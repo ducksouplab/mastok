@@ -22,7 +22,7 @@
         <label for="otree_experiment_id" class="form-label">oTree Experiment*</label>
         <select name="otree_experiment_id" id="otree_experiment_id" class="form-select" aria-label="Default select example" required>
           {{range .Experiments}}
-            <option value="{{ .Id }}">{{ .Name }}</option>
+            <option value="{{ . }}">{{ . }}</option>
           {{end}}
         </select>
       </div>

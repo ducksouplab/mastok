@@ -35,7 +35,7 @@
 				</tr>
 				<tr>
 					<th scope="row">Duration (in minutes)</th>
-					<td>{{ .Campaign.SessionMaxMinutes }}</td>
+					<td>{{ .Campaign.SessionDuration }}</td>
 				</tr>
 				<tr>
 					<th scope="row">Concurrent sessions</th>
@@ -59,16 +59,19 @@
 							<div id="new-container" class="alert alert-success" role="alert" style="display: none">
 								New session started (page refreshing in 3 seconds)
 							</div>
-							<dl>
-								<div id="size-container">
+							<div id="busy-container" class="alert alert-warning" role="alert" style="display: none">
+								Concurrent sessions limit reached
+							</div>
+							<div id="size-container">
+								<dl>
 									<dt>Size</dt>
 									<dd><span id="pool-size">...</span></dd>
-								</div>
-								<dt>Share URL</dt>
-								<dd><input id="share-url" readonly value="{{ .Campaign.ShareURL }}"></dd>
-								<dt>Additional info</dt>
-								<dd>{{ .Campaign.Info }}</dd>
-							</dl>
+									<dt>Share URL</dt>
+									<dd><input id="share-url" readonly value="{{ .Campaign.ShareURL }}"></dd>
+									<dt>Additional info</dt>
+									<dd>{{ .Campaign.Info }}</dd>
+								</dl>
+							</div>
 						</div>
 					</div>
 					<div id="completed-container" style="display: none;">

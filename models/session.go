@@ -3,7 +3,9 @@ package models
 import (
 	"log"
 	"strconv"
+	"time"
 
+	"github.com/ducksouplab/mastok/cache"
 	"github.com/ducksouplab/mastok/otree"
 	"gorm.io/gorm"
 )
@@ -11,6 +13,7 @@ import (
 type Session struct {
 	gorm.Model
 	CampaignId uint
+	LaunchedAt time.Time // used to see if session is currently runnning
 	// otree Code
 	Code     string
 	OtreeId  string
@@ -32,7 +35,7 @@ func convertFromOtree(o otree.Session) Session {
 func newSessionArgs(c *Campaign) otree.SessionArgs {
 	sessionId := OtreePrefix + c.Namespace + ":" + strconv.Itoa(c.StartedSessions+1)
 	return otree.SessionArgs{
-		SessionConfigName: c.OtreeExperimentId,
+		SessionConfigName: cache.GetExperimentName(c.OtreeExperimentId),
 		NumParticipants:   c.PerSession,
 		Config: otree.NestedConfig{
 			Id: sessionId,
@@ -43,6 +46,7 @@ func newSessionArgs(c *Campaign) otree.SessionArgs {
 func CreateSession(c *Campaign) (session Session, participantCodes []string, err error) {
 	args := newSessionArgs(c)
 	o := otree.Session{}
+
 	// GET code
 	if err = otree.PostOTreeJSON("/api/sessions/", args, &o); err != nil {
 		return
@@ -57,6 +61,7 @@ func CreateSession(c *Campaign) (session Session, participantCodes []string, err
 	}
 	// save to campaign
 	session = convertFromOtree(o)
+	session.LaunchedAt = time.Now()
 	err = c.appendSession(session)
 	if err != nil {
 		log.Println("[runner] add session to campaign failed: ", err)

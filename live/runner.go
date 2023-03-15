@@ -3,10 +3,30 @@ package live
 import (
 	"log"
 	"strconv"
+	"sync"
+	"time"
 
 	"github.com/ducksouplab/mastok/models"
 	"github.com/ducksouplab/mastok/otree"
 )
+
+type ticker struct {
+	sync.Mutex
+	*time.Ticker
+	doneCh    chan struct{}
+	isStopped bool
+}
+
+func (t *ticker) stop() {
+	t.Lock()
+	defer t.Unlock()
+
+	if !t.isStopped {
+		t.isStopped = true
+		t.Ticker.Stop()
+		close(t.doneCh)
+	}
+}
 
 // clients hold references to any (supervisor or participant) client
 // the currentPool holds count of participant clients
@@ -20,11 +40,12 @@ type runner struct {
 	// other incoming events
 	stateCh chan string
 	// done
-	doneCh chan struct{}
+	updateStateTicker *ticker
+	doneCh            chan struct{}
 }
 
 func newRunner(c *models.Campaign) *runner {
-	return &runner{
+	r := runner{
 		campaign:     c,
 		poolSize:     0,
 		clients:      make(map[*client]bool),
@@ -33,6 +54,12 @@ func newRunner(c *models.Campaign) *runner {
 		stateCh:      make(chan string),
 		doneCh:       make(chan struct{}),
 	}
+
+	if c.GetPublicState(true) == models.Busy {
+		r.tickStateMessage()
+	}
+
+	return &r
 }
 
 func (r *runner) isDone() chan struct{} {
@@ -45,14 +72,9 @@ func (r *runner) stop() {
 }
 
 func (r *runner) stateMessage(c *client) Message {
-	state := r.campaign.State
-	// hide internals to participants
-	if state != "Running" && !c.isSupervisor {
-		state = "Unavailable"
-	}
 	return Message{
 		Kind:    "State",
-		Payload: state,
+		Payload: r.campaign.GetPublicState(c.isSupervisor),
 	}
 }
 
@@ -84,6 +106,38 @@ func participantDisconnectMessage() Message {
 	}
 }
 
+func (r *runner) tickStateMessage() {
+	if r.updateStateTicker.Ticker != nil {
+		r.updateStateTicker.stop()
+	}
+	r.updateStateTicker = &ticker{
+		sync.Mutex{},
+		time.NewTicker(models.SessionDurationUnit),
+		make(chan struct{}),
+		false,
+	}
+
+	go func() {
+		for {
+			select {
+			case <-r.doneCh:
+				return
+			case <-r.updateStateTicker.doneCh:
+				return
+			case <-r.updateStateTicker.Ticker.C:
+				if r.campaign.GetPublicState(true) != models.Busy {
+					for c := range r.clients {
+						if c.isSupervisor {
+							c.messageCh <- r.stateMessage(c)
+						}
+					}
+					r.updateStateTicker.stop()
+				}
+			}
+		}
+	}()
+}
+
 func (r *runner) loop() {
 	for {
 		select {
@@ -106,12 +160,16 @@ func (r *runner) loop() {
 					if r.poolSize == r.campaign.PerSession {
 						session, participantCodes, err := models.CreateSession(r.campaign)
 						if err != nil {
-							log.Println("[runner] oTree session creation failed")
+							log.Println("[runner] session creation failed: ", err)
 						} else {
 							participantIndex := 0
 							for c := range r.clients {
 								if c.isSupervisor {
 									c.messageCh <- r.sessionStartSupervisorMessage(session)
+									c.messageCh <- r.stateMessage(c) // if state becomes Busy
+									if c.runner.campaign.GetPublicState(true) == models.Busy {
+										c.runner.tickStateMessage()
+									}
 								} else {
 									c.messageCh <- r.sessionStartParticipantMessage(participantCodes[participantIndex])
 									c.messageCh <- participantDisconnectMessage()
@@ -122,6 +180,7 @@ func (r *runner) loop() {
 					}
 				}
 			} else {
+				// don't register
 				c.messageCh <- r.stateMessage(c)
 				c.messageCh <- participantDisconnectMessage()
 				if len(r.clients) == 0 {

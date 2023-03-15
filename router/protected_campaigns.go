@@ -40,7 +40,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 	})
 	g.GET("/campaigns/supervise/:namespace", func(c *gin.Context) {
 		namespace := c.Param("namespace")
-		campaign, err := models.FindCampaignByNamespaceWithSessions(namespace)
+		campaign, err := models.FindCampaignByNamespace(namespace)
 		if err != nil {
 			log.Printf("[router] find campaign failed for namespace %v: %v", namespace, err)
 			c.AbortWithStatus(http.StatusNotFound)

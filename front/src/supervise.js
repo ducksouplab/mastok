@@ -42,20 +42,29 @@ const start = function (namespace) {
   };
 
   ws.onmessage = (event) => {
-    const { kind, payload } = looseJSONParse(event.data)
+    const { kind, payload } = looseJSONParse(event.data);
+    console.log(kind, payload);
     if(kind === 'State') {
       document.getElementById("state").innerHTML = payload;
       if(payload === "Paused") {
         document.getElementById("change-state-container").value = "Run";
         show("change-state-container");
+        show("size-container");
+        hide("busy-container");
       } else if(payload === "Running") {
         document.getElementById("change-state-container").value = "Pause";
         show("change-state-container");
+        show("size-container");
+        hide("busy-container");
+      } else if(payload === "Busy") {
+        hide("change-state-container");
+        hide("size-container");
+        show("busy-container");
       } else if(payload === "Completed") {
         hide("not-completed-container");
         hide("change-state-container");
         show("completed-container");
-      }
+      } 
     } else if(kind === 'PoolSize') {
       updateHasParticipants(payload);
       document.getElementById("pool-size").innerHTML = payload;

@@ -3,6 +3,7 @@ package models
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/ducksouplab/mastok/env"
 	"gorm.io/driver/postgres"
@@ -11,6 +12,15 @@ import (
 )
 
 var DB *gorm.DB
+var SessionDurationUnit time.Duration
+
+func init() {
+	if env.Mode == "TEST" {
+		SessionDurationUnit = 3 * time.Millisecond
+	} else {
+		SessionDurationUnit = time.Minute
+	}
+}
 
 func ConnectAndMigrate() {
 	var err error
@@ -41,6 +51,7 @@ func ReinitDevDB() {
 	if env.Mode == "RESET_DEV" {
 		os.Remove(env.ProjectRoot + "local.db")
 		ConnectAndMigrate()
+		// dev fixtures
 		var campaign = Campaign{
 			Namespace:          "dev_campaign_1",
 			Slug:               "dev_campaign_1_slug",
@@ -60,14 +71,15 @@ func ReinitDevDB() {
 			log.Fatal(err)
 		}
 		campaign.appendSession(session)
-
+		// simple campaign
 		var otherCampaign = Campaign{
 			Namespace:          "dev_campaign_2",
 			Slug:               "dev_campaign_2_slug",
 			OtreeExperimentId:  "CH",
-			PerSession:         8,
+			PerSession:         2,
 			MaxSessions:        4,
-			ConcurrentSessions: 2,
+			SessionDuration:    2,
+			ConcurrentSessions: 1,
 			State:              Running,
 		}
 		if err := DB.Create(&otherCampaign).Error; err != nil {

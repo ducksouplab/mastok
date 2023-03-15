@@ -8,14 +8,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func campaignFormData(namespace, slug, expId, perSession, maxSessions, sessionMaxMinutes, concurrentSessions string) url.Values {
+func campaignFormData(namespace, slug, expId, perSession, maxSessions, sessionDuration, concurrentSessions string) url.Values {
 	data := url.Values{}
 	data.Set("namespace", namespace)
 	data.Set("slug", slug)
 	data.Set("otree_experiment_id", expId)
 	data.Set("per_session", perSession)
 	data.Set("max_sessions", maxSessions)
-	data.Set("session_max_minutes", sessionMaxMinutes)
+	data.Set("session_duration", sessionDuration)
 	data.Set("concurrent_sessions", concurrentSessions)
 	return data
 }

@@ -3,30 +3,10 @@ package live
 import (
 	"log"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/ducksouplab/mastok/models"
 	"github.com/ducksouplab/mastok/otree"
 )
-
-type ticker struct {
-	sync.Mutex
-	*time.Ticker
-	doneCh    chan struct{}
-	isStopped bool
-}
-
-func (t *ticker) stop() {
-	t.Lock()
-	defer t.Unlock()
-
-	if !t.isStopped {
-		t.isStopped = true
-		t.Ticker.Stop()
-		close(t.doneCh)
-	}
-}
 
 // clients hold references to any (supervisor or participant) client
 // the currentPool holds count of participant clients
@@ -107,35 +87,12 @@ func participantDisconnectMessage() Message {
 }
 
 func (r *runner) tickStateMessage() {
-	if r.updateStateTicker.Ticker != nil {
+	if r.updateStateTicker != nil {
 		r.updateStateTicker.stop()
 	}
-	r.updateStateTicker = &ticker{
-		sync.Mutex{},
-		time.NewTicker(models.SessionDurationUnit),
-		make(chan struct{}),
-		false,
-	}
-
-	go func() {
-		for {
-			select {
-			case <-r.doneCh:
-				return
-			case <-r.updateStateTicker.doneCh:
-				return
-			case <-r.updateStateTicker.Ticker.C:
-				if r.campaign.GetPublicState(true) != models.Busy {
-					for c := range r.clients {
-						if c.isSupervisor {
-							c.messageCh <- r.stateMessage(c)
-						}
-					}
-					r.updateStateTicker.stop()
-				}
-			}
-		}
-	}()
+	ticker := newTicker(models.SessionDurationUnit)
+	go ticker.loop(r)
+	r.updateStateTicker = r.updateStateTicker
 }
 
 func (r *runner) loop() {

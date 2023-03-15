@@ -147,4 +147,38 @@ func TestRunner_Integration(t *testing.T) {
 			return addWs.isLastWriteLike(Message{"Participant", "Disconnect"})
 		}), "participant should receive Disconnect")
 	})
+
+	t.Run("manages Busy state", func(t *testing.T) {
+		ns := "fxt_live_ns8_busy"
+		slug := "fxt_live_ns8_busy_slug"
+		perSession := 2
+		defer tearDown(ns)
+
+		// the fixture data is what we expected
+		campaign, _ := models.FindCampaignByNamespace(ns)
+		assert.Equal(t, perSession, campaign.PerSession)
+		assert.Equal(t, 1, campaign.ConcurrentSessions)
+		assert.Equal(t, "Running", campaign.State)
+
+		// supervisor
+		wsSup := newWSStub()
+		RunSupervisor(wsSup, ns)
+		// fills the pool
+		th.InterceptOtreePostSession()
+		th.InterceptOtreeGetSession()
+		defer th.InterceptOff()
+		wsSlice := makeWSStubs(perSession)
+		for _, ws := range wsSlice {
+			RunParticipant(ws, slug)
+		}
+
+		// assert inner state
+		assert.True(t, retryUntil(longerDuration, func() bool {
+			return wsSup.hasReceived(Message{"State", "Busy"})
+		}), "supervisor should receive Busy")
+		assert.True(t, retryUntil(sessionDurationTest*models.SessionDurationUnit, func() bool {
+			t.Logf(">>> \n%+v", wsSup.writes)
+			return wsSup.isLastWriteLike(Message{"State", "Running"})
+		}), "supervisor should receive Running after Busy")
+	})
 }

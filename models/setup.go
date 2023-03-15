@@ -78,8 +78,8 @@ func ReinitDevDB() {
 			OtreeExperiment:    "chatroulette",
 			PerSession:         2,
 			MaxSessions:        4,
-			SessionDuration:    2,
 			ConcurrentSessions: 1,
+			SessionDuration:    2,
 			State:              Running,
 		}
 		if err := DB.Create(&otherCampaign).Error; err != nil {

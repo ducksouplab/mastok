@@ -29,8 +29,8 @@ type Campaign struct {
 	OtreeExperiment    string `form:"otree_experiment_id" binding:"required"`
 	PerSession         int    `form:"per_session" binding:"required,gte=1,lte=32"`
 	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`
-	SessionDuration    int    `form:"session_duration" binding:"required"`
 	ConcurrentSessions int    `form:"concurrent_sessions" binding:"required,gte=1,lte=99" gorm:"default:1"`
+	SessionDuration    int    `form:"session_duration" binding:"required"`
 	State              string `gorm:"default:Paused"`
 	StartedSessions    int    `gorm:"default:0"`
 	// relations

@@ -26,7 +26,7 @@
 					<td>{{ .Campaign.OtreeExperiment }}</td>
 				</tr>
 				<tr>
-					<th scope="row">Per session</th>
+					<th scope="row">Participants per session</th>
 					<td>{{ .Campaign.PerSession }}</td>
 				</tr>
 				<tr>
@@ -34,13 +34,13 @@
 					<td>{{ .Campaign.MaxSessions }}</td>
 				</tr>
 				<tr>
-					<th scope="row">Duration (in minutes)</th>
-					<td>{{ .Campaign.SessionDuration }}</td>
-				</tr>
-				<tr>
-					<th scope="row">Concurrent sessions</th>
+					<th scope="row">Max concurrent sessions</th>
 					<td>{{ .Campaign.ConcurrentSessions }}</td>
 				</tr>
+				</tr>
+				<tr>
+					<th scope="row">Session duration</th>
+					<td>{{ .Campaign.SessionDuration }} mn</td>
 			</tbody>
 		</table>
 	</div>
@@ -53,31 +53,26 @@
 		<div class="row mb-3">
 			<div class="col">
 				<div class="card">
-					<div id="not-completed-container">
-						<div class="card-header">Current pool</div>
-						<div class="card-body">
-							<div id="new-container" class="alert alert-success" role="alert" style="display: none">
-								New session started (page refreshing in 3 seconds)
-							</div>
-							<div id="busy-container" class="alert alert-warning" role="alert" style="display: none">
-								Concurrent sessions limit reached
-							</div>
-							<div id="size-container">
-								<dl>
-									<dt>Size</dt>
-									<dd><span id="pool-size">...</span></dd>
-									<dt>Share URL</dt>
-									<dd><input id="share-url" readonly value="{{ .Campaign.ShareURL }}"></dd>
-									<dt>Additional info</dt>
-									<dd>{{ .Campaign.Info }}</dd>
-								</dl>
-							</div>
+					<div class="card-header">Current pool</div>
+					<div class="card-body">
+						<div id="new-container" class="alert alert-success" role="alert" style="display: none">
+							New session started (page refreshing in 3 seconds)
 						</div>
-					</div>
-					<div id="completed-container" style="display: none;">
-						<div class="card-header">Current pool closed</div>
-						<div class="card-body">
-							<p>Campaign has been completed</p>
+						<div id="busy-container" class="alert alert-warning" role="alert" style="display: none">
+							Concurrent sessions limit reached
+						</div>
+						<div id="completed-container" class="alert alert-dark" role="alert" style="display: none">
+							Campaign has been completed
+						</div>
+						<div id="size-container">
+							<dl>
+								<dt>Size</dt>
+								<dd><span id="pool-size">...</span></dd>
+								<dt>Share URL</dt>
+								<dd><input id="share-url" readonly value="{{ .Campaign.ShareURL }}"></dd>
+								<dt>Additional info</dt>
+								<dd>{{ .Campaign.Info }}</dd>
+							</dl>
 						</div>
 					</div>
 				</div>

@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	shortDuration  = 10 * time.Millisecond
-	longerDuration = 50 * time.Millisecond // for instance if there are DB writes
+	shortDuration       = 10 * time.Millisecond
+	longerDuration      = 50 * time.Millisecond // for instance if there are DB writes
+	sessionDurationTest = 60
 )
 
 func TestMain(m *testing.M) {
@@ -85,6 +86,16 @@ var Fixtures []models.Campaign = []models.Campaign{
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
 		StartedSessions:    3,
+		State:              models.Running,
+	},
+	{
+		Namespace:          "fxt_live_ns8_busy",
+		Slug:               "fxt_live_ns8_busy_slug",
+		OtreeExperiment:    "xp_name",
+		PerSession:         2,
+		MaxSessions:        2,
+		ConcurrentSessions: 1,
+		SessionDuration:    sessionDurationTest,
 		State:              models.Running,
 	},
 }

@@ -61,8 +61,8 @@ const start = function (namespace) {
         hide("size-container");
         show("busy-container");
       } else if(payload === "Completed") {
-        hide("not-completed-container");
         hide("change-state-container");
+        hide("size-container");
         show("completed-container");
       } 
     } else if(kind === 'PoolSize') {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ducksouplab/mastok/env"
+	"github.com/ducksouplab/mastok/helpers"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -51,6 +52,7 @@ func ReinitDevDB() {
 	if env.Mode == "RESET_DEV" {
 		os.Remove(env.ProjectRoot + "local.db")
 		ConnectAndMigrate()
+		consentString := helpers.ReadFile("consent.md")
 		// dev fixtures
 		var campaign = Campaign{
 			Namespace:          "dev_campaign_1",
@@ -59,6 +61,7 @@ func ReinitDevDB() {
 			PerSession:         4,
 			MaxSessions:        2,
 			ConcurrentSessions: 1,
+			Consent:            consentString,
 			State:              Running,
 		}
 		var session = Session{

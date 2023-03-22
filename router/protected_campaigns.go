@@ -1,6 +1,7 @@
 package router
 
 import (
+	"html/template"
 	"log"
 	"net/http"
 
@@ -49,7 +50,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		}
 		c.HTML(http.StatusOK, "campaigns_supervise.tmpl", gin.H{
 			"Campaign":        campaign,
-			"RenderedConsent": string(github_flavored_markdown.Markdown([]byte("input:\n\n- [ ] item"))),
+			"RenderedConsent": template.HTML(github_flavored_markdown.Markdown([]byte(campaign.Consent))),
 		})
 	})
 	g.GET("/ws/campaigns/supervise", func(c *gin.Context) {

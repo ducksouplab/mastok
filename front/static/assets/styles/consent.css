@@ -1,0 +1,11 @@
+.consent h1 {
+  font-size: 1.4em;
+}
+
+.consent ul {
+  padding-left: 0;
+}
+
+.consent ul li {
+  list-style: none;
+}

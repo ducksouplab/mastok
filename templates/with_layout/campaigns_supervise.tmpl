@@ -30,26 +30,29 @@
 					<td>{{ .Campaign.PerSession }}</td>
 				</tr>
 				<tr>
+					<th scope="row">Join once</th>
+					<td>{{if .Campaign.JoinOnce}}yes{{else}}no{{end}}</td>
+				</tr>
+				<tr>
 					<th scope="row">Max sessions</th>
 					<td>{{ .Campaign.MaxSessions }}</td>
 				</tr>
 				<tr>
 					<th scope="row">Max concurrent sessions</th>
 					<td>{{ .Campaign.ConcurrentSessions }}</td>
-				</tr>
+				</tr>				
+				<tr>
+					<th scope="row">Grouping</th>
+					<td>{{if .Campaign.Grouping}}yes{{else}}no{{end}}</td>
 				</tr>
 				<tr>
 					<th scope="row">Session duration</th>
 					<td>{{ .Campaign.SessionDuration }} mn</td>
+				</tr>
 			</tbody>
 		</table>
 	</div>
 	<div class="col">
-		<div class="row mb-3">
-			<div class="col">
-				
-			</div>
-		</div>
 		<div class="row mb-3">
 			<div class="col">
 				<div class="card">
@@ -73,8 +76,6 @@
 								<dd><span id="pool-size">...</span></dd>
 								<dt>Share URL</dt>
 								<dd><input id="share-url" readonly value="{{ .Campaign.ShareURL }}"></dd>
-								<dt>Additional info</dt>
-								<dd>{{ .Campaign.Info }}</dd>
 							</dl>
 						</div>
 					</div>
@@ -112,6 +113,11 @@
 				</div>
 			</div>
 		</div>
+	</div>
+</div>
+<div class="row">
+	<div class="col">
+		{{ .RenderedConsent }}
 	</div>
 </div>
 

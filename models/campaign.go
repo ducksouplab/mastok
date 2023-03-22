@@ -28,7 +28,6 @@ type Campaign struct {
 	// definition
 	Namespace          string `form:"namespace" binding:"required,namespace,min=2,max=128" gorm:"uniqueIndex"`
 	Slug               string `form:"slug" binding:"required,namespace,min=2,max=128" gorm:"uniqueIndex"`
-	Info               string `form:"info" binding:"max=128"`
 	OtreeExperiment    string `form:"otree_experiment_id" binding:"required"`
 	PerSession         int    `form:"per_session" binding:"required,gte=1,lte=32"`
 	JoinOnce           bool   `form:"join_once" gorm:"default:false" ` // don't <require> due to https://github.com/go-playground/validator/issues/1040
@@ -36,6 +35,9 @@ type Campaign struct {
 	ConcurrentSessions int    `form:"concurrent_sessions" binding:"gte=1,lte=99" gorm:"default:1"`
 	SessionDuration    int    `form:"session_duration" binding:"required"`
 	WaitingLimit       int    `form:"waiting_limit" binding:"gte=1,lte=12" gorm:"default:5"`
+	// extra configuration
+	Grouping string `json:"grouping" gorm:"size:1024"`
+	Consent  string `json:"consent" gorm:"size:65535"`
 	// evolving
 	State           string `gorm:"default:Paused"`
 	StartedSessions int    `gorm:"default:0"`

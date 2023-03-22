@@ -8,6 +8,7 @@ import (
 	"github.com/ducksouplab/mastok/live"
 	"github.com/ducksouplab/mastok/models"
 	"github.com/gin-gonic/gin"
+	"github.com/shurcooL/github_flavored_markdown"
 )
 
 func wsSuperviseHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +48,8 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 			return
 		}
 		c.HTML(http.StatusOK, "campaigns_supervise.tmpl", gin.H{
-			"Campaign": campaign,
+			"Campaign":        campaign,
+			"RenderedConsent": string(github_flavored_markdown.Markdown([]byte("input:\n\n- [ ] item"))),
 		})
 	})
 	g.GET("/ws/campaigns/supervise", func(c *gin.Context) {

@@ -18,6 +18,8 @@ type campaignForm struct {
 	concurrentSessions string
 	sessionDuration    string
 	waitingLimit       string
+	grouping           string
+	consent            string
 }
 
 func newCampaignForm(namespace string) campaignForm {
@@ -45,6 +47,8 @@ func campaignFormData(cf campaignForm) url.Values {
 	data.Set("concurrent_sessions", cf.concurrentSessions)
 	data.Set("session_duration", cf.sessionDuration)
 	data.Set("waiting_limit", cf.waitingLimit)
+	data.Set("grouping", cf.grouping)
+	data.Set("consent", cf.consent)
 	return data
 }
 

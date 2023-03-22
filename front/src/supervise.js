@@ -48,7 +48,6 @@ const start = function (namespace) {
       document.getElementById("state").innerHTML = payload;
       if(payload === "Paused") {
         document.getElementById("change-state-container").value = "Run";
-        console.log("blabla")
         show("change-state-container");
         hide("size-container");
         show("paused-container");

@@ -1,24 +1,31 @@
 {{define "content"}}
 <div class="row">
-  <div class="col-5">
+  <div class="col">
     <h1>New campaign</h1>
     {{ .Error }}
-    <form action="/campaigns" method="POST">
+  </div>
+</div>
+<form action="/campaigns" method="POST">
+  <div class="row">
+    <div class="col">
       <div class="mb-3">
         <label for="namespace" class="form-label">Unique namespace*</label>
-        <input type="text" name="namespace" id="namespace" tabindex="0" class="form-control" pattern="[a-zA-Z0-9]+" minlength="2" maxlength="64" required>
+        <input type="text" name="namespace" id="namespace" tabindex="0" class="form-control" pattern="[a-zA-Z0-9]+"
+          minlength="2" maxlength="64" required>
         <div class="form-text">Used to build oTree session IDs, only letters and numbers</div>
       </div>
       <div class="mb-3">
         <label for="slug" class="form-label">Unique slug*</label>
-        <input type="text" name="slug" id="slug" class="form-control" pattern="[a-zA-Z0-9]+" minlength="2" maxlength="64" required>
+        <input type="text" name="slug" id="slug" class="form-control" pattern="[a-zA-Z0-9]+" minlength="2"
+          maxlength="64" required>
         <div class="form-text">Used to share campaign URL, only letters and numbers</div>
       </div>
       <div class="mb-3">
         <label for="otree_experiment_id" class="form-label">oTree Experiment*</label>
-        <select name="otree_experiment_id" id="otree_experiment_id" class="form-select" aria-label="Default select example" required>
+        <select name="otree_experiment_id" id="otree_experiment_id" class="form-select"
+          aria-label="Default select example" required>
           {{range .Experiments}}
-            <option value="{{ . }}">{{ . }}</option>
+          <option value="{{ . }}">{{ . }}</option>
           {{end}}
         </select>
       </div>
@@ -27,8 +34,8 @@
         <input type="number" name="per_session" id="per_session" min=1 max=32 class="form-control" required>
       </div>
       <div class="mb-3">
-        <input class="form-check-input" type="checkbox" value="" name="join_once" id="join_once" required>
-        <label for="join_once" class="form-label">Restrict participations (once per campaign)*</label>
+        <input class="form-check-input" type="checkbox" value="" name="join_once" id="join_once">
+        <label for="join_once" class="form-label">Restrict participations (once per campaign)</label>
         <div class="form-text">Relies on device fingerprinting</div>
 
       </div>
@@ -38,7 +45,8 @@
       </div>
       <div class="mb-3">
         <label for="concurrent_sessions" class="form-label">Number of sessions run concurrently*</label>
-        <input type="number" name="concurrent_sessions" id="concurrent_sessions" value=1 min=1 max=32 class="form-control" required>
+        <input type="number" name="concurrent_sessions" id="concurrent_sessions" value=1 min=1 max=32
+          class="form-control" required>
         <div class="form-text">Leave 1 if you don't want to run several sessions at the same time</div>
       </div>
       <div class="mb-3">
@@ -49,14 +57,43 @@
       <div class="mb-3">
         <label for="waiting_limit" class="form-label">Maximum waiting time before session (in minutes)*</label>
         <input type="number" name="waiting_limit" id="waiting_limit" value=4 min=1 max=12 class="form-control" required>
-        <div class="form-text">If participants pool is incomplete after this limit, participants will be disconnected</div>
+        <div class="form-text">If participants pool is incomplete after this limit, participants will be disconnected
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="mb-3">
+        <label for="grouping" class="form-label">Grouping rule (leave empty if no grouping is needed)</label>
+        <textarea name="grouping" id="grouping" class="form-control" rows="3"></textarea>
+        <div class="form-text">
+          <div class="row">
+            <div class="col-6">
+              <p class="m-0">Follow this pattern</p>
+              <code>Question</code><br/>
+              <code>group1:size</code><br/>
+              <code>group2:size</code><br/>
+              <code>...</code>
+            </div>
+            <div class="col-6">
+              <p class="m-0">For instance</p>
+              <code>What is your gender?</code><br/>
+              <code>Male:4</code><br/>
+              <code>Female:4</code>
+            </div>
+          </div>
+          <p class="m-0">Sum of groups size must match the "Participants per session" property (on the left)</p>
+        </div>
       </div>
       <div class="mb-3">
-        <label for="info" class="form-label">Additional info</label>
-        <input type="text" name="info" id="info" class="form-control" maxlength="128">
+        <label for="consent" class="form-label">Consent in markdown format</label>
+        <textarea name="consent" id="consent" class="form-control" rows="16"></textarea>
       </div>
-      <button type="submit" class="btn btn-primary">Create</button>
-    </form>
+    </div>
   </div>
-</div>
+  <div class="row">
+    <div class="col">
+      <button type="submit" class="btn btn-primary">Create</button>
+    </div>
+  </div>
+</form>
 {{end}}

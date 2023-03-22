@@ -9,7 +9,9 @@
 					<th>Namespace</th>
 					<th>Experiment</th>
 					<th>Per session</th>
+					<th>Join once</th>
 					<th>Max sessions</th>
+					<th>Grouping</th>
 					<th>Sessions started</th>
 					<th>State</th>
 					<th></th>
@@ -22,7 +24,9 @@
 					<td>{{ .Namespace }}</td>
 					<td>{{ .OtreeExperiment }}</td>
 					<td>{{ .PerSession }}</td>
+					<td>{{if .JoinOnce}}yes{{else}}no{{end}}</td>
 					<td>{{ .MaxSessions }}</td>
+					<td>{{if .Grouping}}yes{{else}}no{{end}}</td>
 					<td>{{ .StartedSessions }}</td>
 					<td>{{ .State }}</td>
 					<td><a href="/campaigns/supervise/{{ .Namespace }}" class="float-end">Supervise</a></td>

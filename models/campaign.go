@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"log"
 
 	"github.com/ducksouplab/mastok/env"
 	"gorm.io/gorm"
@@ -39,17 +40,31 @@ type Campaign struct {
 	Sessions []Session
 }
 
-func FindCampaignByNamespace(namespace string) (c *Campaign, err error) {
-	err = DB.Preload("Sessions", func(db *gorm.DB) *gorm.DB {
+func GetCampaignByNamespace(namespace string) (c *Campaign, ok bool) {
+	err := DB.Preload("Sessions", func(db *gorm.DB) *gorm.DB {
 		return db.Order("sessions.created_at DESC")
 	}).First(&c, "namespace = ?", namespace).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Println("[db] error: ", err)
+		}
+		return
+	}
+	ok = true
 	return
 }
 
-func FindCampaignBySlug(slug string) (c *Campaign, err error) {
-	err = DB.Preload("Sessions", func(db *gorm.DB) *gorm.DB {
+func GetCampaignBySlug(slug string) (c *Campaign, ok bool) {
+	err := DB.Preload("Sessions", func(db *gorm.DB) *gorm.DB {
 		return db.Order("sessions.created_at DESC")
 	}).First(&c, "slug = ?", slug).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Println("[db] error: ", err)
+		}
+		return
+	}
+	ok = true
 	return
 }
 

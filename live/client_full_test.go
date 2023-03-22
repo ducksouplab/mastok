@@ -20,7 +20,7 @@ func TestClientFull_Integration(t *testing.T) {
 		defer tearDown(ns)
 
 		// the fixture data is what we expected
-		campaign, _ := models.FindCampaignByNamespace(ns)
+		campaign, _ := models.GetCampaignByNamespace(ns)
 		assert.Equal(t, perSession, campaign.PerSession)
 		assert.Equal(t, 0, campaign.StartedSessions)
 		assert.Equal(t, "Running", campaign.State)
@@ -74,7 +74,7 @@ func TestClientFull_Integration(t *testing.T) {
 		defer tearDown(ns)
 
 		// the fixture data is what we expected
-		campaign, _ := models.FindCampaignByNamespace(ns)
+		campaign, _ := models.GetCampaignByNamespace(ns)
 		assert.Equal(t, perSession, campaign.PerSession)
 		assert.Equal(t, 3, campaign.StartedSessions)
 		assert.Equal(t, "Running", campaign.State)
@@ -91,7 +91,7 @@ func TestClientFull_Integration(t *testing.T) {
 
 		// assert inner state
 		assert.True(t, retryUntil(longDuration, func() bool {
-			c, _ := models.FindCampaignByNamespace(ns)
+			c, _ := models.GetCampaignByNamespace(ns)
 			return c.State == models.Completed && c.StartedSessions == 4
 		}), "campaign should be Completed")
 
@@ -111,7 +111,7 @@ func TestClientFull_Integration(t *testing.T) {
 		defer tearDown(ns)
 
 		// the fixture data is what we expected
-		campaign, _ := models.FindCampaignByNamespace(ns)
+		campaign, _ := models.GetCampaignByNamespace(ns)
 		assert.Equal(t, perSession, campaign.PerSession)
 		assert.Equal(t, false, campaign.JoinOnce)
 		assert.Equal(t, 0, campaign.StartedSessions)
@@ -156,7 +156,7 @@ func TestClientFull_Integration(t *testing.T) {
 		defer tearDown(ns)
 
 		// the fixture data is what we expected
-		campaign, _ := models.FindCampaignByNamespace(ns)
+		campaign, _ := models.GetCampaignByNamespace(ns)
 		assert.Equal(t, perSession, campaign.PerSession)
 		assert.Equal(t, true, campaign.JoinOnce)
 		assert.Equal(t, 0, campaign.StartedSessions)
@@ -201,7 +201,7 @@ func TestClientFull_Integration(t *testing.T) {
 		defer tearDown(ns)
 
 		// the fixture data is what we expected
-		campaign, _ := models.FindCampaignByNamespace(ns)
+		campaign, _ := models.GetCampaignByNamespace(ns)
 		assert.Equal(t, perSession, campaign.PerSession)
 		assert.Equal(t, true, campaign.JoinOnce)
 		assert.Equal(t, 0, campaign.StartedSessions)
@@ -247,7 +247,7 @@ func TestClientFull_Integration(t *testing.T) {
 		defer tearDown(ns)
 
 		// the fixture data is what we expected
-		campaign, _ := models.FindCampaignByNamespace(ns)
+		campaign, _ := models.GetCampaignByNamespace(ns)
 		assert.Equal(t, perSession, campaign.PerSession)
 		assert.Equal(t, false, campaign.JoinOnce)
 		assert.Equal(t, 0, campaign.StartedSessions)

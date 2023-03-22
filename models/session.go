@@ -74,7 +74,7 @@ func (s *Session) FormatCreatedAt() string {
 	return s.CreatedAt.Format("2006-01-02 15:04:05")
 }
 
-func FindSession(id uint) (s *Session, ok bool) {
+func GetSession(id uint) (s *Session, ok bool) {
 	err := DB.First(&s, "id = ?", id).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {

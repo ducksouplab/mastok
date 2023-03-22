@@ -154,9 +154,9 @@ func (r *runner) loop() {
 			}
 		case c := <-r.landCh:
 			var isInLiveSession bool
-			participation, hasParticipatedToCampaign := models.FindParticipation(*c.runner.campaign, c.fingerprint)
+			participation, hasParticipatedToCampaign := models.GetParticipation(*c.runner.campaign, c.fingerprint)
 			if hasParticipatedToCampaign {
-				pastSession, ok := models.FindSession(participation.SessionID)
+				pastSession, ok := models.GetSession(participation.SessionID)
 				if ok {
 					isInLiveSession = pastSession.IsLive()
 				}

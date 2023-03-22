@@ -26,7 +26,7 @@ func CreateParticipation(s Session, fingerprint, code string) (err error) {
 }
 
 // ok if participation exists, live if participation is related to a live session
-func FindParticipation(c Campaign, fingerprint string) (p *Participation, ok bool) {
+func GetParticipation(c Campaign, fingerprint string) (p *Participation, ok bool) {
 	err := DB.First(&p, "campaign_id = ? AND fingerprint = ?", c.ID, fingerprint).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {

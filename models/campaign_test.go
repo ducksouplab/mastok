@@ -9,7 +9,7 @@ import (
 func TestCampaign_Unit(t *testing.T) {
 	t.Run("session can't be added to completed campaign", func(t *testing.T) {
 		ns := "fxt_models_ns2_completed"
-		campaign, _ := FindCampaignByNamespace(ns)
+		campaign, _ := GetCampaignByNamespace(ns)
 
 		s := &Session{}
 		err := campaign.appendSession(s)
@@ -19,7 +19,7 @@ func TestCampaign_Unit(t *testing.T) {
 
 	t.Run("campaign is Busy when MaxSessions is reached", func(t *testing.T) {
 		ns := "fxt_models_ns3_busy"
-		campaign, _ := FindCampaignByNamespace(ns)
+		campaign, _ := GetCampaignByNamespace(ns)
 
 		assert.Equal(t, 3, campaign.liveSessions())
 		assert.Equal(t, true, campaign.isBusy())

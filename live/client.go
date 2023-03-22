@@ -95,13 +95,13 @@ func (c *client) writeLoop() {
 
 func runClient(isSupervisor bool, ws wsConn, identifier string) *client {
 	var campaign *models.Campaign
-	var err error
+	var ok bool
 	if isSupervisor {
-		campaign, err = models.FindCampaignByNamespace(identifier)
+		campaign, ok = models.GetCampaignByNamespace(identifier)
 	} else {
-		campaign, err = models.FindCampaignBySlug(identifier)
+		campaign, ok = models.GetCampaignBySlug(identifier)
 	}
-	if err != nil {
+	if !ok {
 		return nil
 	}
 

@@ -51,7 +51,7 @@ func TestMain(m *testing.M) {
 	if err := DB.Create(Fixtures).Error; err != nil {
 		log.Fatal(err)
 	}
-	busyCampaign, _ := FindCampaignByNamespace("fxt_models_ns3_busy")
+	busyCampaign, _ := GetCampaignByNamespace("fxt_models_ns3_busy")
 	var oldSession = Session{
 		LaunchedAt: time.Now().Add(-2 * time.Duration(sessionDurationTest) * SessionDurationUnit), // not "current" session
 		Code:       "codenum1",

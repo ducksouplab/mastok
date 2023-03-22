@@ -16,8 +16,8 @@ type NestedConfig struct {
 }
 
 type Session struct {
-	Id              string
-	Code            string
+	Id              string              `json:"id"`
+	Code            string              `json:"code"`
 	ConfigName      string              `json:"config_name"`
 	CreatedAtFloat  float32             `json:"created_at"`
 	NumParticipants int                 `json:"num_participants"`

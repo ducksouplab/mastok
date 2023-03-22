@@ -18,7 +18,7 @@ type runner struct {
 	registerCh   chan *client
 	unregisterCh chan *client
 	// other incoming events
-	stateCh chan string
+	incomingCh chan Message
 	// done
 	updateStateTicker *ticker
 	doneCh            chan struct{}
@@ -31,7 +31,7 @@ func newRunner(c *models.Campaign) *runner {
 		clients:      make(map[*client]bool),
 		registerCh:   make(chan *client),
 		unregisterCh: make(chan *client),
-		stateCh:      make(chan string),
+		incomingCh:   make(chan Message),
 		doneCh:       make(chan struct{}),
 	}
 
@@ -81,8 +81,7 @@ func (r *runner) sessionStartSupervisorMessage(session models.Session) Message {
 
 func participantDisconnectMessage() Message {
 	return Message{
-		Kind:    "Participant",
-		Payload: "Disconnect",
+		Kind: "Disconnect",
 	}
 }
 
@@ -101,45 +100,16 @@ func (r *runner) loop() {
 		case c := <-r.registerCh:
 			if r.campaign.State == "Running" || c.isSupervisor {
 				r.clients[c] = true
-				c.messageCh <- r.stateMessage(c)
+				c.outgoingCh <- r.stateMessage(c)
 
 				if c.isSupervisor {
-					// only inform supervisor client about the pool size
-					c.messageCh <- r.poolSizeMessage()
-				} else {
-					// it's a partcipant -> increases pool
-					r.poolSize += 1
-					// inform everyone (participants and supervisors) about the new pool size
-					for c := range r.clients {
-						c.messageCh <- r.poolSizeMessage()
-					}
-					// starts session when pool is full
-					if r.poolSize == r.campaign.PerSession {
-						session, participantCodes, err := models.CreateSession(r.campaign)
-						if err != nil {
-							log.Println("[runner] session creation failed: ", err)
-						} else {
-							participantIndex := 0
-							for c := range r.clients {
-								if c.isSupervisor {
-									c.messageCh <- r.sessionStartSupervisorMessage(session)
-									c.messageCh <- r.stateMessage(c) // if state becomes Busy
-									if c.runner.campaign.GetPublicState(true) == models.Busy {
-										c.runner.tickStateMessage()
-									}
-								} else {
-									c.messageCh <- r.sessionStartParticipantMessage(participantCodes[participantIndex])
-									c.messageCh <- participantDisconnectMessage()
-									participantIndex++
-								}
-							}
-						}
-					}
+					// only inform supervisor client about the pool size right away
+					c.outgoingCh <- r.poolSizeMessage()
 				}
 			} else {
 				// don't register
-				c.messageCh <- r.stateMessage(c)
-				c.messageCh <- participantDisconnectMessage()
+				c.outgoingCh <- r.stateMessage(c)
+				c.outgoingCh <- participantDisconnectMessage()
 				if len(r.clients) == 0 {
 					r.stop()
 					return
@@ -147,12 +117,12 @@ func (r *runner) loop() {
 			}
 		case c := <-r.unregisterCh:
 			if _, ok := r.clients[c]; ok {
-				// leaves pool if participant
-				if !c.isSupervisor {
+				// leaves pool if participant has joined
+				if !c.isSupervisor && c.hasJoinedPool {
 					r.poolSize -= 1
 					// tells everyone including supervisor
 					for c := range r.clients {
-						c.messageCh <- r.poolSizeMessage()
+						c.outgoingCh <- r.poolSizeMessage()
 					}
 				}
 				// actually deletes client
@@ -162,14 +132,47 @@ func (r *runner) loop() {
 					return
 				}
 			}
-		case state := <-r.stateCh:
-			r.campaign.State = state
-			models.DB.Save(r.campaign)
-			for c := range r.clients {
-				newMessageState := r.stateMessage(c)
-				c.messageCh <- newMessageState
-				if newMessageState.Payload == "Unavailable" {
-					c.messageCh <- participantDisconnectMessage()
+		case m := <-r.incomingCh:
+			if m.Kind == "State" {
+				r.campaign.State = m.Payload.(string)
+				models.DB.Save(r.campaign)
+				for c := range r.clients {
+					newMessageState := r.stateMessage(c)
+					c.outgoingCh <- newMessageState
+					if newMessageState.Payload == "Unavailable" {
+						c.outgoingCh <- participantDisconnectMessage()
+					}
+				}
+			} else if m.Kind == "Join" {
+				// it's a partcipant -> increases pool
+				r.poolSize += 1
+				// inform everyone (participants and supervisors) about the new pool size
+				for c := range r.clients {
+					c.outgoingCh <- r.poolSizeMessage()
+				}
+				// starts session when pool is full
+				if r.poolSize == r.campaign.PerSession {
+					session, participantCodes, err := models.CreateSession(r.campaign)
+					if err != nil {
+						log.Println("[runner] session creation failed: ", err)
+					} else {
+						participantIndex := 0
+						for c := range r.clients {
+							if c.isSupervisor {
+								c.outgoingCh <- r.sessionStartSupervisorMessage(session)
+								c.outgoingCh <- r.stateMessage(c) // if state becomes Busy
+								if c.runner.campaign.GetPublicState(true) == models.Busy {
+									c.runner.tickStateMessage()
+								}
+							} else {
+								code := participantCodes[participantIndex]
+								c.outgoingCh <- r.sessionStartParticipantMessage(code)
+								models.CreateParticipation(session, c.fingerprint, code)
+								c.outgoingCh <- participantDisconnectMessage()
+								participantIndex++
+							}
+						}
+					}
 				}
 			}
 		}

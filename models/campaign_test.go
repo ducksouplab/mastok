@@ -21,7 +21,7 @@ func TestCampaign_Unit(t *testing.T) {
 		ns := "fxt_models_ns3_busy"
 		campaign, _ := FindCampaignByNamespace(ns)
 
-		assert.Equal(t, 3, campaign.currentSessions())
+		assert.Equal(t, 3, campaign.liveSessions())
 		assert.Equal(t, true, campaign.isBusy())
 		assert.Equal(t, Busy, campaign.GetPublicState(true))
 		assert.Equal(t, Unavailable, campaign.GetPublicState(false))

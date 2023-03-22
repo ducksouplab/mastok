@@ -36,7 +36,7 @@ func ConnectAndMigrate() {
 		panic("failed to connect database")
 	}
 	// Migrate the schema
-	DB.AutoMigrate(&Campaign{}, &Session{})
+	DB.AutoMigrate(&Campaign{}, &Session{}, &Participation{})
 }
 
 // not declared in a _test.go file to be callable from another test package

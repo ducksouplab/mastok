@@ -68,6 +68,16 @@ docker push ducksouplab/mastok:latest
 
 There are shared types in the otree package (representing oTree REST API in and outs) and in the models package (saved to DB), there share data thoses their names and format is chosen to be closer to their usage. There are conversion functions when needed.
 
+## Join sequence
+
+When participant arrives on the campaign join page (Share URL), here is a typical sequence:
+
+- the server returns current campaign State (must be `Running` to continue)
+- the client sends a `Land` message to share a unique ID (then server will decide to accept, redirect or ban this participant for this particular session)
+- if `Land` is accepted, the participant is asked to consent to the session rules. If yes, the client sends a `Join` message to the server to enter the pool (waiting room)
+- the client receives a `PoolSize` message from the server to inform the participant
+- when the pool is full (ready), the client receives a `SessionStart` message from the server
+
 ## Credits
 
 This projects is in particular built upon [Gin](https://gin-gonic.com/), [GORM](https://gorm.io/), [esbuild](https://esbuild.github.io/) and [gorilla](https://github.com/gorilla/websocket) following this chat [example](https://github.com/gorilla/websocket/tree/master/examples/chat).

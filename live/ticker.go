@@ -36,7 +36,7 @@ func (t *ticker) loop(r *runner) {
 			if r.campaign.GetPublicState(true) != models.Busy {
 				for c := range r.clients {
 					if c.isSupervisor {
-						c.messageCh <- r.stateMessage(c)
+						c.outgoingCh <- r.stateMessage(c)
 					}
 				}
 				r.updateStateTicker.stop()

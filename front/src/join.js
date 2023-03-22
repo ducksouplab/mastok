@@ -1,3 +1,5 @@
+import fingerprint from "./fingerprint";
+
 const looseJSONParse = (str) => {
   try {
     return JSON.parse(str);
@@ -23,7 +25,10 @@ const start = function (slug) {
   const wsUrl = `${wsProtocol}://${window.location.host}${pathPrefix}ws/join?slug=${slug}`;
   const ws = new WebSocket(wsUrl);
 
-  // ws.onopen = (event) => {};
+  ws.onopen = async () => {
+    const uid = await fingerprint();
+    ws.send(JSON.stringify({ kind: "Land", payload: uid }));
+  };
 
   ws.onclose = (event) => {
     console.log(event);
@@ -35,7 +40,7 @@ const start = function (slug) {
 
   ws.onmessage = (event) => {
     const {kind, payload} = looseJSONParse(event.data);
-    console.log(kind, payload);
+    // console.log(kind, payload);
     if(kind === 'PoolSize') {
       document.getElementById("pool-size").innerHTML = payload;
     } else if(kind === 'SessionStart') {
@@ -54,6 +59,7 @@ const start = function (slug) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  console.log("[supervise] version 0.2.0");
   const slugMatch = /join\/(.*)$/.exec(window.location.pathname);
   if(slugMatch) {
     const slug = slugMatch[1];

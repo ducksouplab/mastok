@@ -33,7 +33,6 @@ func GetOTreeJSON(path string, target any) error {
 func PostOTreeJSON(path string, body, target any) error {
 	// prepare body
 	bodyBytes, err := json.Marshal(body)
-	//log.Printf(">>> %+v", string(bodyBytes))
 	if err != nil {
 		return err
 	}

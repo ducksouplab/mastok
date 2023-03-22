@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"time"
 
 	"github.com/ducksouplab/mastok/env"
 	"gorm.io/gorm"
@@ -55,6 +54,9 @@ func (c *Campaign) appendSession(s Session) (err error) {
 	if c.State == Completed {
 		return errors.New("session can't be added to completed campaign")
 	}
+	// process session
+	s.Duration = c.SessionDuration
+	// do append
 	c.StartedSessions += 1
 	if c.StartedSessions == c.MaxSessions {
 		c.State = "Completed"
@@ -65,15 +67,12 @@ func (c *Campaign) appendSession(s Session) (err error) {
 }
 
 func (c *Campaign) isBusy() bool {
-	return c.State == Running && (c.currentSessions() >= c.ConcurrentSessions)
+	return c.State == Running && (c.liveSessions() >= c.ConcurrentSessions)
 }
 
-func (c *Campaign) currentSessions() (count int) {
-	span := time.Duration(c.SessionDuration) * SessionDurationUnit
-	limit := time.Now().Add(-span)
-
+func (c *Campaign) liveSessions() (count int) {
 	for _, s := range c.Sessions {
-		if s.LaunchedAt.After(limit) {
+		if s.IsLive() {
 			count++
 		}
 	}

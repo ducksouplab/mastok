@@ -43,26 +43,31 @@ const start = function (namespace) {
 
   ws.onmessage = (event) => {
     const { kind, payload } = looseJSONParse(event.data);
-    console.log(kind, payload);
+    // console.log(kind, payload);
     if(kind === 'State') {
       document.getElementById("state").innerHTML = payload;
       if(payload === "Paused") {
         document.getElementById("change-state-container").value = "Run";
+        console.log("blabla")
         show("change-state-container");
-        show("size-container");
+        hide("size-container");
+        show("paused-container");
         hide("busy-container");
       } else if(payload === "Running") {
         document.getElementById("change-state-container").value = "Pause";
         show("change-state-container");
         show("size-container");
+        hide("paused-container");
         hide("busy-container");
       } else if(payload === "Busy") {
         hide("change-state-container");
         hide("size-container");
+        hide("paused-container");
         show("busy-container");
       } else if(payload === "Completed") {
         hide("change-state-container");
         hide("size-container");
+        hide("paused-container");
         show("completed-container");
       } 
     } else if(kind === 'PoolSize') {
@@ -92,7 +97,7 @@ const start = function (namespace) {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[supervise] version 0.1");
+  console.log("[supervise] version 0.2.0");
   const namespaceMatch = /campaigns\/supervise\/(.*)$/.exec(
     window.location.pathname
   );

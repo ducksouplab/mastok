@@ -11,8 +11,9 @@ import (
 
 type Session struct {
 	gorm.Model
-	CampaignId uint
+	CampaignID uint      `gorm:"index"`
 	LaunchedAt time.Time // used to see if session is currently runnning
+	Duration   int       // copied from Campaign SessionDuration
 	// otree Code
 	Code     string
 	OtreeId  string
@@ -70,4 +71,15 @@ func CreateSession(c *Campaign) (session Session, participantCodes []string, err
 
 func (s *Session) FormatCreatedAt() string {
 	return s.CreatedAt.Format("2006-01-02 15:04:05")
+}
+
+func FindSession(id uint) (s *Session, err error) {
+	err = DB.First(&s, "id = ?", id).Error
+	return
+}
+
+func (s *Session) IsLive() bool {
+	span := time.Duration(s.Duration) * SessionDurationUnit
+	limit := time.Now().Add(-span)
+	return s.LaunchedAt.After(limit)
 }

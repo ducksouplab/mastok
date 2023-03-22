@@ -112,7 +112,6 @@ func TestClientSupervisor_Integration(t *testing.T) {
 
 		// assert inner state
 		assert.True(t, retryUntil(longerDuration, func() bool {
-			// t.Logf(">>> writes >>> %+v", wsSup.writes)
 			return wsSup.hasReceived(Message{"State", "Busy"})
 		}), "supervisor should receive Busy")
 		assert.True(t, retryUntil(sessionDurationTest*models.SessionDurationUnit, func() bool {

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"log"
 	"strconv"
 	"time"
@@ -73,8 +74,15 @@ func (s *Session) FormatCreatedAt() string {
 	return s.CreatedAt.Format("2006-01-02 15:04:05")
 }
 
-func FindSession(id uint) (s *Session, err error) {
-	err = DB.First(&s, "id = ?", id).Error
+func FindSession(id uint) (s *Session, ok bool) {
+	err := DB.First(&s, "id = ?", id).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Println("[db] error: ", err)
+		}
+		return
+	}
+	ok = true
 	return
 }
 

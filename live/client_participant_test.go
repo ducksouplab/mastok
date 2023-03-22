@@ -55,7 +55,7 @@ func TestClient_Integration(t *testing.T) {
 	})
 
 	t.Run("same fingerprint is rejected from pool if campaign requires unique participants", func(t *testing.T) {
-		ns := "fxt_live_ns10_once"
+		ns := "fxt_live_ns9_once"
 		slug := ns + "_slug"
 		defer tearDown(ns)
 

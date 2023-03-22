@@ -79,7 +79,9 @@ func (c *Campaign) isBusy() bool {
 }
 
 func (c *Campaign) liveSessions() (count int) {
+	// log.Printf(">>>>>>> %+v", len(c.Sessions))
 	for _, s := range c.Sessions {
+		// log.Printf(">>>>>>> %+v %+v", s, s.IsLive())
 		if s.IsLive() {
 			count++
 		}

@@ -1,6 +1,7 @@
 package live
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -101,42 +102,95 @@ func TestClientFull_Integration(t *testing.T) {
 		}), "participant should receive Disconnect")
 	})
 
-	// t.Run("sends redirect if same participant reconnects while session is live", func(t *testing.T) {
-	// 	ns := "fxt_live_ns9_rejoin"
-	// 	slug := ns + "_slug"
-	// 	perSession := 2
-	// 	defer tearDown(ns)
+	t.Run("sends redirect if participant reconnects", func(t *testing.T) {
+		ns := "fxt_live_ns10_redirect"
+		slug := ns + "_slug"
+		perSession := 2
+		defer tearDown(ns)
 
-	// 	// the fixture data is what we expected
-	// 	campaign, _ := models.FindCampaignByNamespace(ns)
-	// 	assert.Equal(t, perSession, campaign.PerSession)
-	// 	assert.Equal(t, 0, campaign.StartedSessions)
-	// 	assert.Equal(t, "Running", campaign.State)
+		// the fixture data is what we expected
+		campaign, _ := models.FindCampaignByNamespace(ns)
+		assert.Equal(t, perSession, campaign.PerSession)
+		assert.Equal(t, false, campaign.JoinOnce)
+		assert.Equal(t, 0, campaign.StartedSessions)
+		assert.Equal(t, "Running", campaign.State)
 
-	// 	// fills the pool
-	// 	th.InterceptOtreePostSession()
-	// 	th.InterceptOtreeGetSession()
-	// 	defer th.InterceptOff()
+		// fills the pool
+		th.InterceptOtreePostSession()
+		th.InterceptOtreeGetSession()
+		defer th.InterceptOff()
 
-	// 	// complete pool with 2 participants
-	// 	wsSlice := makeWSStubs(perSession)
-	// 	for index, ws := range wsSlice {
-	// 		RunParticipant(ws, slug)
-	// 		ws.landWith(fmt.Sprintf("fingerprint%v", index)).join()
-	// 	}
+		// complete pool with 2 participants
+		wsSlice := makeWSStubs(perSession)
+		for index, ws := range wsSlice {
+			RunParticipant(ws, slug)
+			ws.landWith(fmt.Sprintf("fingerprint%v", index)).join()
+		}
 
-	// 	// first participant reconnects
-	// 	time.Sleep(shortDuration)
-	// 	wsSlice[0].Close()
-	// 	ws := newWSStub()
-	// 	RunParticipant(ws, slug)
-	// 	ws.landWith("fingerprint0").join()
+		// assert session has started
+		for _, ws := range wsSlice {
+			assert.True(t, retryUntil(longDuration, func() bool {
+				_, ok := ws.hasReceivedKind("SessionStart")
+				return ok
+			}), "participant should receive SessionStart with oTree starting link")
+		}
 
-	// 	assert.True(t, retryUntil(longDuration, func() bool {
-	// 		_, found := ws.hasReceivedKind("Redirect")
-	// 		return found
-	// 	}), "participant should receive Redirect")
-	// })
+		// first participant reconnects
+		wsSlice[0].Close()
+		ws := newWSStub()
+		RunParticipant(ws, slug)
+		ws.landWith("fingerprint0").join()
+
+		assert.True(t, retryUntil(longDuration, func() bool {
+			_, found := ws.hasReceivedKind("Redirect")
+			return found
+		}), "participant should receive Redirect")
+	})
+
+	t.Run("sends redirect if participant reconnects even for JoinOnce campaign", func(t *testing.T) {
+		ns := "fxt_live_ns11_redirect2"
+		slug := ns + "_slug"
+		perSession := 2
+		defer tearDown(ns)
+
+		// the fixture data is what we expected
+		campaign, _ := models.FindCampaignByNamespace(ns)
+		assert.Equal(t, perSession, campaign.PerSession)
+		assert.Equal(t, true, campaign.JoinOnce)
+		assert.Equal(t, 0, campaign.StartedSessions)
+		assert.Equal(t, "Running", campaign.State)
+
+		// fills the pool
+		th.InterceptOtreePostSession()
+		th.InterceptOtreeGetSession()
+		defer th.InterceptOff()
+
+		// complete pool with 2 participants
+		wsSlice := makeWSStubs(perSession)
+		for index, ws := range wsSlice {
+			RunParticipant(ws, slug)
+			ws.landWith(fmt.Sprintf("fingerprint%v", index)).join()
+		}
+
+		// assert session has started
+		for _, ws := range wsSlice {
+			assert.True(t, retryUntil(longDuration, func() bool {
+				_, ok := ws.hasReceivedKind("SessionStart")
+				return ok
+			}), "participant should receive SessionStart with oTree starting link")
+		}
+
+		// first participant reconnects
+		wsSlice[0].Close()
+		ws := newWSStub()
+		RunParticipant(ws, slug)
+		ws.landWith("fingerprint0").join()
+
+		assert.True(t, retryUntil(longDuration, func() bool {
+			_, found := ws.hasReceivedKind("Redirect")
+			return found
+		}), "participant should receive Redirect")
+	})
 
 	// t.Run("sends reject if same participant reconnects while session is not live", func(t *testing.T) {
 

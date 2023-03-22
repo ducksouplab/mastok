@@ -153,25 +153,25 @@ func (r *runner) loop() {
 				}
 			}
 		case c := <-r.landCh:
-			if c.runner.campaign.JoinOnce {
+			var isInLiveSession bool
+			participation, hasParticipatedToCampaign := models.FindParticipation(*c.runner.campaign, c.fingerprint)
+			log.Printf(">>>>>>> p  %+v %+v", participation, hasParticipatedToCampaign)
+			if hasParticipatedToCampaign {
+				pastSession, ok := models.FindSession(participation.SessionID)
+				log.Printf(">>>>>>> s  %+v %+v", pastSession, ok)
+				if ok {
+					isInLiveSession = pastSession.IsLive()
+					log.Printf(">>>>>>> l  %+v", isInLiveSession)
+				}
+			}
+			if isInLiveSession { // we assume it's a reconnect, so we redirect to oTree
+				c.outgoingCh <- participantRedirectMessage(participation.OtreeCode)
+			} else if c.runner.campaign.JoinOnce {
 				if _, ok := r.poolFingerprints[c.fingerprint]; ok { // is in pool?
 					c.outgoingCh <- participantRejectMessage()
+				} else if hasParticipatedToCampaign { // has been found in one session of this campaign
+					c.outgoingCh <- participantRejectMessage()
 				} else {
-					// process if reply is needed
-					// p, err := models.FindParticipation(*c.runner.campaign, c.fingerprint)
-					// log.Printf(">>>>>> p %#v %#v", p, err)
-					// if err == nil {
-					// 	s, err := models.FindSession(p.SessionID)
-					// 	if err == nil {
-					// 		log.Printf(">>>>>> s %#v %#v %#v", s, s.IsLive(), err)
-					// 		if s.IsLive() {
-					// 			log.Printf(">>>>>> live")
-					// 			c.outgoingCh <- participantRedirectMessage(p.OtreeCode)
-					// 		} else {
-					// 			c.outgoingCh <- participantRejectMessage()
-					// 		}
-					// 	}
-					// }
 					r.poolFingerprints[c.fingerprint] = true
 				}
 			}

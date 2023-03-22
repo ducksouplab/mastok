@@ -155,13 +155,10 @@ func (r *runner) loop() {
 		case c := <-r.landCh:
 			var isInLiveSession bool
 			participation, hasParticipatedToCampaign := models.FindParticipation(*c.runner.campaign, c.fingerprint)
-			log.Printf(">>>>>>> p  %+v %+v", participation, hasParticipatedToCampaign)
 			if hasParticipatedToCampaign {
 				pastSession, ok := models.FindSession(participation.SessionID)
-				log.Printf(">>>>>>> s  %+v %+v", pastSession, ok)
 				if ok {
 					isInLiveSession = pastSession.IsLive()
-					log.Printf(">>>>>>> l  %+v", isInLiveSession)
 				}
 			}
 			if isInLiveSession { // we assume it's a reconnect, so we redirect to oTree

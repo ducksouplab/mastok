@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ducksouplab/mastok/models"
 	th "github.com/ducksouplab/mastok/test_helpers"
@@ -97,6 +98,7 @@ func TestClientFull_Integration(t *testing.T) {
 		// outer state: new participant can't connect
 		addWs := newWSStub()
 		RunParticipant(addWs, slug)
+		// no need to land/join, Completed State will kick participant first thing
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			return addWs.isLastWriteKind("Disconnect")
 		}), "participant should receive Disconnect")
@@ -192,7 +194,95 @@ func TestClientFull_Integration(t *testing.T) {
 		}), "participant should receive Redirect")
 	})
 
-	// t.Run("sends reject if same participant reconnects while session is not live", func(t *testing.T) {
+	t.Run("sends reject if participant reconnect to JoinOnce campaign after session ended", func(t *testing.T) {
+		ns := "fxt_live_ns12_reject"
+		slug := ns + "_slug"
+		perSession := 2
+		defer tearDown(ns)
 
-	// })
+		// the fixture data is what we expected
+		campaign, _ := models.FindCampaignByNamespace(ns)
+		assert.Equal(t, perSession, campaign.PerSession)
+		assert.Equal(t, true, campaign.JoinOnce)
+		assert.Equal(t, 0, campaign.StartedSessions)
+		assert.Equal(t, "Running", campaign.State)
+
+		// fills the pool
+		th.InterceptOtreePostSession()
+		th.InterceptOtreeGetSession()
+		defer th.InterceptOff()
+
+		// complete pool with 2 participants
+		wsSlice := makeWSStubs(perSession)
+		for index, ws := range wsSlice {
+			RunParticipant(ws, slug)
+			ws.landWith(fmt.Sprintf("fingerprint%v", index)).join()
+		}
+
+		// assert session has started
+		for _, ws := range wsSlice {
+			assert.True(t, retryUntil(longDuration, func() bool {
+				_, ok := ws.hasReceivedKind("SessionStart")
+				return ok
+			}), "participant should receive SessionStart with oTree starting link")
+		}
+
+		// first participant reconnects
+		time.Sleep((sessionDurationTest + 1) * models.SessionDurationUnit)
+		wsSlice[0].Close()
+		ws := newWSStub()
+		RunParticipant(ws, slug)
+		ws.landWith("fingerprint0").join()
+
+		assert.True(t, retryUntil(longDuration, func() bool {
+			_, found := ws.hasReceivedKind("Reject")
+			return found
+		}))
+	})
+
+	t.Run("does not send reject if participant reconnect to multi-join campaign after session ended", func(t *testing.T) {
+		ns := "fxt_live_ns13_noreject"
+		slug := ns + "_slug"
+		perSession := 2
+		defer tearDown(ns)
+
+		// the fixture data is what we expected
+		campaign, _ := models.FindCampaignByNamespace(ns)
+		assert.Equal(t, perSession, campaign.PerSession)
+		assert.Equal(t, false, campaign.JoinOnce)
+		assert.Equal(t, 0, campaign.StartedSessions)
+		assert.Equal(t, "Running", campaign.State)
+
+		// fills the pool
+		th.InterceptOtreePostSession()
+		th.InterceptOtreeGetSession()
+		defer th.InterceptOff()
+
+		// complete pool with 2 participants
+		wsSlice := makeWSStubs(perSession)
+		for index, ws := range wsSlice {
+			RunParticipant(ws, slug)
+			ws.landWith(fmt.Sprintf("fingerprint%v", index)).join()
+		}
+
+		// assert session has started
+		for _, ws := range wsSlice {
+			assert.True(t, retryUntil(longDuration, func() bool {
+				_, ok := ws.hasReceivedKind("SessionStart")
+				return ok
+			}), "participant should receive SessionStart with oTree starting link")
+		}
+
+		// first participant reconnects
+		time.Sleep((sessionDurationTest + 1) * models.SessionDurationUnit)
+		wsSlice[0].Close()
+		ws := newWSStub()
+		RunParticipant(ws, slug)
+		ws.landWith("fingerprint0").join()
+
+		assert.False(t, retryUntil(longDuration, func() bool {
+			_, found := ws.hasReceivedKind("Reject")
+			return found
+		}))
+	})
 }

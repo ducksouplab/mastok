@@ -45,6 +45,7 @@ func TestClientSupervisor_Integration(t *testing.T) {
 		wsSlice := makeWSStubs(3)
 		for _, ws := range wsSlice {
 			RunParticipant(ws, slug)
+			ws.land().join()
 		}
 		// the fixture data is what we expected
 		runner, _ := hasRunner(ns)

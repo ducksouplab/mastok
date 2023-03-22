@@ -5,7 +5,6 @@ import (
 
 	"github.com/ducksouplab/mastok/helpers"
 	"github.com/ducksouplab/mastok/models"
-	"github.com/ducksouplab/mastok/otree"
 )
 
 type Message struct {
@@ -23,7 +22,6 @@ type wsConn interface {
 type client struct {
 	// state
 	isSupervisor  bool
-	hasLanded     bool
 	hasJoinedPool bool
 	fingerprint   string
 	// links
@@ -31,19 +29,6 @@ type client struct {
 	runner *runner
 	// updates from runner
 	outgoingCh chan Message
-}
-
-func redirectMessage(code string) Message {
-	return Message{
-		Kind:    "Redirect",
-		Payload: otree.ParticipantStartURL(code),
-	}
-}
-
-func rejectMessage() Message {
-	return Message{
-		Kind: "Reject",
-	}
 }
 
 func (c *client) write(m Message) {
@@ -78,27 +63,15 @@ func (c *client) readLoop() {
 			if m.Kind == "Land" {
 				fingerprint := m.Payload.(string)
 
-				if len(fingerprint) != 0 {
-					// set client state
+				if len(fingerprint) == 0 {
+					c.outgoingCh <- participantRejectMessage()
+				} else {
+					// do set client state before sharing landing with runner
 					c.fingerprint = fingerprint
-					c.hasLanded = true
-					// process if reply is needed
-					// p, err := models.FindParticipation(*c.runner.campaign, fingerprint)
-					// log.Printf(">> >> p %#v %#v", p, err)
-					// if err == nil {
-					// 	s, err := models.FindSession(p.SessionID)
-					// 	log.Printf(">> >> s %#v %#v %#v", s, s.IsLive(), err)
-					// 	if err == nil {
-					// 		if s.IsLive() {
-					// 			c.outgoingCh <- redirectMessage(p.OtreeCode)
-					// 		} else {
-					// 			c.outgoingCh <- rejectMessage()
-					// 		}
-					// 	}
-					// }
+					c.runner.landCh <- c
 				}
 			} else if m.Kind == "Join" {
-				if c.hasLanded {
+				if len(c.fingerprint) != 0 {
 					c.runner.incomingCh <- m
 					c.hasJoinedPool = true
 				}

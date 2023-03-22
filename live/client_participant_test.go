@@ -2,7 +2,6 @@ package live
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,11 +13,13 @@ func TestClient_Unit(t *testing.T) {
 		defer tearDown(ns)
 
 		ws := newWSStub()
-		p := RunParticipant(ws, slug)
+		RunParticipant(ws, slug)
 		ws.push(Message{"Land", ""})
 
-		time.Sleep(shortDuration)
-		assert.False(t, p.hasLanded)
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			_, ok := ws.hasReceivedKind("Reject")
+			return ok
+		}))
 	})
 
 	t.Run("accepts landing if fingerprint payload is present", func(t *testing.T) {
@@ -27,15 +28,18 @@ func TestClient_Unit(t *testing.T) {
 		defer tearDown(ns)
 
 		ws := newWSStub()
-		p := RunParticipant(ws, slug)
+		RunParticipant(ws, slug)
 		ws.push(Message{"Land", "fingerprint"})
 
-		time.Sleep(shortDuration)
-		assert.True(t, p.hasLanded)
+		assert.False(t, retryUntil(longDuration, func() bool {
+			_, ok := ws.hasReceivedKind("Reject")
+			return ok
+		}))
 	})
 }
 
 func TestClient_Integration(t *testing.T) {
+
 	t.Run("participant receives State first thing", func(t *testing.T) {
 		ns := "fxt_live_ns1"
 		slug := ns + "_slug"
@@ -48,6 +52,50 @@ func TestClient_Integration(t *testing.T) {
 			_, ok := ws.hasReceivedKind("State")
 			return ok
 		}), "participant should receive State")
+	})
+
+	t.Run("same fingerprint is rejected from pool if campaign requires unique participants", func(t *testing.T) {
+		ns := "fxt_live_ns10_once"
+		slug := ns + "_slug"
+		defer tearDown(ns)
+
+		ws1 := newWSStub()
+		p1 := RunParticipant(ws1, slug)
+		ws2 := newWSStub()
+		RunParticipant(ws2, slug)
+
+		// the fixture data is what we expected
+		assert.Equal(t, true, p1.runner.campaign.JoinOnce)
+
+		ws1.landWith("fingerprint1")
+		ws2.landWith("fingerprint1")
+
+		assert.True(t, retryUntil(longDuration, func() bool {
+			_, ok := ws2.hasReceivedKind("Reject")
+			return ok
+		}))
+	})
+
+	t.Run("same fingerprint is accepted in pool if campaign does not require unique participants", func(t *testing.T) {
+		ns := "fxt_live_ns1"
+		slug := ns + "_slug"
+		defer tearDown(ns)
+
+		ws1 := newWSStub()
+		p1 := RunParticipant(ws1, slug)
+		ws2 := newWSStub()
+		RunParticipant(ws2, slug)
+
+		// the fixture data is what we expected
+		assert.Equal(t, false, p1.runner.campaign.JoinOnce)
+
+		ws1.landWith("fingerprint1")
+		ws2.landWith("fingerprint1")
+
+		assert.False(t, retryUntil(longDuration, func() bool {
+			_, ok := ws2.hasReceivedKind("Reject")
+			return ok
+		}))
 	})
 
 	t.Run("participant should not receive PoolSize before landing", func(t *testing.T) {

@@ -11,8 +11,8 @@ import (
 
 const (
 	shortDuration       = 10 * time.Millisecond
-	longDuration        = 50 * time.Millisecond // for instance if there are DB writes
-	longerDuration      = 80 * time.Millisecond // for instance if there are DB writes
+	longDuration        = 50 * time.Millisecond  // for instance if there are DB writes
+	longerDuration      = 120 * time.Millisecond // for instance if there are DB writes
 	sessionDurationTest = 60
 )
 
@@ -107,6 +107,16 @@ var Fixtures []models.Campaign = []models.Campaign{
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
 		StartedSessions:    0,
+		State:              models.Running,
+	},
+	{
+		Namespace:          "fxt_live_ns10_once",
+		Slug:               "fxt_live_ns10_once_slug",
+		OtreeExperiment:    "xp_name",
+		PerSession:         4,
+		JoinOnce:           true,
+		MaxSessions:        2,
+		ConcurrentSessions: 2,
 		State:              models.Running,
 	},
 }

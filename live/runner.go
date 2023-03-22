@@ -11,13 +11,15 @@ import (
 // clients hold references to any (supervisor or participant) client
 // the currentPool holds count of participant clients
 type runner struct {
-	campaign *models.Campaign
-	poolSize int
-	clients  map[*client]bool
+	campaign         *models.Campaign
+	poolSize         int
+	clients          map[*client]bool
+	poolFingerprints map[string]bool
 	// manage broadcasting
 	registerCh   chan *client
 	unregisterCh chan *client
 	// other incoming events
+	landCh     chan *client
 	incomingCh chan Message
 	// done
 	updateStateTicker *ticker
@@ -26,13 +28,15 @@ type runner struct {
 
 func newRunner(c *models.Campaign) *runner {
 	r := runner{
-		campaign:     c,
-		poolSize:     0,
-		clients:      make(map[*client]bool),
-		registerCh:   make(chan *client),
-		unregisterCh: make(chan *client),
-		incomingCh:   make(chan Message),
-		doneCh:       make(chan struct{}),
+		campaign:         c,
+		poolSize:         0,
+		clients:          make(map[*client]bool),
+		poolFingerprints: map[string]bool{}, // used only for JoinOnce campaigns
+		registerCh:       make(chan *client),
+		unregisterCh:     make(chan *client),
+		landCh:           make(chan *client),
+		incomingCh:       make(chan Message),
+		doneCh:           make(chan struct{}),
 	}
 
 	if c.GetPublicState(true) == models.Busy {
@@ -65,14 +69,14 @@ func (r *runner) poolSizeMessage() Message {
 	}
 }
 
-func (r *runner) sessionStartParticipantMessage(code string) Message {
+func sessionStartParticipantMessage(code string) Message {
 	return Message{
 		Kind:    "SessionStart",
 		Payload: otree.ParticipantStartURL(code),
 	}
 }
 
-func (r *runner) sessionStartSupervisorMessage(session models.Session) Message {
+func sessionStartSupervisorMessage(session models.Session) Message {
 	return Message{
 		Kind:    "SessionStart",
 		Payload: session,
@@ -82,6 +86,19 @@ func (r *runner) sessionStartSupervisorMessage(session models.Session) Message {
 func participantDisconnectMessage() Message {
 	return Message{
 		Kind: "Disconnect",
+	}
+}
+
+func participantRejectMessage() Message {
+	return Message{
+		Kind: "Reject",
+	}
+}
+
+func participantRedirectMessage(code string) Message {
+	return Message{
+		Kind:    "Redirect",
+		Payload: otree.ParticipantStartURL(code),
 	}
 }
 
@@ -127,9 +144,35 @@ func (r *runner) loop() {
 				}
 				// actually deletes client
 				delete(r.clients, c)
+				if c.runner.campaign.JoinOnce {
+					delete(r.poolFingerprints, c.fingerprint)
+				}
 				if len(r.clients) == 0 {
 					r.stop()
 					return
+				}
+			}
+		case c := <-r.landCh:
+			if c.runner.campaign.JoinOnce {
+				if _, ok := r.poolFingerprints[c.fingerprint]; ok { // is in pool?
+					c.outgoingCh <- participantRejectMessage()
+				} else {
+					// process if reply is needed
+					// p, err := models.FindParticipation(*c.runner.campaign, c.fingerprint)
+					// log.Printf(">>>>>> p %#v %#v", p, err)
+					// if err == nil {
+					// 	s, err := models.FindSession(p.SessionID)
+					// 	if err == nil {
+					// 		log.Printf(">>>>>> s %#v %#v %#v", s, s.IsLive(), err)
+					// 		if s.IsLive() {
+					// 			log.Printf(">>>>>> live")
+					// 			c.outgoingCh <- participantRedirectMessage(p.OtreeCode)
+					// 		} else {
+					// 			c.outgoingCh <- participantRejectMessage()
+					// 		}
+					// 	}
+					// }
+					r.poolFingerprints[c.fingerprint] = true
 				}
 			}
 		case m := <-r.incomingCh:
@@ -159,14 +202,14 @@ func (r *runner) loop() {
 						participantIndex := 0
 						for c := range r.clients {
 							if c.isSupervisor {
-								c.outgoingCh <- r.sessionStartSupervisorMessage(session)
+								c.outgoingCh <- sessionStartSupervisorMessage(session)
 								c.outgoingCh <- r.stateMessage(c) // if state becomes Busy
 								if c.runner.campaign.GetPublicState(true) == models.Busy {
 									c.runner.tickStateMessage()
 								}
 							} else {
 								code := participantCodes[participantIndex]
-								c.outgoingCh <- r.sessionStartParticipantMessage(code)
+								c.outgoingCh <- sessionStartParticipantMessage(code)
 								models.CreateParticipation(session, c.fingerprint, code)
 								c.outgoingCh <- participantDisconnectMessage()
 								participantIndex++

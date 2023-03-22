@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 		Size:       4,
 		AdminUrl:   env.OTreeURL + "/SessionStartLinks/codenum1",
 	}
-	busyCampaign.appendSession(oldSession)
+	busyCampaign.appendSession(&oldSession)
 	for i := 0; i < 3; i++ {
 		// less than sessionDurationTest
 		ago := -time.Duration(sessionDurationTest*(i+1)/4) * SessionDurationUnit
@@ -71,7 +71,7 @@ func TestMain(m *testing.M) {
 			Size:       4,
 			AdminUrl:   env.OTreeURL + "/SessionStartLinks/codenum" + suffix,
 		}
-		busyCampaign.appendSession(currentSession)
+		busyCampaign.appendSession(&currentSession)
 	}
 
 	os.Exit(m.Run())

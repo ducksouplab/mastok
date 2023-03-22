@@ -62,6 +62,7 @@ var upgrader = websocket.Upgrader{
 func NewRouter(r *gin.Engine) *gin.Engine {
 	r.Use(gzip.Gzip(gzip.DefaultCompression))
 	r.HTMLRender = createTemplateRenderer()
+	addCustomValidators()
 
 	// static assets
 	r.Static(env.WebPrefix+"/assets", "./front/static/assets")

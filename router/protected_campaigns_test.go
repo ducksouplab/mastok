@@ -8,15 +8,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func campaignFormData(namespace, slug, expId, perSession, maxSessions, sessionDuration, concurrentSessions string) url.Values {
+type campaignForm struct {
+	namespace          string
+	slug               string
+	otreeExperiment    string
+	perSession         string
+	joinOnce           string
+	maxSessions        string
+	concurrentSessions string
+	sessionDuration    string
+}
+
+// func campaignFormData(namespace, slug, expId, perSession, uniqueParticipants, maxSessions, sessionDuration, concurrentSessions string)
+func campaignFormData(cf campaignForm) url.Values {
 	data := url.Values{}
-	data.Set("namespace", namespace)
-	data.Set("slug", slug)
-	data.Set("otree_experiment_id", expId)
-	data.Set("per_session", perSession)
-	data.Set("max_sessions", maxSessions)
-	data.Set("session_duration", sessionDuration)
-	data.Set("concurrent_sessions", concurrentSessions)
+	data.Set("namespace", cf.namespace)
+	data.Set("slug", cf.slug)
+	data.Set("otree_experiment_id", cf.otreeExperiment)
+	data.Set("per_session", cf.perSession)
+	data.Set("join_once", cf.joinOnce)
+	data.Set("max_sessions", cf.maxSessions)
+	data.Set("concurrent_sessions", cf.concurrentSessions)
+	data.Set("session_duration", cf.sessionDuration)
 	return data
 }
 
@@ -63,7 +76,16 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("namespace1", "slug1", "config1", "8", "4", "15", "2")
+		data := campaignFormData(campaignForm{
+			namespace:          "namespace1",
+			slug:               "namespace1_slug",
+			otreeExperiment:    "config1",
+			perSession:         "8",
+			joinOnce:           "false",
+			maxSessions:        "4",
+			concurrentSessions: "2",
+			sessionDuration:    "15",
+		})
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		// t.Log(res.Body.String())
@@ -84,8 +106,26 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("namespace2", "slug2", "config1", "8", "4", "15", "2")
-		dataDupNamespace := campaignFormData("namespace2", "slug2bis", "config2", "8", "4", "15", "2")
+		data := campaignFormData(campaignForm{
+			namespace:          "namespace2",
+			slug:               "namespace2_slug",
+			otreeExperiment:    "config1",
+			perSession:         "8",
+			joinOnce:           "false",
+			maxSessions:        "4",
+			concurrentSessions: "2",
+			sessionDuration:    "15",
+		})
+		dataDupNamespace := campaignFormData(campaignForm{
+			namespace:          "namespace2",
+			slug:               "namespace2_different_slug",
+			otreeExperiment:    "config1",
+			perSession:         "8",
+			joinOnce:           "false",
+			maxSessions:        "4",
+			concurrentSessions: "2",
+			sessionDuration:    "15",
+		})
 		// POST
 		MastokPostRequestWithAuth(router, "/campaigns", data)
 		res := MastokPostRequestWithAuth(router, "/campaigns", dataDupNamespace)
@@ -97,11 +137,29 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("namespace3", "slug3", "config1", "8", "4", "15", "2")
-		dataDupNamespace := campaignFormData("namespace3bis", "slug3", "config2", "8", "4", "15", "2")
+		data := campaignFormData(campaignForm{
+			namespace:          "namespace3",
+			slug:               "namespace3_slug",
+			otreeExperiment:    "config1",
+			perSession:         "8",
+			joinOnce:           "false",
+			maxSessions:        "4",
+			concurrentSessions: "2",
+			sessionDuration:    "15",
+		})
+		dataDupSlug := campaignFormData(campaignForm{
+			namespace:          "namespace3_different",
+			slug:               "namespace3_slug",
+			otreeExperiment:    "config1",
+			perSession:         "8",
+			joinOnce:           "false",
+			maxSessions:        "4",
+			concurrentSessions: "2",
+			sessionDuration:    "15",
+		})
 		// POST
 		MastokPostRequestWithAuth(router, "/campaigns", data)
-		res := MastokPostRequestWithAuth(router, "/campaigns", dataDupNamespace)
+		res := MastokPostRequestWithAuth(router, "/campaigns", dataDupSlug)
 		// t.Log(res.Body.String())
 		assert.Equal(t, 422, res.Code)
 	})
@@ -110,7 +168,16 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("namespace4#", "slug4", "config1", "8", "4", "15", "2")
+		data := campaignFormData(campaignForm{
+			namespace:          "namespace4#",
+			slug:               "namespace4_slug",
+			otreeExperiment:    "config1",
+			perSession:         "8",
+			joinOnce:           "false",
+			maxSessions:        "4",
+			concurrentSessions: "2",
+			sessionDuration:    "15",
+		})
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		// t.Log(res.Body.String())
@@ -121,7 +188,16 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("n", "slug5", "config1", "8", "4", "15", "2")
+		data := campaignFormData(campaignForm{
+			namespace:          "n#",
+			slug:               "n_slug",
+			otreeExperiment:    "config1",
+			perSession:         "8",
+			joinOnce:           "false",
+			maxSessions:        "4",
+			concurrentSessions: "2",
+			sessionDuration:    "15",
+		})
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		assert.Equal(t, 422, res.Code)
@@ -131,7 +207,16 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData("namespace6", "slug6", "config1", "15", "100", "4", "2")
+		data := campaignFormData(campaignForm{
+			namespace:          "namespace6",
+			slug:               "namespace6_slug",
+			otreeExperiment:    "config1",
+			perSession:         "100",
+			joinOnce:           "false",
+			maxSessions:        "4",
+			concurrentSessions: "2",
+			sessionDuration:    "15",
+		})
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns", data)
 		assert.Equal(t, 422, res.Code)
@@ -145,6 +230,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		data.Set("namespace", "nsnoslug")
 		data.Set("otree_experiment_id", "xp1")
 		data.Set("per_session", "8")
+		data.Set("join_once", "false")
 		data.Set("max_sessions", "4")
 		data.Set("concurrent_sessions", "2")
 		// POST

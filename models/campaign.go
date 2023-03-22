@@ -19,14 +19,17 @@ const (
 	Unavailable string = "Unavailable"
 )
 
-// Caution: validations are done when binding (in routes), before and not related to gorm
+// Caution: validations are done when binding (in routes)
+// with https://github.com/go-playground/validator
+// it's not related to gorm
 type Campaign struct {
 	gorm.Model
-	Namespace          string `form:"namespace" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
-	Slug               string `form:"slug" binding:"required,alphanum,min=2,max=128" gorm:"uniqueIndex"`
+	Namespace          string `form:"namespace" binding:"required,namespace,min=2,max=128" gorm:"uniqueIndex"`
+	Slug               string `form:"slug" binding:"required,namespace,min=2,max=128" gorm:"uniqueIndex"`
 	Info               string `form:"info" binding:"max=128"`
 	OtreeExperiment    string `form:"otree_experiment_id" binding:"required"`
 	PerSession         int    `form:"per_session" binding:"required,gte=1,lte=32"`
+	JoinOnce           bool   `form:"join_once" gorm:"default:false" ` // don't require due to https://github.com/go-playground/validator/issues/1040
 	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`
 	ConcurrentSessions int    `form:"concurrent_sessions" binding:"required,gte=1,lte=99" gorm:"default:1"`
 	SessionDuration    int    `form:"session_duration" binding:"required"`
@@ -50,19 +53,24 @@ func FindCampaignBySlug(slug string) (c *Campaign, err error) {
 	return
 }
 
-func (c *Campaign) appendSession(s Session) (err error) {
+func (c *Campaign) appendSession(s *Session) (err error) {
 	if c.State == Completed {
 		return errors.New("session can't be added to completed campaign")
 	}
 	// process session
 	s.Duration = c.SessionDuration
+	s.CampaignID = c.ID
 	// do append
 	c.StartedSessions += 1
 	if c.StartedSessions == c.MaxSessions {
 		c.State = "Completed"
 	}
-	c.Sessions = append(c.Sessions, s)
+	// append to in memory struct
+	c.Sessions = append(c.Sessions, *s)
+	// updates campaign fields + save session
 	err = DB.Save(c).Error
+	// replace s to get gorm ID
+	*s = c.Sessions[len(c.Sessions)-1]
 	return
 }
 

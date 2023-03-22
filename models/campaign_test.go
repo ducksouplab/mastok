@@ -11,8 +11,8 @@ func TestCampaign_Unit(t *testing.T) {
 		ns := "fxt_models_ns2_completed"
 		campaign, _ := FindCampaignByNamespace(ns)
 
-		session := Session{}
-		err := campaign.appendSession(session)
+		s := &Session{}
+		err := campaign.appendSession(s)
 
 		assert.Error(t, err)
 	})

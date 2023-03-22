@@ -55,6 +55,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 	})
 	g.POST("/campaigns", func(c *gin.Context) {
 		var campaign models.Campaign
+
 		if err := c.ShouldBind(&campaign); err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaigns_new.tmpl", gin.H{
 				"Experiments": cache.GetExperiments(),

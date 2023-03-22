@@ -70,7 +70,7 @@ func ReinitDevDB() {
 		if err := DB.Create(&campaign).Error; err != nil {
 			log.Fatal(err)
 		}
-		campaign.appendSession(session)
+		campaign.appendSession(&session)
 		// simple campaign
 		var otherCampaign = Campaign{
 			Namespace:          "dev_campaign_2",

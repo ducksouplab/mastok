@@ -37,14 +37,19 @@
         <input type="number" name="max_sessions" id="max_sessions" min=1 max=32 class="form-control" required>
       </div>
       <div class="mb-3">
+        <label for="concurrent_sessions" class="form-label">Number of sessions run concurrently*</label>
+        <input type="number" name="concurrent_sessions" id="concurrent_sessions" value=1 min=1 max=32 class="form-control" required>
+        <div class="form-text">Leave 1 if you don't want to run several sessions at the same time</div>
+      </div>
+      <div class="mb-3">
         <label for="session_duration" class="form-label">Maximum duration of a session (in minutes)*</label>
         <input type="number" name="session_duration" id="session_duration" min=1 max=99 class="form-control" required>
         <div class="form-text">Information needed to manage concurrent sessions and participants reconnections</div>
       </div>
       <div class="mb-3">
-        <label for="concurrent_sessions" class="form-label">Number of sessions run concurrently*</label>
-        <input type="number" name="concurrent_sessions" id="concurrent_sessions" value=1 min=1 max=32 class="form-control" required>
-        <div class="form-text">Leave 1 if you don't want to run several sessions at the same time</div>
+        <label for="waiting_limit" class="form-label">Maximum waiting time before session (in minutes)*</label>
+        <input type="number" name="waiting_limit" id="waiting_limit" value=4 min=1 max=12 class="form-control" required>
+        <div class="form-text">If participants pool is incomplete after this limit, participants will be disconnected</div>
       </div>
       <div class="mb-3">
         <label for="info" class="form-label">Additional info</label>

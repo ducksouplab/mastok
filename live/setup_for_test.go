@@ -116,8 +116,8 @@ var Fixtures []models.Campaign = []models.Campaign{
 		PerSession:         2,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
-		StartedSessions:    0,
 		SessionDuration:    sessionDurationTest,
+		StartedSessions:    0,
 		State:              models.Running,
 	},
 	{
@@ -128,8 +128,8 @@ var Fixtures []models.Campaign = []models.Campaign{
 		JoinOnce:           true,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
-		StartedSessions:    0,
 		SessionDuration:    sessionDurationTest,
+		StartedSessions:    0,
 		State:              models.Running,
 	},
 	{
@@ -140,8 +140,8 @@ var Fixtures []models.Campaign = []models.Campaign{
 		JoinOnce:           true,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
-		StartedSessions:    0,
 		SessionDuration:    sessionDurationTest,
+		StartedSessions:    0,
 		State:              models.Running,
 	},
 	{
@@ -152,8 +152,8 @@ var Fixtures []models.Campaign = []models.Campaign{
 		JoinOnce:           false,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
-		StartedSessions:    0,
 		SessionDuration:    sessionDurationTest,
+		StartedSessions:    0,
 		State:              models.Running,
 	},
 }

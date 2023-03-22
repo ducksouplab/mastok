@@ -25,17 +25,20 @@ const (
 // it's not related to gorm
 type Campaign struct {
 	gorm.Model
+	// definition
 	Namespace          string `form:"namespace" binding:"required,namespace,min=2,max=128" gorm:"uniqueIndex"`
 	Slug               string `form:"slug" binding:"required,namespace,min=2,max=128" gorm:"uniqueIndex"`
 	Info               string `form:"info" binding:"max=128"`
 	OtreeExperiment    string `form:"otree_experiment_id" binding:"required"`
 	PerSession         int    `form:"per_session" binding:"required,gte=1,lte=32"`
-	JoinOnce           bool   `form:"join_once" gorm:"default:false" ` // don't require due to https://github.com/go-playground/validator/issues/1040
+	JoinOnce           bool   `form:"join_once" gorm:"default:false" ` // don't <require> due to https://github.com/go-playground/validator/issues/1040
 	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`
-	ConcurrentSessions int    `form:"concurrent_sessions" binding:"required,gte=1,lte=99" gorm:"default:1"`
+	ConcurrentSessions int    `form:"concurrent_sessions" binding:"gte=1,lte=99" gorm:"default:1"`
 	SessionDuration    int    `form:"session_duration" binding:"required"`
-	State              string `gorm:"default:Paused"`
-	StartedSessions    int    `gorm:"default:0"`
+	WaitingLimit       int    `form:"waiting_limit" binding:"gte=1,lte=12" gorm:"default:5"`
+	// evolving
+	State           string `gorm:"default:Paused"`
+	StartedSessions int    `gorm:"default:0"`
 	// relations
 	Sessions []Session
 }

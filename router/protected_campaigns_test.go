@@ -207,7 +207,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		assert.Contains(t, res.Body.String(), "Supervise")
 		assert.Contains(t, res.Body.String(), "/campaigns/supervise/namespace1")
 		res = MastokGetRequestWithAuth(router, "/campaigns/supervise/namespace1")
-		assert.Contains(t, res.Body.String(), "Current pool")
+		assert.Contains(t, res.Body.String(), "Waiting room")
 		// assert markdown rendering
 		assert.Contains(t, res.Body.String(), "<li><input type=\"checkbox\"")
 		// GET edit

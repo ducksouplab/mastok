@@ -54,7 +54,7 @@ func TestClient_Integration(t *testing.T) {
 		}), "participant should receive State")
 	})
 
-	t.Run("same fingerprint is rejected from pool if campaign requires unique participants", func(t *testing.T) {
+	t.Run("same fingerprint is rejected from room if campaign requires unique participants", func(t *testing.T) {
 		ns := "fxt_live_ns9_once"
 		slug := ns + "_slug"
 		defer tearDown(ns)
@@ -76,7 +76,7 @@ func TestClient_Integration(t *testing.T) {
 		}))
 	})
 
-	t.Run("same fingerprint is accepted in pool if campaign does not require unique participants", func(t *testing.T) {
+	t.Run("same fingerprint is accepted in room if campaign does not require unique participants", func(t *testing.T) {
 		ns := "fxt_live_ns1"
 		slug := ns + "_slug"
 		defer tearDown(ns)
@@ -127,7 +127,7 @@ func TestClient_Integration(t *testing.T) {
 		}))
 	})
 
-	t.Run("participant should not receive PoolSize before landing", func(t *testing.T) {
+	t.Run("participant should not receive RoomSize before landing", func(t *testing.T) {
 		ns := "fxt_live_ns1"
 		slug := ns + "_slug"
 		defer tearDown(ns)
@@ -136,12 +136,12 @@ func TestClient_Integration(t *testing.T) {
 		RunParticipant(ws, slug)
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("PoolSize")
+			_, ok := ws.hasReceivedKind("RoomSize")
 			return ok
 		}))
 	})
 
-	t.Run("participant should not receive PoolSize before joining", func(t *testing.T) {
+	t.Run("participant should not receive RoomSize before joining", func(t *testing.T) {
 		ns := "fxt_live_ns1"
 		slug := ns + "_slug"
 		defer tearDown(ns)
@@ -151,12 +151,12 @@ func TestClient_Integration(t *testing.T) {
 		ws.land()
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("PoolSize")
+			_, ok := ws.hasReceivedKind("RoomSize")
 			return ok
 		}))
 	})
 
-	t.Run("participant receives PoolSize after joining", func(t *testing.T) {
+	t.Run("participant receives RoomSize after joining", func(t *testing.T) {
 		ns := "fxt_live_ns1"
 		slug := ns + "_slug"
 		defer tearDown(ns)
@@ -166,9 +166,9 @@ func TestClient_Integration(t *testing.T) {
 		ws.land().join()
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("PoolSize")
+			_, ok := ws.hasReceivedKind("RoomSize")
 			return ok
-		}), "participant should receive PoolSize")
+		}), "participant should receive RoomSize")
 	})
 
 	t.Run("kicks participants if State is Paused", func(t *testing.T) {

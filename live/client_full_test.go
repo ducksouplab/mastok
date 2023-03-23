@@ -25,7 +25,7 @@ func TestClientFull_Integration(t *testing.T) {
 		assert.Equal(t, 0, campaign.StartedSessions)
 		assert.Equal(t, "Running", campaign.State)
 
-		// fills the pool
+		// fills the room
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
@@ -79,7 +79,7 @@ func TestClientFull_Integration(t *testing.T) {
 		assert.Equal(t, 3, campaign.StartedSessions)
 		assert.Equal(t, "Running", campaign.State)
 
-		// fills the pool
+		// fills the room
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
@@ -117,12 +117,12 @@ func TestClientFull_Integration(t *testing.T) {
 		assert.Equal(t, 0, campaign.StartedSessions)
 		assert.Equal(t, "Running", campaign.State)
 
-		// fills the pool
+		// fills the room
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
 
-		// complete pool with 2 participants
+		// complete room with 2 participants
 		wsSlice := makeWSStubs(perSession)
 		for index, ws := range wsSlice {
 			RunParticipant(ws, slug)
@@ -162,12 +162,12 @@ func TestClientFull_Integration(t *testing.T) {
 		assert.Equal(t, 0, campaign.StartedSessions)
 		assert.Equal(t, "Running", campaign.State)
 
-		// fills the pool
+		// fills the room
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
 
-		// complete pool with 2 participants
+		// complete room with 2 participants
 		wsSlice := makeWSStubs(perSession)
 		for index, ws := range wsSlice {
 			RunParticipant(ws, slug)
@@ -207,12 +207,12 @@ func TestClientFull_Integration(t *testing.T) {
 		assert.Equal(t, 0, campaign.StartedSessions)
 		assert.Equal(t, "Running", campaign.State)
 
-		// fills the pool
+		// fills the room
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
 
-		// complete pool with 2 participants
+		// complete room with 2 participants
 		wsSlice := makeWSStubs(perSession)
 		for index, ws := range wsSlice {
 			RunParticipant(ws, slug)
@@ -253,12 +253,12 @@ func TestClientFull_Integration(t *testing.T) {
 		assert.Equal(t, 0, campaign.StartedSessions)
 		assert.Equal(t, "Running", campaign.State)
 
-		// fills the pool
+		// fills the room
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
 
-		// complete pool with 2 participants
+		// complete room with 2 participants
 		wsSlice := makeWSStubs(perSession)
 		for index, ws := range wsSlice {
 			RunParticipant(ws, slug)

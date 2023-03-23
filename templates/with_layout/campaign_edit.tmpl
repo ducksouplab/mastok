@@ -51,9 +51,9 @@
         <div class="form-text">Information needed to manage concurrent sessions and participants reconnections</div>
       </div>
       <div class="mb-3">
-        <label for="waiting_limit" class="form-label">Maximum waiting time before session (in minutes)*</label>
+        <label for="waiting_limit" class="form-label">Maximum waiting time (in minutes)*</label>
         <input value="{{ .Campaign.WaitingLimit }}" type="number" name="waiting_limit" id="waiting_limit" value=4 min=1 max=12 class="form-control" required>
-        <div class="form-text">If participants pool is incomplete after this limit, participants will be disconnected
+        <div class="form-text">If waiting room is incomplete after this limit, participants will be disconnected
         </div>
       </div>
     </div>

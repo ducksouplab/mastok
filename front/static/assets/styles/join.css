@@ -6,3 +6,6 @@ h5 {
   margin-top: 8px;
 }
 
+.card-body {
+  min-height: 120px;
+}

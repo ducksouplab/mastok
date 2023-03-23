@@ -69,9 +69,9 @@ const start = function (namespace) {
         hide("paused-container");
         show("completed-container");
       } 
-    } else if(kind === 'PoolSize') {
+    } else if(kind === 'RoomSize') {
       updateHasParticipants(payload);
-      document.getElementById("pool-size").innerHTML = payload;
+      document.getElementById("room-size").innerHTML = payload;
     } else if(kind === 'SessionStart') {
       hide("size-container");
       show("new-container");
@@ -84,7 +84,7 @@ const start = function (namespace) {
       ws.send(JSON.stringify({ kind: "State", payload: "Running"}));
     } else if(e.target.value == "Pause") {
       if(state.hasParticipants) {
-        if (window.confirm("Participants in the pool will be disconnected, are you sure you want to pause campaign?")) {
+        if (window.confirm("Participants in the room will be disconnected, are you sure you want to pause campaign?")) {
           ws.send(JSON.stringify({ kind: "State", payload: "Paused"}));
         }
       } else {

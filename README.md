@@ -74,9 +74,9 @@ When participant arrives on the campaign join page (Share URL), here is a typica
 
 - the server returns current campaign State (must be `Running` to continue)
 - the client sends a `Land` message to share a unique ID (then server will decide to accept, redirect or ban this participant for this particular session)
-- if `Land` is accepted, the participant is asked to consent to the session rules. If yes, the client sends a `Join` message to the server to enter the pool (waiting room)
-- the client receives a `PoolSize` message from the server to inform the participant
-- when the pool is full (ready), the client receives a `SessionStart` message from the server
+- if `Land` is accepted, the participant is asked to consent to the session rules. If yes, the client sends a `Join` message to the server to enter the waiting room
+- the client receives a `RoomSize` message from the server to inform the participant
+- when the waiting room is full (ready), the client receives a `SessionStart` message from the server
 
 ## Credits
 

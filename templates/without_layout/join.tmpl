@@ -1,40 +1,54 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>mastok</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-    <link rel="stylesheet" href="{{ WebPrefix }}assets/styles/join.css">
-    <link rel="stylesheet" href="{{ WebPrefix }}assets/styles/consent.css">
-    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
-  </head>
-  <body>
-    <div class="container text-center">
-      <div class="row justify-content-center">
-				<div class="col-4 card">
-					<div class="card-boactive-containerdy">
-            <div id="active-container">
-              <h5 class="card-title">Waiting for participants</h5>
-              <p id="size-container" class="card-text">Connected <span id="pool-size">...</span></p>
-              <div id="connecting-container" style="display:none" >
-                <p class="card-text">Connecting</p>
-                <div class="d-flex justify-content-center">
-                  <div class="spinner-border text-secondary mb-3" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                  </div>
-                </div>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mastok</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+  <link rel="stylesheet" href="{{ WebPrefix }}assets/styles/join.css">
+  <link rel="stylesheet" href="{{ WebPrefix }}assets/styles/consent.css">
+  <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+</head>
+
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-4 card">
+        <div class="card-body">
+          <div id="consent-container" style="display: none;">
+            <p class="card-text consent"></p>
+            <p><button class="btn btn-success">Start</button></p>
+            <div id="alert-container" class="alert alert-warning" role="alert" style="display: none;">
+              Accepting statements is required before starting
+            </div>
+          </div>
+          <div id="waiting-container" class="text-center" style="display: none;">
+            <h5 class="card-title">Waiting for participants</h5>
+            <p class="card-text">Connected <span class="room-size">...</span></p>
+          </div>
+          <div id="joining-container" class="text-center" style="display: none;">
+            <h5 class="card-title">Joining</h5>
+            <p class="card-text">Connected <span class="room-size">...</span></p>
+            <div class="d-flex justify-content-center">
+              <div class="spinner-border text-secondary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
               </div>
             </div>
-            <div id="inactive-container" style="display: none;">
-              <h5 class="card-title">Inactive Experiment</h5>
-            </div>
-					</div>
-				</div>
-			</div>
+          </div>
+          <div id="unavailable-container" class="text-center" style="display: none;">
+            <h5 class="card-title">Unavailable</h5>
+          </div>
+        </div>
+      </div>
     </div>
-    <script>const serverHash = "{{.Hash}}";</script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
-		<script src="{{ WebPrefix }}assets/scripts/join.js"></script>
-  </body>
+  </div>
+  <script>const serverHash = "{{.Hash}}";</script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+    crossorigin="anonymous"></script>
+  <script src="{{ WebPrefix }}assets/scripts/join.js"></script>
+</body>
+
 </html>

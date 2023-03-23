@@ -22,7 +22,7 @@ type wsConn interface {
 type client struct {
 	// state
 	isSupervisor  bool
-	hasJoinedPool bool
+	hasJoinedRoom bool
 	fingerprint   string
 	// links
 	ws     wsConn
@@ -73,7 +73,7 @@ func (c *client) readLoop() {
 			} else if m.Kind == "Join" {
 				if len(c.fingerprint) != 0 {
 					c.runner.incomingCh <- m
-					c.hasJoinedPool = true
+					c.hasJoinedRoom = true
 				}
 			}
 		}

@@ -15,10 +15,10 @@ func stateMessage(c *models.Campaign, cl *client) Message {
 	}
 }
 
-func poolSizeMessage(r *runner) Message {
+func roomSizeMessage(r *runner) Message {
 	return Message{
-		Kind:    "PoolSize",
-		Payload: strconv.Itoa(r.poolSize) + "/" + strconv.Itoa(r.campaign.PerSession),
+		Kind:    "RoomSize",
+		Payload: strconv.Itoa(r.roomSize) + "/" + strconv.Itoa(r.campaign.PerSession),
 	}
 }
 

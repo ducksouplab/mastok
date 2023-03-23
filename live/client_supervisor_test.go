@@ -20,7 +20,7 @@ func TestClientSupervisor_Integration(t *testing.T) {
 		assert.Equal(t, true, ok)
 	})
 
-	t.Run("supervisor receives PoolSize", func(t *testing.T) {
+	t.Run("supervisor receives RoomSize", func(t *testing.T) {
 		ns := "fxt_live_ns1"
 		defer tearDown(ns)
 
@@ -28,9 +28,9 @@ func TestClientSupervisor_Integration(t *testing.T) {
 		RunSupervisor(ws, ns)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("PoolSize")
+			_, ok := ws.hasReceivedKind("RoomSize")
 			return ok
-		}), "supervisor should receive PoolSize")
+		}), "supervisor should receive RoomSize")
 	})
 
 	t.Run("aborts session when supervisor changes campaign State to paused", func(t *testing.T) {
@@ -60,8 +60,8 @@ func TestClientSupervisor_Integration(t *testing.T) {
 		}
 		// participants have been disconnected
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return supWs.hasReceived(Message{"PoolSize", "0/4"})
-		}), "supervisor should receive PoolSize:0/4")
+			return supWs.hasReceived(Message{"RoomSize", "0/4"})
+		}), "supervisor should receive RoomSize:0/4")
 	})
 
 	t.Run("persists supervisor changed State after runner stopped", func(t *testing.T) {
@@ -101,7 +101,7 @@ func TestClientSupervisor_Integration(t *testing.T) {
 		assert.Equal(t, 1, campaign.ConcurrentSessions)
 		assert.Equal(t, "Running", campaign.State)
 
-		// fills the pool
+		// fills the room
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()

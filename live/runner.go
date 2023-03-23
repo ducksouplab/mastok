@@ -7,12 +7,11 @@ import (
 )
 
 // clients hold references to any (supervisor or participant) client
-// the currentPool holds count of participant clients
 type runner struct {
 	campaign         *models.Campaign
-	poolSize         int
+	roomSize         int
 	clients          map[*client]bool
-	poolFingerprints map[string]bool
+	roomFingerprints map[string]bool
 	// manage broadcasting
 	registerCh   chan *client
 	unregisterCh chan *client
@@ -27,9 +26,9 @@ type runner struct {
 func newRunner(c *models.Campaign) *runner {
 	r := runner{
 		campaign:         c,
-		poolSize:         0,
+		roomSize:         0,
 		clients:          make(map[*client]bool),
-		poolFingerprints: map[string]bool{}, // used only for JoinOnce campaigns
+		roomFingerprints: map[string]bool{}, // used only for JoinOnce campaigns
 		registerCh:       make(chan *client),
 		unregisterCh:     make(chan *client),
 		landCh:           make(chan *client),
@@ -62,8 +61,8 @@ func (r *runner) loop() {
 				c.outgoingCh <- stateMessage(r.campaign, c)
 
 				if c.isSupervisor {
-					// only inform supervisor client about the pool size right away
-					c.outgoingCh <- poolSizeMessage(r)
+					// only inform supervisor client about the room size right away
+					c.outgoingCh <- roomSizeMessage(r)
 				}
 			} else {
 				// don't register
@@ -76,18 +75,18 @@ func (r *runner) loop() {
 			}
 		case c := <-r.unregisterCh:
 			if _, ok := r.clients[c]; ok {
-				// leaves pool if participant has joined
-				if !c.isSupervisor && c.hasJoinedPool {
-					r.poolSize -= 1
+				// leaves room if participant has joined
+				if !c.isSupervisor && c.hasJoinedRoom {
+					r.roomSize -= 1
 					// tells everyone including supervisor
 					for c := range r.clients {
-						c.outgoingCh <- poolSizeMessage(r)
+						c.outgoingCh <- roomSizeMessage(r)
 					}
 				}
 				// actually deletes client
 				delete(r.clients, c)
 				if c.runner.campaign.JoinOnce {
-					delete(r.poolFingerprints, c.fingerprint)
+					delete(r.roomFingerprints, c.fingerprint)
 				}
 				if len(r.clients) == 0 {
 					r.stop()
@@ -108,7 +107,7 @@ func (r *runner) loop() {
 				break
 			}
 			if c.runner.campaign.JoinOnce {
-				if _, ok := r.poolFingerprints[c.fingerprint]; ok { // is in pool?
+				if _, ok := r.roomFingerprints[c.fingerprint]; ok { // is in room?
 					c.outgoingCh <- participantRejectMessage()
 					break
 				}
@@ -116,9 +115,9 @@ func (r *runner) loop() {
 					c.outgoingCh <- participantRejectMessage()
 					break
 				}
-				r.poolFingerprints[c.fingerprint] = true
+				r.roomFingerprints[c.fingerprint] = true
 			}
-			// finally lands in pool
+			// finally lands in room
 			c.outgoingCh <- participantConsentMessage(r.campaign)
 		case m := <-r.incomingCh:
 			if m.Kind == "State" {
@@ -132,14 +131,14 @@ func (r *runner) loop() {
 					}
 				}
 			} else if m.Kind == "Join" {
-				// it's a partcipant -> increases pool
-				r.poolSize += 1
-				// inform everyone (participants and supervisors) about the new pool size
+				// it's a partcipant -> increases room
+				r.roomSize += 1
+				// inform everyone (participants and supervisors) about the new room size
 				for c := range r.clients {
-					c.outgoingCh <- poolSizeMessage(r)
+					c.outgoingCh <- roomSizeMessage(r)
 				}
-				// starts session when pool is full
-				if r.poolSize == r.campaign.PerSession {
+				// starts session when room is full
+				if r.roomSize == r.campaign.PerSession {
 					session, participantCodes, err := models.CreateSession(r.campaign)
 					if err != nil {
 						log.Println("[runner] session creation failed: ", err)

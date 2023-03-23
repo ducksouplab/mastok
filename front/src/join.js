@@ -40,7 +40,7 @@ const start = function (slug) {
 
   ws.onmessage = (event) => {
     const {kind, payload} = looseJSONParse(event.data);
-    // console.log(kind, payload);
+    console.log(kind, payload);
     if(kind === 'PoolSize') {
       document.getElementById("pool-size").innerHTML = payload;
     } else if(kind === 'SessionStart') {

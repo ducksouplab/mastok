@@ -2,10 +2,8 @@ package live
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/ducksouplab/mastok/models"
-	"github.com/ducksouplab/mastok/otree"
 )
 
 // clients hold references to any (supervisor or participant) client
@@ -55,77 +53,21 @@ func (r *runner) stop() {
 	close(r.doneCh)
 }
 
-func (r *runner) stateMessage(c *client) Message {
-	return Message{
-		Kind:    "State",
-		Payload: r.campaign.GetPublicState(c.isSupervisor),
-	}
-}
-
-func (r *runner) poolSizeMessage() Message {
-	return Message{
-		Kind:    "PoolSize",
-		Payload: strconv.Itoa(r.poolSize) + "/" + strconv.Itoa(r.campaign.PerSession),
-	}
-}
-
-func sessionStartParticipantMessage(code string) Message {
-	return Message{
-		Kind:    "SessionStart",
-		Payload: otree.ParticipantStartURL(code),
-	}
-}
-
-func sessionStartSupervisorMessage(session models.Session) Message {
-	return Message{
-		Kind:    "SessionStart",
-		Payload: session,
-	}
-}
-
-func participantDisconnectMessage() Message {
-	return Message{
-		Kind: "Disconnect",
-	}
-}
-
-func participantRejectMessage() Message {
-	return Message{
-		Kind: "Reject",
-	}
-}
-
-func participantRedirectMessage(code string) Message {
-	return Message{
-		Kind:    "Redirect",
-		Payload: otree.ParticipantStartURL(code),
-	}
-}
-
-func (r *runner) tickStateMessage() {
-	if r.updateStateTicker != nil {
-		r.updateStateTicker.stop()
-	}
-	ticker := newTicker(models.SessionDurationUnit)
-	go ticker.loop(r)
-	r.updateStateTicker = ticker
-}
-
 func (r *runner) loop() {
 	for {
 		select {
 		case c := <-r.registerCh:
 			if r.campaign.State == "Running" || c.isSupervisor {
 				r.clients[c] = true
-				c.outgoingCh <- r.stateMessage(c)
+				c.outgoingCh <- stateMessage(r.campaign, c)
 
 				if c.isSupervisor {
 					// only inform supervisor client about the pool size right away
-					c.outgoingCh <- r.poolSizeMessage()
+					c.outgoingCh <- poolSizeMessage(r)
 				}
 			} else {
 				// don't register
-				c.outgoingCh <- r.stateMessage(c)
+				c.outgoingCh <- stateMessage(r.campaign, c)
 				c.outgoingCh <- participantDisconnectMessage()
 				if len(r.clients) == 0 {
 					r.stop()
@@ -139,7 +81,7 @@ func (r *runner) loop() {
 					r.poolSize -= 1
 					// tells everyone including supervisor
 					for c := range r.clients {
-						c.outgoingCh <- r.poolSizeMessage()
+						c.outgoingCh <- poolSizeMessage(r)
 					}
 				}
 				// actually deletes client
@@ -163,21 +105,27 @@ func (r *runner) loop() {
 			}
 			if isInLiveSession { // we assume it's a reconnect, so we redirect to oTree
 				c.outgoingCh <- participantRedirectMessage(participation.OtreeCode)
-			} else if c.runner.campaign.JoinOnce {
+				break
+			}
+			if c.runner.campaign.JoinOnce {
 				if _, ok := r.poolFingerprints[c.fingerprint]; ok { // is in pool?
 					c.outgoingCh <- participantRejectMessage()
-				} else if hasParticipatedToCampaign { // has been found in one session of this campaign
-					c.outgoingCh <- participantRejectMessage()
-				} else {
-					r.poolFingerprints[c.fingerprint] = true
+					break
 				}
+				if hasParticipatedToCampaign { // has been found in one session of this campaign
+					c.outgoingCh <- participantRejectMessage()
+					break
+				}
+				r.poolFingerprints[c.fingerprint] = true
 			}
+			// finally lands in pool
+			c.outgoingCh <- participantConsentMessage(r.campaign)
 		case m := <-r.incomingCh:
 			if m.Kind == "State" {
 				r.campaign.State = m.Payload.(string)
 				models.DB.Save(r.campaign)
 				for c := range r.clients {
-					newMessageState := r.stateMessage(c)
+					newMessageState := stateMessage(r.campaign, c)
 					c.outgoingCh <- newMessageState
 					if newMessageState.Payload == "Unavailable" {
 						c.outgoingCh <- participantDisconnectMessage()
@@ -188,7 +136,7 @@ func (r *runner) loop() {
 				r.poolSize += 1
 				// inform everyone (participants and supervisors) about the new pool size
 				for c := range r.clients {
-					c.outgoingCh <- r.poolSizeMessage()
+					c.outgoingCh <- poolSizeMessage(r)
 				}
 				// starts session when pool is full
 				if r.poolSize == r.campaign.PerSession {
@@ -200,7 +148,7 @@ func (r *runner) loop() {
 						for c := range r.clients {
 							if c.isSupervisor {
 								c.outgoingCh <- sessionStartSupervisorMessage(session)
-								c.outgoingCh <- r.stateMessage(c) // if state becomes Busy
+								c.outgoingCh <- stateMessage(r.campaign, c) // if state becomes Busy
 								if c.runner.campaign.GetPublicState(true) == models.Busy {
 									c.runner.tickStateMessage()
 								}

@@ -108,7 +108,6 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		var input models.Campaign
 		input.Namespace = model.Namespace
 		input.OtreeExperiment = model.OtreeExperiment
-		log.Printf(">>>>>>>>>>> %#v", input)
 
 		if err := c.ShouldBind(&input); err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaign_edit.tmpl", gin.H{

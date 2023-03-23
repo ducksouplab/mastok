@@ -98,6 +98,35 @@ func TestClient_Integration(t *testing.T) {
 		}))
 	})
 
+	t.Run("participant should not receive Consent before landing", func(t *testing.T) {
+		ns := "fxt_live_ns1"
+		slug := ns + "_slug"
+		defer tearDown(ns)
+
+		ws := newWSStub()
+		RunParticipant(ws, slug)
+
+		assert.False(t, retryUntil(shortDuration, func() bool {
+			_, ok := ws.hasReceivedKind("Consent")
+			return ok
+		}))
+	})
+
+	t.Run("participant receives Consent after landing", func(t *testing.T) {
+		ns := "fxt_live_ns1"
+		slug := ns + "_slug"
+		defer tearDown(ns)
+
+		ws := newWSStub()
+		RunParticipant(ws, slug)
+		ws.land()
+
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			_, ok := ws.hasReceivedKind("Consent")
+			return ok
+		}))
+	})
+
 	t.Run("participant should not receive PoolSize before landing", func(t *testing.T) {
 		ns := "fxt_live_ns1"
 		slug := ns + "_slug"

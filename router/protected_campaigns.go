@@ -1,15 +1,14 @@
 package router
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 
 	"github.com/ducksouplab/mastok/cache"
+	"github.com/ducksouplab/mastok/helpers"
 	"github.com/ducksouplab/mastok/live"
 	"github.com/ducksouplab/mastok/models"
 	"github.com/gin-gonic/gin"
-	"github.com/shurcooL/github_flavored_markdown"
 )
 
 func wsSuperviseHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +46,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		}
 		c.HTML(http.StatusOK, "campaign_supervise.tmpl", gin.H{
 			"Campaign":        model,
-			"RenderedConsent": template.HTML(github_flavored_markdown.Markdown([]byte(model.Consent))),
+			"RenderedConsent": helpers.MarkdownToHTML(model.Consent),
 		})
 	})
 	g.GET("/ws/campaigns/supervise", func(c *gin.Context) {

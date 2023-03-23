@@ -27,8 +27,8 @@ type Campaign struct {
 	gorm.Model
 	// definition
 	OtreeExperiment    string `form:"otree_experiment_id" binding:"required"`
-	Namespace          string `form:"namespace" binding:"required,namespace,min=2,max=128" gorm:"uniqueIndex"`
-	Slug               string `form:"slug" binding:"required,namespace,min=2,max=128" gorm:"uniqueIndex"`
+	Namespace          string `form:"namespace" binding:"required,namespaceValidate,min=2,max=128" gorm:"uniqueIndex"`
+	Slug               string `form:"slug" binding:"required,namespaceValidate,min=2,max=128" gorm:"uniqueIndex"`
 	PerSession         int    `form:"per_session" binding:"required,gte=1,lte=32"`
 	JoinOnce           bool   `form:"join_once" gorm:"default:false" ` // don't <require> due to https://github.com/go-playground/validator/issues/1040
 	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`
@@ -36,7 +36,7 @@ type Campaign struct {
 	SessionDuration    int    `form:"session_duration" binding:"required" gorm:"default:10"`
 	WaitingLimit       int    `form:"waiting_limit" binding:"gte=1,lte=12" gorm:"default:5"`
 	// extra configuration
-	Grouping string `form:"grouping" gorm:"size:1024"`
+	Grouping string `form:"grouping" binding:"groupingValidate" gorm:"size:1024"`
 	Consent  string `form:"consent" gorm:"size:65535"`
 	// evolving
 	State           string `gorm:"default:Paused"`

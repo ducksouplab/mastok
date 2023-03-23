@@ -91,6 +91,22 @@
       <div class="mb-3">
         <label for="consent" class="form-label">Consent in markdown format</label>
         <textarea name="consent" id="consent" class="form-control" rows="16">{{ or .Campaign.Consent ""}}</textarea>
+        <div class="form-text">
+          <div class="row">
+            <div class="col-6">
+              <p class="m-0">For instance</p>
+              <code># Title</code><br/><br/>
+              <code>- [X] pre-checked checkbox</code><br/>
+              <code>- [ ] paragraph that needs to be checked</code><br/>
+              <code>...</code>
+            </div>
+            <div class="col-6">
+              <p class="m-0">End with</p>
+              <code>[start]Start[/start]</code><br/>
+              <code>[alert]Accepting conditions above is required before starting[/alert]</code><br/>
+            </div>
+          </div>
+          <p class="m-0">If you include checkboxes, they need to be checked by participants before starting (or the [alert]...[/alert] contents will be shown).</p>
       </div>
     </div>
   </div>

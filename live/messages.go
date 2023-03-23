@@ -3,9 +3,9 @@ package live
 import (
 	"strconv"
 
+	"github.com/ducksouplab/mastok/helpers"
 	"github.com/ducksouplab/mastok/models"
 	"github.com/ducksouplab/mastok/otree"
-	"github.com/shurcooL/github_flavored_markdown"
 )
 
 func stateMessage(c *models.Campaign, cl *client) Message {
@@ -58,7 +58,7 @@ func participantRedirectMessage(code string) Message {
 func participantConsentMessage(c *models.Campaign) Message {
 	return Message{
 		Kind:    "Consent",
-		Payload: string(github_flavored_markdown.Markdown([]byte(c.Consent))),
+		Payload: helpers.MarkdownToHTML(c.Consent),
 	}
 }
 

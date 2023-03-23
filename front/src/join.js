@@ -66,6 +66,7 @@ const start = function (slug) {
     if (kind === "Consent") {
       document.querySelector("#consent-container p").innerHTML =
         processConcent(payload);
+      hide("alert-container");
       showOnly("consent-container");
       // ease checkboxes clicking
       const lis = document.querySelectorAll("#consent-container li");

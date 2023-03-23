@@ -14,9 +14,9 @@ var sessionDurationTest = 60
 
 var Fixtures []Campaign = []Campaign{
 	{
+		OtreeExperiment:    "xp_name",
 		Namespace:          "fxt_models_ns1",
 		Slug:               "fxt_models_ns1_slug",
-		OtreeExperiment:    "xp_name",
 		PerSession:         4,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
@@ -24,9 +24,9 @@ var Fixtures []Campaign = []Campaign{
 		State:              Running,
 	},
 	{
+		OtreeExperiment:    "xp_name",
 		Namespace:          "fxt_models_ns2_completed",
 		Slug:               "fxt_models_ns2_completed_slug",
-		OtreeExperiment:    "xp_name",
 		PerSession:         4,
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
@@ -34,9 +34,9 @@ var Fixtures []Campaign = []Campaign{
 		State:              Completed,
 	},
 	{
+		OtreeExperiment:    "xp_name",
 		Namespace:          "fxt_models_ns3_busy",
 		Slug:               "fxt_models_ns3_busy_slug",
-		OtreeExperiment:    "xp_name",
 		PerSession:         4,
 		MaxSessions:        8,
 		ConcurrentSessions: 3,

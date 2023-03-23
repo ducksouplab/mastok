@@ -26,9 +26,18 @@ func TestMain(m *testing.M) {
 
 var Fixtures []models.Campaign = []models.Campaign{
 	{
+		OtreeExperiment:    "xp_name",
 		Namespace:          "fxt_router_ns1",
 		Slug:               "fxt_router_ns1_slug",
+		PerSession:         4,
+		MaxSessions:        2,
+		ConcurrentSessions: 2,
+		State:              models.Running,
+	},
+	{
 		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_router_ns2_edit",
+		Slug:               "fxt_router_ns2_edit_slug",
 		PerSession:         4,
 		MaxSessions:        2,
 		ConcurrentSessions: 2,

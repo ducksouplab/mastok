@@ -53,7 +53,7 @@ func (c *client) readLoop() {
 		m, err := c.read()
 
 		if err != nil {
-			log.Println("[ws] ReadJSON error:", err)
+			// client left (in most cases)
 			return
 		} else if c.isSupervisor {
 			if m.Kind == "State" {

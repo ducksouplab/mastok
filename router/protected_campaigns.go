@@ -25,6 +25,7 @@ func wsSuperviseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func addCampaignsRoutesTo(g *gin.RouterGroup) {
+	// list
 	g.GET("/campaigns", func(c *gin.Context) {
 		var campaigns []models.Campaign
 		if err := models.DB.Order("ID desc").Find(&campaigns).Error; err != nil {
@@ -35,46 +36,99 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 			"Campaigns": campaigns,
 		})
 	})
-	g.GET("/campaigns/new", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "campaigns_new.tmpl", gin.H{
-			"Experiments": cache.GetExperiments(),
-		})
-	})
+	// supervise
 	g.GET("/campaigns/supervise/:namespace", func(c *gin.Context) {
 		namespace := c.Param("namespace")
-		campaign, ok := models.GetCampaignByNamespace(namespace)
+		model, ok := models.GetCampaignByNamespace(namespace)
 		if !ok {
 			log.Printf("[router] find campaign failed for namespace %v", namespace)
 			c.AbortWithStatus(http.StatusNotFound)
 			return
 		}
-		c.HTML(http.StatusOK, "campaigns_supervise.tmpl", gin.H{
-			"Campaign":        campaign,
-			"RenderedConsent": template.HTML(github_flavored_markdown.Markdown([]byte(campaign.Consent))),
+		c.HTML(http.StatusOK, "campaign_supervise.tmpl", gin.H{
+			"Campaign":        model,
+			"RenderedConsent": template.HTML(github_flavored_markdown.Markdown([]byte(model.Consent))),
 		})
 	})
 	g.GET("/ws/campaigns/supervise", func(c *gin.Context) {
 		wsSuperviseHandler(c.Writer, c.Request)
 	})
-	g.POST("/campaigns", func(c *gin.Context) {
-		var campaign models.Campaign
+	// CREATE
+	g.GET("/campaigns/new", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "campaign_new.tmpl", gin.H{
+			"Experiments": cache.GetExperiments(),
+			"Campaign":    models.Campaign{},
+		})
+	})
+	g.POST("/campaigns/new", func(c *gin.Context) {
+		var input models.Campaign
 
-		if err := c.ShouldBind(&campaign); err != nil {
-			c.HTML(http.StatusUnprocessableEntity, "campaigns_new.tmpl", gin.H{
+		if err := c.ShouldBind(&input); err != nil {
+			c.HTML(http.StatusUnprocessableEntity, "campaign_new.tmpl", gin.H{
 				"Experiments": cache.GetExperiments(),
 				"Error":       err.Error(),
+				"Campaign":    input,
 			})
 			return
 		}
 
-		if err := models.DB.Create(&campaign).Error; err != nil {
-			c.HTML(http.StatusUnprocessableEntity, "campaigns_new.tmpl", gin.H{
+		if err := models.DB.Create(&input).Error; err != nil {
+			c.HTML(http.StatusUnprocessableEntity, "campaign_new.tmpl", gin.H{
 				"Experiments": cache.GetExperiments(),
 				"Error":       err.Error(),
+				"Campaign":    input,
 			})
 			return
 		}
 
 		c.Redirect(http.StatusFound, "/campaigns")
+	})
+	// EDIT
+	g.GET("/campaigns/edit/:namespace", func(c *gin.Context) {
+		namespace := c.Param("namespace")
+		model, ok := models.GetCampaignByNamespace(namespace)
+		if !ok {
+			log.Printf("[router] find campaign failed for namespace %v", namespace)
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		c.HTML(http.StatusOK, "campaign_edit.tmpl", gin.H{
+			"Campaign": model,
+		})
+	})
+	g.POST("/campaigns/edit/:namespace", func(c *gin.Context) {
+		namespace := c.Param("namespace")
+		model, ok := models.GetCampaignByNamespace(namespace)
+		if !ok {
+			log.Printf("[router] find campaign failed for namespace %v", namespace)
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+
+		var input models.Campaign
+		input.Namespace = model.Namespace
+		input.OtreeExperiment = model.OtreeExperiment
+		log.Printf(">>>>>>>>>>> %#v", input)
+
+		if err := c.ShouldBind(&input); err != nil {
+			c.HTML(http.StatusUnprocessableEntity, "campaign_edit.tmpl", gin.H{
+				"Error":    err.Error(),
+				"Campaign": input,
+			})
+			return
+		}
+		// pick fileds to update:
+		// - exclude Namespace and OtreeExperiment
+		// - and force zero values updates for Grouping and Consent
+		selecteds := []string{"Slug", "PerSession", "JoinOnce", "MaxSessions", "ConcurrentSessions", "SessionDuration", "WaitingLimit", "Grouping", "Consent"}
+		if err := models.DB.Model(&model).Select(selecteds).Updates(input).Error; err != nil {
+			c.HTML(http.StatusUnprocessableEntity, "campaign_edit.tmpl", gin.H{
+				"Error":    err.Error(),
+				"Campaign": input,
+			})
+			return
+		}
+
+		c.Redirect(http.StatusFound, "/campaigns/supervise/"+namespace)
 	})
 }

@@ -55,9 +55,9 @@ func ReinitDevDB() {
 		consentString := helpers.ReadFile("consent.md")
 		// dev fixtures
 		var campaign = Campaign{
+			OtreeExperiment:    "chatroulette",
 			Namespace:          "dev_campaign_1",
 			Slug:               "dev_campaign_1_slug",
-			OtreeExperiment:    "chatroulette",
 			PerSession:         4,
 			MaxSessions:        2,
 			ConcurrentSessions: 1,
@@ -76,13 +76,14 @@ func ReinitDevDB() {
 		campaign.appendSession(&session)
 		// simple campaign
 		var otherCampaign = Campaign{
+			OtreeExperiment:    "chatroulette",
 			Namespace:          "dev_campaign_2",
 			Slug:               "dev_campaign_2_slug",
-			OtreeExperiment:    "chatroulette",
 			PerSession:         2,
 			MaxSessions:        4,
 			ConcurrentSessions: 1,
 			SessionDuration:    2,
+			Consent:            consentString,
 			State:              Running,
 		}
 		if err := DB.Create(&otherCampaign).Error; err != nil {

@@ -280,7 +280,7 @@ func TestClientFull_Integration(t *testing.T) {
 		RunParticipant(ws, slug)
 		ws.landWith("fingerprint0").join()
 
-		assert.False(t, retryUntil(longDuration, func() bool {
+		assert.False(t, retryUntil(longerDuration, func() bool {
 			_, found := ws.hasReceivedKind("Reject")
 			return found
 		}))

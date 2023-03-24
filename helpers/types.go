@@ -9,7 +9,7 @@ import (
 
 type Group struct {
 	Label string
-	Size  uint
+	Size  int
 }
 
 type Grouping struct {
@@ -28,18 +28,15 @@ func ParseGroup(text string) (grouping Grouping, ok bool) {
 	var groups []Group
 	for scanner.Scan() {
 		line := scanner.Text()
-		log.Println(line)
 		if len(question) == 0 {
 			question = line
 		} else {
 			splits := strings.Split(line, ":")
-			log.Println(splits)
-			size, err := strconv.ParseUint(splits[1], 10, 64)
-			log.Println(size, err)
+			size, err := strconv.Atoi(splits[1])
 			if err != nil {
 				return
 			}
-			groups = append(groups, Group{splits[0], uint(size)})
+			groups = append(groups, Group{splits[0], size})
 		}
 	}
 	return Grouping{question, groups}, true

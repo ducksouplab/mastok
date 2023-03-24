@@ -65,7 +65,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		if err := c.ShouldBind(&input); err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaign_new.tmpl", gin.H{
 				"Experiments": cache.GetExperiments(),
-				"Error":       err.Error(),
+				"Error":       changeErrorMessage(err.Error()),
 				"Campaign":    input,
 			})
 			return
@@ -74,7 +74,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		if err := models.DB.Create(&input).Error; err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaign_new.tmpl", gin.H{
 				"Experiments": cache.GetExperiments(),
-				"Error":       err.Error(),
+				"Error":       changeErrorMessage(err.Error()),
 				"Campaign":    input,
 			})
 			return
@@ -110,7 +110,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 
 		if err := c.ShouldBind(&input); err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaign_edit.tmpl", gin.H{
-				"Error":    err.Error(),
+				"Error":    changeErrorMessage(err.Error()),
 				"Campaign": input,
 			})
 			return
@@ -121,7 +121,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		selecteds := []string{"Slug", "PerSession", "JoinOnce", "MaxSessions", "ConcurrentSessions", "SessionDuration", "WaitingLimit", "Grouping", "Consent"}
 		if err := models.DB.Model(&model).Select(selecteds).Updates(input).Error; err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaign_edit.tmpl", gin.H{
-				"Error":    err.Error(),
+				"Error":    changeErrorMessage(err.Error()),
 				"Campaign": input,
 			})
 			return

@@ -5,31 +5,35 @@ import (
 )
 
 type runnerClients struct {
-	groupMap                    map[string]int
-	participants                map[*client]bool
-	supervisors                 map[*client]bool
-	all                         map[*client]bool
-	pool                        map[*client]bool
-	groupedAgreeingParticipants map[string][]*client
+	participants map[*client]bool
+	supervisors  map[*client]bool
+	all          map[*client]bool
+	pool         map[*client]bool
+	groupsSize   map[string]int
+	groups       map[string]map[*client]bool
 }
 
 func newRunnerClients(g *models.Grouping, ps int) *runnerClients {
-	gMap := make(map[string]int)
+	groupsSize := make(map[string]int)
 	if g == nil {
 		// create default group
-		gMap[defaultGroupLabel] = ps
+		groupsSize[defaultGroupLabel] = ps
 	} else {
 		for _, group := range g.Groups {
-			gMap[group.Label] = group.Size
+			groupsSize[group.Label] = group.Size
 		}
 	}
+	groups := make(map[string]map[*client]bool)
+	for label := range groupsSize {
+		groups[label] = make(map[*client]bool)
+	}
 	return &runnerClients{
-		groupMap:                    gMap,
-		participants:                make(map[*client]bool),
-		supervisors:                 make(map[*client]bool),
-		all:                         make(map[*client]bool),
-		pool:                        make(map[*client]bool), // have landed, agreed, chosen
-		groupedAgreeingParticipants: make(map[string][]*client),
+		participants: make(map[*client]bool),
+		supervisors:  make(map[*client]bool),
+		all:          make(map[*client]bool),
+		pool:         make(map[*client]bool), // have landed, agreed, chosen
+		groupsSize:   groupsSize,
+		groups:       groups,
 	}
 }
 
@@ -38,7 +42,7 @@ func (rc *runnerClients) isEmpty() bool {
 }
 
 func (rc *runnerClients) participantsCount() (count int) {
-	for _, participants := range rc.groupedAgreeingParticipants {
+	for _, participants := range rc.groups {
 		count += len(participants)
 	}
 	return
@@ -47,14 +51,16 @@ func (rc *runnerClients) participantsCount() (count int) {
 func (rc *runnerClients) tentativePool() ([]*client, bool) {
 	ok := true
 	// all groups have to be full
-	for label, size := range rc.groupMap {
-		isGroupFull := len(rc.groupedAgreeingParticipants[label]) == size
+	for label, size := range rc.groupsSize {
+		isGroupFull := len(rc.groups[label]) == size
 		ok = ok && isGroupFull
 	}
 	if ok {
 		var flatAgreeingParticipants []*client
-		for _, participants := range rc.groupedAgreeingParticipants {
-			flatAgreeingParticipants = append(flatAgreeingParticipants, participants...)
+		for _, group := range rc.groups {
+			for participant := range group {
+				flatAgreeingParticipants = append(flatAgreeingParticipants, participant)
+			}
 		}
 		return flatAgreeingParticipants, true
 	}
@@ -75,20 +81,9 @@ func (rc *runnerClients) add(c *client) {
 	}
 }
 
-func (rc *runnerClients) choose(c *client, groupLabel string) {
-	rc.groupedAgreeingParticipants[defaultGroupLabel] = append(rc.groupedAgreeingParticipants[defaultGroupLabel], c)
+func (rc *runnerClients) choose(c *client, label string) {
+	rc.groups[label][c] = true
 	rc.pool[c] = true
-}
-
-func deleteFromSlice(c *client, list []*client) (newList []*client, wasThere bool) {
-	for _, item := range list {
-		if item == c {
-			wasThere = true
-		} else {
-			newList = append(newList, item)
-		}
-	}
-	return
 }
 
 func (rc *runnerClients) delete(c *client) (wasAgreeing bool) {
@@ -100,11 +95,10 @@ func (rc *runnerClients) delete(c *client) (wasAgreeing bool) {
 	} else {
 		delete(rc.participants, c)
 
-		for groupLabel, participants := range rc.groupedAgreeingParticipants {
-			newParticipants, wasThere := deleteFromSlice(c, participants)
-			// replace
-			rc.groupedAgreeingParticipants[groupLabel] = newParticipants
-			wasAgreeing = wasAgreeing || wasThere
+		for _, group := range rc.groups {
+			_, wasInGroup := group[c]
+			delete(group, c)
+			wasAgreeing = wasAgreeing || wasInGroup
 		}
 	}
 	return

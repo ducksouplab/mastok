@@ -69,9 +69,9 @@ const start = function (namespace) {
         hide("paused-container");
         show("completed-container");
       } 
-    } else if(kind === 'RoomSize') {
+    } else if(kind === 'PoolSize') {
       updateHasParticipants(payload);
-      document.getElementById("room-size").innerHTML = payload;
+      document.getElementById("pool-size").innerHTML = payload;
     } else if(kind === 'SessionStart') {
       hide("size-container");
       show("new-container");

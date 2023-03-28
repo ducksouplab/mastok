@@ -38,7 +38,7 @@ func TestClientFull_Integration(t *testing.T) {
 		wsSlice := makeWSStubs(perSession)
 		for _, ws := range wsSlice {
 			RunParticipant(ws, slug)
-			ws.land().join()
+			ws.land().agree()
 		}
 
 		assert.True(t, retryUntil(longerDuration, func() bool {
@@ -86,7 +86,7 @@ func TestClientFull_Integration(t *testing.T) {
 		wsSlice := makeWSStubs(perSession)
 		for _, ws := range wsSlice {
 			RunParticipant(ws, slug)
-			ws.land().join()
+			ws.land().agree()
 		}
 
 		// assert inner state
@@ -98,7 +98,7 @@ func TestClientFull_Integration(t *testing.T) {
 		// outer state: new participant can't connect
 		addWs := newWSStub()
 		RunParticipant(addWs, slug)
-		// no need to land/join, Completed State will kick participant first thing
+		// no need to land/agree, Completed State will kick participant first thing
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			return addWs.isLastWriteKind("Disconnect")
 		}), "participant should receive Disconnect")
@@ -126,7 +126,7 @@ func TestClientFull_Integration(t *testing.T) {
 		wsSlice := makeWSStubs(perSession)
 		for index, ws := range wsSlice {
 			RunParticipant(ws, slug)
-			ws.landWith(fmt.Sprintf("fingerprint%v", index)).join()
+			ws.landWith(fmt.Sprintf("fingerprint%v", index)).agree()
 		}
 
 		// assert session has started
@@ -141,7 +141,7 @@ func TestClientFull_Integration(t *testing.T) {
 		wsSlice[0].Close()
 		ws := newWSStub()
 		RunParticipant(ws, slug)
-		ws.landWith("fingerprint0").join()
+		ws.landWith("fingerprint0").agree()
 
 		assert.True(t, retryUntil(longDuration, func() bool {
 			_, found := ws.hasReceivedKind("Redirect")
@@ -171,7 +171,7 @@ func TestClientFull_Integration(t *testing.T) {
 		wsSlice := makeWSStubs(perSession)
 		for index, ws := range wsSlice {
 			RunParticipant(ws, slug)
-			ws.landWith(fmt.Sprintf("fingerprint%v", index)).join()
+			ws.landWith(fmt.Sprintf("fingerprint%v", index)).agree()
 		}
 
 		// assert session has started
@@ -186,7 +186,7 @@ func TestClientFull_Integration(t *testing.T) {
 		wsSlice[0].Close()
 		ws := newWSStub()
 		RunParticipant(ws, slug)
-		ws.landWith("fingerprint0").join()
+		ws.landWith("fingerprint0").agree()
 
 		assert.True(t, retryUntil(longDuration, func() bool {
 			_, found := ws.hasReceivedKind("Redirect")
@@ -216,7 +216,7 @@ func TestClientFull_Integration(t *testing.T) {
 		wsSlice := makeWSStubs(perSession)
 		for index, ws := range wsSlice {
 			RunParticipant(ws, slug)
-			ws.landWith(fmt.Sprintf("fingerprint%v", index)).join()
+			ws.landWith(fmt.Sprintf("fingerprint%v", index)).agree()
 		}
 
 		// assert session has started
@@ -232,7 +232,7 @@ func TestClientFull_Integration(t *testing.T) {
 		wsSlice[0].Close()
 		ws := newWSStub()
 		RunParticipant(ws, slug)
-		ws.landWith("fingerprint0").join()
+		ws.landWith("fingerprint0").agree()
 
 		assert.True(t, retryUntil(longDuration, func() bool {
 			_, found := ws.hasReceivedKind("Reject")
@@ -262,12 +262,12 @@ func TestClientFull_Integration(t *testing.T) {
 		wsSlice := makeWSStubs(perSession)
 		for index, ws := range wsSlice {
 			RunParticipant(ws, slug)
-			ws.landWith(fmt.Sprintf("fingerprint%v", index)).join()
+			ws.landWith(fmt.Sprintf("fingerprint%v", index)).agree()
 		}
 
 		// assert session has started
 		for _, ws := range wsSlice {
-			assert.True(t, retryUntil(longDuration, func() bool {
+			assert.True(t, retryUntil(longerDuration, func() bool {
 				_, ok := ws.hasReceivedKind("SessionStart")
 				return ok
 			}), "participant should receive SessionStart with oTree starting link")
@@ -278,7 +278,7 @@ func TestClientFull_Integration(t *testing.T) {
 		wsSlice[0].Close()
 		ws := newWSStub()
 		RunParticipant(ws, slug)
-		ws.landWith("fingerprint0").join()
+		ws.landWith("fingerprint0").agree()
 
 		assert.False(t, retryUntil(longerDuration, func() bool {
 			_, found := ws.hasReceivedKind("Reject")

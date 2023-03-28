@@ -1,8 +1,11 @@
 package models
 
 import (
+	"bufio"
 	"errors"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/ducksouplab/mastok/env"
 	"gorm.io/gorm"
@@ -45,6 +48,16 @@ type Campaign struct {
 	Sessions []Session
 }
 
+type Group struct {
+	Label string
+	Size  int
+}
+
+type Grouping struct {
+	Question string
+	Groups   []Group
+}
+
 func GetCampaignByNamespace(namespace string) (c *Campaign, ok bool) {
 	err := DB.Preload("Sessions", func(db *gorm.DB) *gorm.DB {
 		return db.Order("sessions.created_at DESC")
@@ -71,6 +84,45 @@ func GetCampaignBySlug(slug string) (c *Campaign, ok bool) {
 	}
 	ok = true
 	return
+}
+
+// Does not compare groupingStr and PerSession (it's done in router/validators)
+func RawParseGroupingString(groupingStr string) (grouping Grouping, err error) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("panic occurred:", err)
+		}
+	}()
+	scanner := bufio.NewScanner(strings.NewReader(groupingStr))
+	var question string
+	var groups []Group
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(question) == 0 {
+			question = line
+		} else {
+			splits := strings.Split(line, ":")
+			size, err := strconv.Atoi(splits[1])
+			if err != nil {
+				return grouping, err
+			}
+			groups = append(groups, Group{splits[0], size})
+		}
+	}
+	return Grouping{question, groups}, nil
+}
+
+// returns nil if empty or invalid
+func (c *Campaign) GetGrouping() (grouping *Grouping) {
+	if len(c.Grouping) == 0 {
+		return nil
+	} else {
+		grouping, err := RawParseGroupingString(c.Grouping)
+		if err != nil {
+			return nil
+		}
+		return &grouping
+	}
 }
 
 func (c *Campaign) appendSession(s *Session) (err error) {

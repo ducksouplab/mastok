@@ -8,6 +8,9 @@ import (
 	"github.com/ducksouplab/mastok/otree"
 )
 
+// in case there is no grouping
+const defaultGroupLabel = "default"
+
 func stateMessage(c *models.Campaign, cl *client) Message {
 	return Message{
 		Kind:    "State",
@@ -15,10 +18,10 @@ func stateMessage(c *models.Campaign, cl *client) Message {
 	}
 }
 
-func roomSizeMessage(r *runner) Message {
+func poolSizeMessage(r *runner) Message {
 	return Message{
-		Kind:    "RoomSize",
-		Payload: strconv.Itoa(r.roomSize) + "/" + strconv.Itoa(r.campaign.PerSession),
+		Kind:    "PoolSize",
+		Payload: strconv.Itoa(r.clients.participantsCount()) + "/" + strconv.Itoa(r.campaign.PerSession),
 	}
 }
 

@@ -12,6 +12,12 @@ type Message struct {
 	Payload any    `json:"payload"`
 }
 
+type FromParticipantMessage struct {
+	Kind    string
+	Payload string
+	From    *client
+}
+
 type wsConn interface {
 	ReadJSON(any) error
 	WriteJSON(any) error
@@ -21,9 +27,10 @@ type wsConn interface {
 // client for campaign runner
 type client struct {
 	// state
-	isSupervisor  bool
-	hasJoinedRoom bool
-	fingerprint   string
+	isSupervisor bool
+	hasLanded    bool
+	hasAgreed    bool
+	fingerprint  string
 	// links
 	ws     wsConn
 	runner *runner
@@ -53,27 +60,36 @@ func (c *client) readLoop() {
 		m, err := c.read()
 
 		if err != nil {
-			// client left (in most cases)
+			// client left (or needs to stop loop anyway)
 			return
 		} else if c.isSupervisor {
 			if m.Kind == "State" {
-				c.runner.incomingCh <- m
+				c.runner.supervisorCh <- m
 			}
 		} else { // participant
 			if m.Kind == "Land" {
 				fingerprint := m.Payload.(string)
-
 				if len(fingerprint) == 0 {
 					c.outgoingCh <- participantRejectMessage()
 				} else {
 					// do set client state before sharing landing with runner
+					c.hasLanded = true
 					c.fingerprint = fingerprint
-					c.runner.landCh <- c
+					c.runner.participantCh <- FromParticipantMessage{Kind: m.Kind, Payload: fingerprint, From: c}
 				}
-			} else if m.Kind == "Join" {
-				if len(c.fingerprint) != 0 {
-					c.runner.incomingCh <- m
-					c.hasJoinedRoom = true
+			} else if m.Kind == "Agree" {
+				if c.hasLanded { // can't agree before landing
+					c.hasAgreed = true
+					c.runner.participantCh <- FromParticipantMessage{Kind: m.Kind, From: c}
+					// when there is not grouping, Agree implies Choose
+					if c.runner.grouping == nil {
+						c.runner.participantCh <- FromParticipantMessage{Kind: "Choose", Payload: defaultGroupLabel, From: c}
+					}
+				}
+			} else if m.Kind == "Choose" {
+				groupLabel := m.Payload.(string)
+				if len(groupLabel) != 0 && c.hasAgreed { // can't agree before landing
+					c.runner.participantCh <- FromParticipantMessage{Kind: m.Kind, Payload: groupLabel, From: c}
 				}
 			}
 		}

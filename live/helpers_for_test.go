@@ -11,7 +11,7 @@ func getRunnerStoreSize() int {
 
 func tearDown(namespace string) {
 	if sharedRunner, ok := hasRunner(namespace); ok {
-		for client := range sharedRunner.clients {
+		for client := range sharedRunner.clients.all {
 			client.ws.Close()
 		}
 		<-sharedRunner.isDone()

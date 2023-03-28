@@ -70,13 +70,13 @@ func campaignFormData(cf campaignForm) url.Values {
 
 func TestCampaigns_Templates(t *testing.T) {
 	router := getTestRouter()
-	t.Run("shows campaigns list", func(t *testing.T) {
+	t.Run("campaigns page", func(t *testing.T) {
 		res := MastokGetRequestWithAuth(router, "/campaigns")
 
 		assert.Contains(t, res.Body.String(), "New")
 	})
 
-	t.Run("shows campaigns new form", func(t *testing.T) {
+	t.Run("new campaign", func(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		res := MastokGetRequestWithAuth(router, "/campaigns/new")
@@ -111,8 +111,8 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf1 := newCampaignForm("namespace2")
-		cf2 := newCampaignForm("namespace2")
+		cf1 := newCampaignForm("namespace1")
+		cf2 := newCampaignForm("namespace1")
 		cf2.slug = "namespace2_different_slug"
 		data := campaignFormData(cf1)
 		dataDupNamespace := campaignFormData(cf2)
@@ -127,8 +127,8 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf1 := newCampaignForm("namespace3")
-		cf2 := newCampaignForm("namespace3bis")
+		cf1 := newCampaignForm("namespace2")
+		cf2 := newCampaignForm("namespace2bis")
 		cf1.slug = "namespace3_slug"
 		cf2.slug = "namespace3_slug"
 		data := campaignFormData(cf1)
@@ -144,7 +144,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf := newCampaignForm("namespace4#")
+		cf := newCampaignForm("namespace3#")
 		cf.slug = "namespace4_slug"
 		data := campaignFormData(cf)
 		// POST
@@ -168,7 +168,8 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		data := campaignFormData(newCampaignForm("namespace7"))
+		cf := newCampaignForm("namespace4")
+		data := campaignFormData(cf)
 		data.Del("slug")
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
@@ -179,7 +180,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf := newCampaignForm("namespace6")
+		cf := newCampaignForm("namespace5")
 		cf.perSession = "100"
 		data := campaignFormData(cf)
 		// POST
@@ -187,11 +188,39 @@ func TestCampaigns_Integration(t *testing.T) {
 		assert.Equal(t, 422, res.Code)
 	})
 
+	t.Run("fails creating if Grouping and PerSession don't match", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("namespace6")
+		cf.perSession = "4"
+		cf.grouping = "What is your gender?\nMale:2\nFemale:3"
+		data := campaignFormData(cf)
+		// POST
+		t.Logf(">>>>>>> t %#v", data)
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
+	t.Run("creates if Grouping and PerSession match", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("namespace7")
+		cf.perSession = "7"
+		cf.grouping = "What is your gender?\nMale:4\nFemale:3"
+		data := campaignFormData(cf)
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 302, res.Code)
+	})
+
 	t.Run("create then lists then supervises then edits", func(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf := newCampaignForm("namespace1")
+		ns := "namespace_scenario"
+		cf := newCampaignForm(ns)
 		cf.consent = "- [ ] checkbox1\n- [ ] checkbox2"
 		data := campaignFormData(cf)
 		// POST
@@ -200,20 +229,20 @@ func TestCampaigns_Integration(t *testing.T) {
 		assert.Equal(t, 302, res.Code)
 		// GET list
 		res = MastokGetRequestWithAuth(router, "/campaigns")
-		assert.Contains(t, res.Body.String(), "namespace1")
+		assert.Contains(t, res.Body.String(), ns)
 		// campaign automatically created with state "Paused"
 		assert.Contains(t, res.Body.String(), "Paused")
 		// GET supervise
 		assert.Contains(t, res.Body.String(), "Supervise")
-		assert.Contains(t, res.Body.String(), "/campaigns/supervise/namespace1")
-		res = MastokGetRequestWithAuth(router, "/campaigns/supervise/namespace1")
+		assert.Contains(t, res.Body.String(), "/campaigns/supervise/"+ns)
+		res = MastokGetRequestWithAuth(router, "/campaigns/supervise/"+ns)
 		assert.Contains(t, res.Body.String(), "Waiting room")
 		// assert markdown rendering
 		assert.Contains(t, res.Body.String(), "<li><input type=\"checkbox\"")
 		// GET edit
 		assert.Contains(t, res.Body.String(), "Edit campaign")
-		assert.Contains(t, res.Body.String(), "/campaigns/edit/namespace1")
-		res = MastokGetRequestWithAuth(router, "/campaigns/edit/namespace1")
+		assert.Contains(t, res.Body.String(), "/campaigns/edit/"+ns)
+		res = MastokGetRequestWithAuth(router, "/campaigns/edit/"+ns)
 		assert.Contains(t, res.Body.String(), "- [ ] checkbox1\n- [ ] checkbox2")
 	})
 

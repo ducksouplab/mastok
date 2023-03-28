@@ -72,11 +72,13 @@ There are shared types in the otree package (representing oTree REST API in and 
 
 When participant arrives on the campaign join page (Share URL), here is a typical sequence:
 
-- the server returns current campaign State (must be `Running` to continue)
-- the client sends a `Land` message to share a unique ID (then server will decide to accept, redirect or ban this participant for this particular session)
-- if `Land` is accepted, the participant is asked to consent to the session rules. If yes, the client sends a `Join` message to the server to enter the waiting room
-- the client receives a `RoomSize` message from the server to inform the participant
-- when the waiting room is full (ready), the client receives a `SessionStart` message from the server
+- the server returns current campaign State: it must be `Running` to continue 
+- the client sends a `Land` message to share a fingerpring that acts as an identifier (then server will decide to accept, redirect or ban this participant for this particular session)
+- if `Land` is accepted, the participant is asked to agree with the session rules
+- if yes, the client sends a `Agree` message to the server
+- if campaign relies on grouping participants, the participant is asked to select a group (for instance male or female), the client thus sending a `Select` message to the server
+- now the participant has joined the waiting room and a `PoolSize` message update is sent from the server
+- when the waiting pool is full (ready), the client receives a `SessionStart` message from the server
 
 ## Credits
 

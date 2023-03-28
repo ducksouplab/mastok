@@ -156,4 +156,17 @@ var Fixtures []models.Campaign = []models.Campaign{
 		StartedSessions:    0,
 		State:              models.Running,
 	},
+	{
+		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_live_ns14_grouping",
+		Slug:               "fxt_live_ns14_grouping_slug",
+		PerSession:         6,
+		JoinOnce:           true,
+		MaxSessions:        4,
+		ConcurrentSessions: 1,
+		SessionDuration:    sessionDurationTest,
+		Grouping:           "What is your gender?\nMale:3\nFemale:3",
+		StartedSessions:    0,
+		State:              models.Running,
+	},
 }

@@ -34,7 +34,7 @@ func (t *ticker) loop(r *runner) {
 			return
 		case <-r.updateStateTicker.Ticker.C:
 			if r.campaign.GetPublicState(true) != models.Busy {
-				for c := range r.clients {
+				for c := range r.clients.all {
 					if c.isSupervisor {
 						c.outgoingCh <- stateMessage(r.campaign, c)
 					}

@@ -23,16 +23,16 @@ func TestRunner_Integration(t *testing.T) {
 		// runner is shared
 		assert.Same(t, runner, p2.runner, "participants runner should be the same")
 
-		// participants join
-		ws1.land().join()
-		ws2.land().join()
-		// clients write RoomSize
+		// participants agree
+		ws1.land().agree()
+		ws2.land().agree()
+		// clients write PoolSize
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws1.isLastWrite(Message{"RoomSize", "2/4"})
-		}), "participant should receive RoomSize:2/4")
+			return ws1.isLastWrite(Message{"PoolSize", "2/4"})
+		}), "participant should receive PoolSize:2/4")
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws2.isLastWrite(Message{"RoomSize", "2/4"})
-		}), "participant should receive RoomSize:2/4")
+			return ws2.isLastWrite(Message{"PoolSize", "2/4"})
+		}), "participant should receive PoolSize:2/4")
 	})
 
 	t.Run("cleans up runner when closed", func(t *testing.T) {

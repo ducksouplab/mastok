@@ -1,11 +1,10 @@
 package router
 
 import (
-	"log"
 	"regexp"
 	"strings"
 
-	"github.com/ducksouplab/mastok/helpers"
+	"github.com/ducksouplab/mastok/models"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 )
@@ -22,13 +21,14 @@ var namespaceValidator validator.Func = func(fl validator.FieldLevel) bool {
 }
 
 var groupingValidator validator.Func = func(fl validator.FieldLevel) bool {
-	grouping, ok := helpers.ParseGroup(fl.Field().String())
-	if !ok {
-		return false
-	}
+	groupingString := fl.Field().String()
 	// grouping is optional
-	if len(grouping.Groups) == 0 {
+	if len(groupingString) == 0 {
 		return true
+	}
+	grouping, err := models.RawParseGroupingString(groupingString)
+	if err != nil {
+		return false
 	}
 	// if grouping is present, we need to check the sum of groups is equal to PerSession
 	var size int
@@ -36,7 +36,8 @@ var groupingValidator validator.Func = func(fl validator.FieldLevel) bool {
 		size += g.Size
 	}
 	perSessionValue, _, _, _ := fl.GetStructFieldOK2()
-	return size == int(perSessionValue.Int())
+	perSessionInt := int(perSessionValue.Int())
+	return size == perSessionInt
 }
 
 func addCustomValidators() {
@@ -48,7 +49,6 @@ func addCustomValidators() {
 }
 
 func changeErrorMessage(err string) string {
-	log.Printf(">>>>>>>>>>> %v", err)
 	if strings.Contains(err, "Campaign.Grouping") {
 		return "Format invalid: grouping rule (or check the sum of groups matches 'Participants per session')"
 	}

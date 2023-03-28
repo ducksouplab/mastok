@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestClientSupervisor_Integration(t *testing.T) {
+func TestClient_Supervisor_Integration(t *testing.T) {
 	t.Run("supervisor has runner", func(t *testing.T) {
 		ns := "fxt_live_ns1"
 		defer tearDown(ns)
@@ -20,7 +20,7 @@ func TestClientSupervisor_Integration(t *testing.T) {
 		assert.Equal(t, true, ok)
 	})
 
-	t.Run("supervisor receives RoomSize", func(t *testing.T) {
+	t.Run("supervisor receives PoolSize", func(t *testing.T) {
 		ns := "fxt_live_ns1"
 		defer tearDown(ns)
 
@@ -28,9 +28,9 @@ func TestClientSupervisor_Integration(t *testing.T) {
 		RunSupervisor(ws, ns)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("RoomSize")
+			_, ok := ws.hasReceivedKind("PoolSize")
 			return ok
-		}), "supervisor should receive RoomSize")
+		}), "supervisor should receive PoolSize")
 	})
 
 	t.Run("aborts session when supervisor changes campaign State to paused", func(t *testing.T) {
@@ -45,7 +45,7 @@ func TestClientSupervisor_Integration(t *testing.T) {
 		wsSlice := makeWSStubs(3)
 		for _, ws := range wsSlice {
 			RunParticipant(ws, slug)
-			ws.land().join()
+			ws.land().agree()
 		}
 		// the fixture data is what we expected
 		runner, _ := hasRunner(ns)
@@ -60,8 +60,8 @@ func TestClientSupervisor_Integration(t *testing.T) {
 		}
 		// participants have been disconnected
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return supWs.hasReceived(Message{"RoomSize", "0/4"})
-		}), "supervisor should receive RoomSize:0/4")
+			return supWs.hasReceived(Message{"PoolSize", "0/4"})
+		}), "supervisor should receive PoolSize:0/4")
 	})
 
 	t.Run("persists supervisor changed State after runner stopped", func(t *testing.T) {
@@ -108,7 +108,7 @@ func TestClientSupervisor_Integration(t *testing.T) {
 		wsSlice := makeWSStubs(perSession)
 		for _, ws := range wsSlice {
 			RunParticipant(ws, slug)
-			ws.land().join()
+			ws.land().agree()
 		}
 
 		// assert inner state

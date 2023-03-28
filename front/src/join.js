@@ -87,13 +87,13 @@ const start = function (slug) {
           }
           if(accepted) {
             hide("alert-container");
-            ws.send(JSON.stringify({ kind: "Join" }));
+            ws.send(JSON.stringify({ kind: "Agree" }));
           } else {
             show("alert-container");
           }
         });
-    } else if (kind === "RoomSize") {
-      let sizes = document.querySelectorAll(".room-size");
+    } else if (kind === "PoolSize") {
+      let sizes = document.querySelectorAll(".pool-size");
       for (let s of sizes) {
         s.innerHTML = payload;
       }

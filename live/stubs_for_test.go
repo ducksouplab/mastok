@@ -85,8 +85,13 @@ func (ws *wsStub) land() *wsStub {
 	return ws
 }
 
-func (ws *wsStub) join() *wsStub {
-	ws.push(Message{"Join", ""})
+func (ws *wsStub) agree() *wsStub {
+	ws.push(Message{"Agree", ""})
+	return ws
+}
+
+func (ws *wsStub) choose(groupLabel string) *wsStub {
+	ws.push(Message{"Choose", groupLabel})
 	return ws
 }
 

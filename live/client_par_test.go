@@ -4,36 +4,9 @@ import (
 	"testing"
 
 	"github.com/ducksouplab/mastok/models"
+	th "github.com/ducksouplab/mastok/test_helpers"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestClient_Participant_Unit(t *testing.T) {
-	t.Run("rejects landing if fingerprint payload is empty", func(t *testing.T) {
-		ns := "fxt_par"
-		defer tearDown(ns)
-
-		ws := runParticipantStub(ns)
-		ws.push(Message{"Land", ""})
-
-		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("Reject")
-			return ok
-		}))
-	})
-
-	t.Run("accepts landing if fingerprint payload is present", func(t *testing.T) {
-		ns := "fxt_par"
-		defer tearDown(ns)
-
-		ws := runParticipantStub(ns)
-		ws.push(Message{"Land", "fingerprint"})
-
-		assert.False(t, retryUntil(longDuration, func() bool {
-			_, ok := ws.hasReceivedKind("Reject")
-			return ok
-		}))
-	})
-}
 
 func TestClient_Participant_Integration(t *testing.T) {
 
@@ -47,69 +20,6 @@ func TestClient_Participant_Integration(t *testing.T) {
 			_, ok := ws.hasReceivedKind("State")
 			return ok
 		}), "participant should receive State")
-	})
-
-	t.Run("same fingerprint is rejected from room if campaign requires unique participants", func(t *testing.T) {
-		ns := "fxt_par_once"
-		defer tearDown(ns)
-
-		// the fixture data is what we expected
-		campaign, _ := models.GetCampaignByNamespace(ns)
-		assert.Equal(t, true, campaign.JoinOnce)
-
-		ws1 := runParticipantStub(ns)
-		ws2 := runParticipantStub(ns)
-		ws1.landWith("fingerprint1")
-		ws2.landWith("fingerprint1")
-
-		assert.True(t, retryUntil(longDuration, func() bool {
-			_, ok := ws2.hasReceivedKind("Reject")
-			return ok
-		}))
-	})
-
-	t.Run("same fingerprint is accepted in room if campaign does not require unique participants", func(t *testing.T) {
-		ns := "fxt_par"
-		defer tearDown(ns)
-
-		// the fixture data is what we expected
-		campaign, _ := models.GetCampaignByNamespace(ns)
-		assert.Equal(t, false, campaign.JoinOnce)
-
-		ws1 := runParticipantStub(ns)
-		ws2 := runParticipantStub(ns)
-		ws1.landWith("fingerprint1")
-		ws2.landWith("fingerprint1")
-
-		assert.False(t, retryUntil(longDuration, func() bool {
-			_, ok := ws2.hasReceivedKind("Reject")
-			return ok
-		}))
-	})
-
-	t.Run("participant should not receive Consent before landing", func(t *testing.T) {
-		ns := "fxt_par"
-		defer tearDown(ns)
-
-		ws := runParticipantStub(ns)
-
-		assert.False(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("Consent")
-			return ok
-		}))
-	})
-
-	t.Run("participant receives Consent after landing", func(t *testing.T) {
-		ns := "fxt_par"
-		defer tearDown(ns)
-
-		ws := runParticipantStub(ns)
-		ws.land()
-
-		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("Consent")
-			return ok
-		}))
 	})
 
 	t.Run("without grouping, PoolSize is sent after Agree", func(t *testing.T) {
@@ -190,5 +100,40 @@ func TestClient_Participant_Integration(t *testing.T) {
 				return ws.hasReceived(Message{"State", "Paused"})
 			}), "participant should not receive State:Paused")
 		}
+	})
+
+	t.Run("turns Campaign to completed after last SessionStart", func(t *testing.T) {
+		ns := "fxt_par_almost_completed"
+		perSession := 4
+		defer tearDown(ns)
+
+		// the fixture data is what we expected
+		campaign, _ := models.GetCampaignByNamespace(ns)
+		assert.Equal(t, perSession, campaign.PerSession)
+		assert.Equal(t, 3, campaign.StartedSessions)
+		assert.Equal(t, "Running", campaign.State)
+
+		// fills the room
+		th.InterceptOtreePostSession()
+		th.InterceptOtreeGetSession()
+		defer th.InterceptOff()
+
+		wsSlice := runParticipantStubs(ns, perSession)
+		for _, ws := range wsSlice {
+			ws.land().agree()
+		}
+
+		// assert inner state
+		assert.True(t, retryUntil(longDuration, func() bool {
+			c, _ := models.GetCampaignByNamespace(ns)
+			return c.State == models.Completed && c.StartedSessions == 4
+		}), "campaign should be Completed")
+
+		// outer state: new participant can't connect
+		wsAdditional := runParticipantStub(ns)
+		// no need to land/agree, Completed State will kick participant first thing
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			return wsAdditional.isLastWriteKind("Disconnect")
+		}), "participant should receive Disconnect")
 	})
 }

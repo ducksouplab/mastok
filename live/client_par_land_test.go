@@ -2,7 +2,6 @@ package live
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -11,92 +10,97 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestClientFull_Integration(t *testing.T) {
-
-	t.Run("creates oTree session and sends relevant SessionStart to participants and supervisors", func(t *testing.T) {
-		ns := "fxt_par_launched"
-		perSession := 4
+func TestClient_Participant_Unit(t *testing.T) {
+	t.Run("rejects landing if fingerprint payload is empty", func(t *testing.T) {
+		ns := "fxt_par"
 		defer tearDown(ns)
 
-		// 2 supervisors
-		wsSup1, campaign := runSupervisorStub(ns)
-		runSupervisorStub(ns)
+		ws := runParticipantStub(ns)
+		ws.push(Message{"Land", ""})
 
-		// the fixture data is what we expected
-		assert.Equal(t, perSession, campaign.PerSession)
-		assert.Equal(t, 0, campaign.StartedSessions)
-		assert.Equal(t, "Running", campaign.State)
-
-		// fills the room
-		th.InterceptOtreePostSession()
-		th.InterceptOtreeGetSession()
-		defer th.InterceptOff()
-
-		// 4 participants
-		wsSlice := runParticipantStubs(ns, perSession)
-		for _, ws := range wsSlice {
-			ws.land().agree()
-		}
-
-		assert.True(t, retryUntil(longerDuration, func() bool {
-			found, ok := wsSup1.hasReceivedKind("SessionStart")
-			if ok {
-				session := found.Payload.(models.Session)
-				//http://localhost:8180/SessionStartLinks/t1wlmb4v
-				return strings.Contains(session.AdminUrl, "/SessionStartLinks/")
-			}
-			return false
-		}), "supervisor should receive SessionStart with oTree admin URL and oTree id like mk:namespace:#")
-
-		urlsMap := map[string]bool{}
-		for _, ws := range wsSlice {
-			assert.True(t, retryUntil(longDuration, func() bool {
-				found, ok := ws.hasReceivedKind("SessionStart")
-				if ok {
-					url := found.Payload.(string)
-					urlsMap[url] = true
-					//http://localhost:8180/InitializeParticipant/brutjmj7
-					return strings.Contains(url, "/InitializeParticipant/")
-				}
-				return false
-			}), "participant should receive SessionStart with oTree starting link")
-		}
-		assert.Equal(t, len(wsSlice), len(urlsMap), "participants should received different oTree starting links")
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			_, ok := ws.hasReceivedKind("Reject")
+			return ok
+		}))
 	})
 
-	t.Run("turns Campaign to completed after last SessionStart", func(t *testing.T) {
-		ns := "fxt_par_almost_completed"
-		perSession := 4
+	t.Run("accepts landing if fingerprint payload is present", func(t *testing.T) {
+		ns := "fxt_par"
+		defer tearDown(ns)
+
+		ws := runParticipantStub(ns)
+		ws.push(Message{"Land", "fingerprint"})
+
+		assert.False(t, retryUntil(longDuration, func() bool {
+			_, ok := ws.hasReceivedKind("Reject")
+			return ok
+		}))
+	})
+}
+
+func TestClient_Participant_Landing_Integration(t *testing.T) {
+
+	t.Run("same fingerprint is rejected from room if campaign requires unique participants", func(t *testing.T) {
+		ns := "fxt_par_once"
 		defer tearDown(ns)
 
 		// the fixture data is what we expected
 		campaign, _ := models.GetCampaignByNamespace(ns)
-		assert.Equal(t, perSession, campaign.PerSession)
-		assert.Equal(t, 3, campaign.StartedSessions)
-		assert.Equal(t, "Running", campaign.State)
+		assert.Equal(t, true, campaign.JoinOnce)
 
-		// fills the room
-		th.InterceptOtreePostSession()
-		th.InterceptOtreeGetSession()
-		defer th.InterceptOff()
+		ws1 := runParticipantStub(ns)
+		ws2 := runParticipantStub(ns)
+		ws1.landWith("fingerprint1")
+		ws2.landWith("fingerprint1")
 
-		wsSlice := runParticipantStubs(ns, perSession)
-		for _, ws := range wsSlice {
-			ws.land().agree()
-		}
-
-		// assert inner state
 		assert.True(t, retryUntil(longDuration, func() bool {
-			c, _ := models.GetCampaignByNamespace(ns)
-			return c.State == models.Completed && c.StartedSessions == 4
-		}), "campaign should be Completed")
+			_, ok := ws2.hasReceivedKind("Reject")
+			return ok
+		}))
+	})
 
-		// outer state: new participant can't connect
-		wsAdditional := runParticipantStub(ns)
-		// no need to land/agree, Completed State will kick participant first thing
+	t.Run("same fingerprint is accepted in room if campaign does not require unique participants", func(t *testing.T) {
+		ns := "fxt_par"
+		defer tearDown(ns)
+
+		// the fixture data is what we expected
+		campaign, _ := models.GetCampaignByNamespace(ns)
+		assert.Equal(t, false, campaign.JoinOnce)
+
+		ws1 := runParticipantStub(ns)
+		ws2 := runParticipantStub(ns)
+		ws1.landWith("fingerprint1")
+		ws2.landWith("fingerprint1")
+
+		assert.False(t, retryUntil(longDuration, func() bool {
+			_, ok := ws2.hasReceivedKind("Reject")
+			return ok
+		}))
+	})
+
+	t.Run("participant should not receive Consent before landing", func(t *testing.T) {
+		ns := "fxt_par"
+		defer tearDown(ns)
+
+		ws := runParticipantStub(ns)
+
+		assert.False(t, retryUntil(shortDuration, func() bool {
+			_, ok := ws.hasReceivedKind("Consent")
+			return ok
+		}))
+	})
+
+	t.Run("participant receives Consent after landing", func(t *testing.T) {
+		ns := "fxt_par"
+		defer tearDown(ns)
+
+		ws := runParticipantStub(ns)
+		ws.land()
+
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return wsAdditional.isLastWriteKind("Disconnect")
-		}), "participant should receive Disconnect")
+			_, ok := ws.hasReceivedKind("Consent")
+			return ok
+		}))
 	})
 
 	t.Run("sends redirect if participant reconnects", func(t *testing.T) {

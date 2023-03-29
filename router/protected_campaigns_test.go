@@ -197,7 +197,6 @@ func TestCampaigns_Integration(t *testing.T) {
 		cf.grouping = "What is your gender?\nMale:2\nFemale:3"
 		data := campaignFormData(cf)
 		// POST
-		t.Logf(">>>>>>> t %#v", data)
 		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
 		assert.Equal(t, 422, res.Code)
 	})

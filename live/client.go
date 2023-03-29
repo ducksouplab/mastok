@@ -31,6 +31,7 @@ type client struct {
 	hasLanded    bool
 	hasAgreed    bool
 	fingerprint  string
+	groupLabel   string
 	// links
 	ws     wsConn
 	runner *runner
@@ -71,6 +72,7 @@ func (c *client) readLoop() {
 				fingerprint := m.Payload.(string)
 				if len(fingerprint) == 0 {
 					c.outgoingCh <- participantRejectMessage()
+					break
 				} else {
 					// do set client state before sharing landing with runner
 					c.hasLanded = true
@@ -83,12 +85,14 @@ func (c *client) readLoop() {
 					c.runner.participantCh <- FromParticipantMessage{Kind: m.Kind, From: c}
 					// when there is not grouping, Agree implies Choose
 					if c.runner.grouping == nil {
+						c.groupLabel = defaultGroupLabel
 						c.runner.participantCh <- FromParticipantMessage{Kind: "Choose", Payload: defaultGroupLabel, From: c}
 					}
 				}
 			} else if m.Kind == "Choose" {
 				groupLabel := m.Payload.(string)
 				if len(groupLabel) != 0 && c.hasAgreed { // can't agree before landing
+					c.groupLabel = groupLabel
 					c.runner.participantCh <- FromParticipantMessage{Kind: m.Kind, Payload: groupLabel, From: c}
 				}
 			}

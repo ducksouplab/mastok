@@ -14,7 +14,7 @@ import (
 func TestClientFull_Integration(t *testing.T) {
 
 	t.Run("creates oTree session and sends relevant SessionStart to participants and supervisors", func(t *testing.T) {
-		ns := "fxt_live_ns5_launched"
+		ns := "fxt_live_par_launched"
 		slug := ns + "_slug"
 		perSession := 4
 		defer tearDown(ns)
@@ -68,7 +68,7 @@ func TestClientFull_Integration(t *testing.T) {
 	})
 
 	t.Run("turns Campaign to completed after last SessionStart", func(t *testing.T) {
-		ns := "fxt_live_ns7_almost_completed"
+		ns := "fxt_live_par_almost_completed"
 		slug := ns + "_slug"
 		perSession := 4
 		defer tearDown(ns)
@@ -105,7 +105,7 @@ func TestClientFull_Integration(t *testing.T) {
 	})
 
 	t.Run("sends redirect if participant reconnects", func(t *testing.T) {
-		ns := "fxt_live_ns10_redirect"
+		ns := "fxt_live_par_redirect"
 		slug := ns + "_slug"
 		perSession := 2
 		defer tearDown(ns)
@@ -150,7 +150,7 @@ func TestClientFull_Integration(t *testing.T) {
 	})
 
 	t.Run("sends redirect if participant reconnects even for JoinOnce campaign", func(t *testing.T) {
-		ns := "fxt_live_ns11_redirect2"
+		ns := "fxt_live_par_redirect2"
 		slug := ns + "_slug"
 		perSession := 2
 		defer tearDown(ns)
@@ -195,7 +195,7 @@ func TestClientFull_Integration(t *testing.T) {
 	})
 
 	t.Run("sends reject if participant reconnect to JoinOnce campaign after session ended", func(t *testing.T) {
-		ns := "fxt_live_ns12_reject"
+		ns := "fxt_live_par_reject"
 		slug := ns + "_slug"
 		perSession := 2
 		defer tearDown(ns)
@@ -241,7 +241,7 @@ func TestClientFull_Integration(t *testing.T) {
 	})
 
 	t.Run("does not send reject if participant reconnect to multi-join campaign after session ended", func(t *testing.T) {
-		ns := "fxt_live_ns13_noreject"
+		ns := "fxt_live_par_noreject"
 		slug := ns + "_slug"
 		perSession := 2
 		defer tearDown(ns)

@@ -7,18 +7,22 @@ import (
 )
 
 type wsStub struct {
-	doneCh    chan struct{}
-	toRead    chan Message
-	writtenTo chan Message
+	toReadCh    chan Message
+	writtenToCh chan Message
+	clearCh     chan struct{}
+	// closing
+	done   bool
+	doneCh chan struct{}
 	// internal
 	writes []Message
 }
 
 func newWSStub() *wsStub {
 	ws := &wsStub{
-		doneCh:    make(chan struct{}),
-		toRead:    make(chan Message, 256),
-		writtenTo: make(chan Message, 256),
+		toReadCh:    make(chan Message, 256),
+		writtenToCh: make(chan Message, 256),
+		clearCh:     make(chan struct{}),
+		doneCh:      make(chan struct{}),
 	}
 	go ws.loop()
 	return ws
@@ -37,7 +41,7 @@ func makeWSStubs(size int) []*wsStub {
 func (ws *wsStub) ReadJSON(m any) error {
 	for {
 		select {
-		case msg := <-ws.toRead:
+		case msg := <-ws.toReadCh:
 			pointer := m.(*Message)
 			*pointer = msg
 			return nil
@@ -50,7 +54,7 @@ func (ws *wsStub) ReadJSON(m any) error {
 func (ws *wsStub) WriteJSON(m any) error {
 	for {
 		select {
-		case ws.writtenTo <- m.(Message):
+		case ws.writtenToCh <- m.(Message):
 			return nil
 		case <-ws.doneCh:
 			return errors.New("ws stub closed")
@@ -58,10 +62,17 @@ func (ws *wsStub) WriteJSON(m any) error {
 	}
 }
 
+func (ws *wsStub) Clear() {
+	ws.clearCh <- struct{}{}
+}
+
 // closing stops reading, which in turn unregister client from runner
 // which in turn deletes runner from store (if was the last registered client) and stops it loop
 func (ws *wsStub) Close() error {
-	close(ws.doneCh)
+	if !ws.done {
+		ws.done = true
+		close(ws.doneCh)
+	}
 	return nil
 }
 
@@ -71,7 +82,7 @@ func (ws *wsStub) Close() error {
 // to the other side of the websocket, we may push (for future ReadJSON)
 // or pull (what has been WriteJSON)
 func (ws *wsStub) push(m Message) {
-	ws.toRead <- m
+	ws.toReadCh <- m
 }
 
 // write helpers
@@ -132,7 +143,12 @@ func (ws *wsStub) hasReceivedKind(kind string) (found Message, ok bool) {
 }
 
 func (ws *wsStub) loop() {
-	for w := range ws.writtenTo {
-		ws.writes = append(ws.writes, w)
+	for {
+		select {
+		case w := <-ws.writtenToCh:
+			ws.writes = append(ws.writes, w)
+		case <-ws.clearCh:
+			ws.writes = []Message{}
+		}
 	}
 }

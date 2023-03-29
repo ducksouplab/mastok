@@ -6,7 +6,7 @@ import (
 	"github.com/ducksouplab/mastok/models"
 )
 
-//const maxWaitingPoolSize = 50
+const maxPendingSize = 50
 
 // clients hold references to any (supervisor or participant) client
 type runner struct {
@@ -80,24 +80,26 @@ func (r *runner) loop() {
 				}
 			}
 		case c := <-r.unregisterCh:
-			if r.clients.has(c) {
-				// deletes client
-				if wasAgreeing := r.clients.delete(c); wasAgreeing {
-					// tells everyone including supervisor that the room size has changed
-					for c := range r.clients.pool {
-						c.outgoingCh <- poolSizeMessage(r)
-					}
-					for c := range r.clients.supervisors {
-						c.outgoingCh <- poolSizeMessage(r)
-					}
+			// deletes client
+			if wasInPool := r.clients.delete(c); wasInPool {
+				// tells everyone including supervisor that the room size has changed
+				for c := range r.clients.pool {
+					c.outgoingCh <- poolSizeMessage(r)
 				}
-				if c.runner.campaign.JoinOnce {
-					delete(r.roomFingerprints, c.fingerprint)
+				for c := range r.clients.supervisors {
+					c.outgoingCh <- poolSizeMessage(r)
 				}
-				if r.clients.isEmpty() {
-					r.stop()
-					return
+			} else {
+				for c := range r.clients.supervisors {
+					c.outgoingCh <- pendingSizeMessage(r)
 				}
+			}
+			if c.runner.campaign.JoinOnce {
+				delete(r.roomFingerprints, c.fingerprint)
+			}
+			if r.clients.isEmpty() {
+				r.stop()
+				return
 			}
 		case m := <-r.participantCh:
 			if m.Kind == "Land" {
@@ -127,7 +129,13 @@ func (r *runner) loop() {
 				// finally lands in room
 				m.From.outgoingCh <- participantConsentMessage(r.campaign)
 			} else if m.Kind == "Choose" {
-				r.clients.choose(m.From, m.Payload)
+				added := r.clients.tentativeAddToPool(m.From)
+				if !added {
+					for c := range r.clients.supervisors {
+						c.outgoingCh <- pendingSizeMessage(r)
+					}
+					break
+				}
 				// inform everyone (participants and supervisors) about the new room size
 				for c := range r.clients.pool {
 					c.outgoingCh <- poolSizeMessage(r)
@@ -136,14 +144,14 @@ func (r *runner) loop() {
 					c.outgoingCh <- poolSizeMessage(r)
 				}
 				// starts session when there is valid pool pending
-				pool, ready := r.clients.tentativePool()
+				ready := r.clients.isPoolReady()
 				if ready {
 					session, participantCodes, err := models.CreateSession(r.campaign)
 					if err != nil {
 						log.Println("[runner] session creation failed: ", err)
 					} else {
 						participantIndex := 0
-						for _, c := range pool {
+						for c := range r.clients.pool {
 							code := participantCodes[participantIndex]
 							c.outgoingCh <- sessionStartParticipantMessage(code)
 							models.CreateParticipation(session, c.fingerprint, code)
@@ -155,6 +163,16 @@ func (r *runner) loop() {
 							c.outgoingCh <- stateMessage(r.campaign, c) // if state becomes Busy
 							if c.runner.campaign.GetPublicState(true) == models.Busy {
 								c.runner.tickStateMessage()
+							}
+						}
+						// now pool has been emptied, refill it from pending participants
+						if updated := r.clients.fillPoolFromPending(); updated {
+							for c := range r.clients.pool { // new pool
+								c.outgoingCh <- poolSizeMessage(r)
+							}
+							for c := range r.clients.supervisors { // both pool and pending have changed
+								c.outgoingCh <- poolSizeMessage(r)
+								c.outgoingCh <- pendingSizeMessage(r)
 							}
 						}
 					}

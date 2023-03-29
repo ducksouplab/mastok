@@ -21,7 +21,14 @@ func stateMessage(c *models.Campaign, cl *client) Message {
 func poolSizeMessage(r *runner) Message {
 	return Message{
 		Kind:    "PoolSize",
-		Payload: strconv.Itoa(r.clients.participantsCount()) + "/" + strconv.Itoa(r.campaign.PerSession),
+		Payload: strconv.Itoa(r.clients.poolSize()) + "/" + strconv.Itoa(r.campaign.PerSession),
+	}
+}
+
+func pendingSizeMessage(r *runner) Message {
+	return Message{
+		Kind:    "PendingSize",
+		Payload: strconv.Itoa(r.clients.pendingSize()) + "/" + strconv.Itoa(maxPendingSize),
 	}
 }
 

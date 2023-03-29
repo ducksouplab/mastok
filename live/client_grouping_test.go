@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestClient_Participant_Grouping_Integration(t *testing.T) {
+func TestClient_Grouping_Integration(t *testing.T) {
 
 	t.Run("with grouping, PoolSize is sent after Choose", func(t *testing.T) {
-		ns := "fxt_live_ns14_grouping"
+		ns := "fxt_live_grp"
 		slug := ns + "_slug"
 		defer tearDown(ns)
 

@@ -55,7 +55,7 @@ func TestClient_Participant_Integration(t *testing.T) {
 	})
 
 	t.Run("same fingerprint is rejected from room if campaign requires unique participants", func(t *testing.T) {
-		ns := "fxt_live_ns9_once"
+		ns := "fxt_live_par_once"
 		slug := ns + "_slug"
 		defer tearDown(ns)
 
@@ -156,7 +156,7 @@ func TestClient_Participant_Integration(t *testing.T) {
 	})
 
 	t.Run("kicks participants if State is Paused", func(t *testing.T) {
-		ns := "fxt_live_ns3_paused"
+		ns := "fxt_live_par_paused"
 		slug := ns + "_slug"
 		defer tearDown(ns)
 
@@ -176,7 +176,7 @@ func TestClient_Participant_Integration(t *testing.T) {
 	})
 
 	t.Run("kicks participants if State is Completed", func(t *testing.T) {
-		ns := "fxt_live_ns6_completed"
+		ns := "fxt_live_par_completed"
 		slug := ns + "_slug"
 		defer tearDown(ns)
 

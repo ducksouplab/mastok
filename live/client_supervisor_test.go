@@ -1,6 +1,7 @@
 package live
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/ducksouplab/mastok/models"
@@ -10,7 +11,7 @@ import (
 
 func TestClient_Supervisor_Integration(t *testing.T) {
 	t.Run("supervisor has runner", func(t *testing.T) {
-		ns := "fxt_live_ns1"
+		ns := "fxt_live_sup"
 		defer tearDown(ns)
 
 		ws := newWSStub()
@@ -21,7 +22,7 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 	})
 
 	t.Run("supervisor receives PoolSize", func(t *testing.T) {
-		ns := "fxt_live_ns1"
+		ns := "fxt_live_sup"
 		defer tearDown(ns)
 
 		ws := newWSStub()
@@ -33,8 +34,53 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		}), "supervisor should receive PoolSize")
 	})
 
+	t.Run("supervisor receives PendingSize", func(t *testing.T) {
+		ns := "fxt_live_sup_grouping"
+		slug := ns + "_slug"
+		defer tearDown(ns)
+
+		wsSup := newWSStub()
+		s := RunSupervisor(wsSup, ns)
+
+		// the fixture data is what we expected
+		assert.Equal(t, 3, s.runner.campaign.PerSession)
+		assert.Contains(t, s.runner.campaign.Grouping, "Male:1")
+		assert.Contains(t, s.runner.campaign.Grouping, "Female:1")
+		assert.Contains(t, s.runner.campaign.Grouping, "Other:1")
+
+		// first participants in pool
+		ws := newWSStub()
+		RunParticipant(ws, slug)
+		ws.land().agree().choose("Female")
+
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			_, ok := wsSup.hasReceivedKind("PoolSize")
+			return ok
+		}))
+
+		// other participants pending
+		wsSlice := makeWSStubs(2)
+		for _, ws := range wsSlice {
+			RunParticipant(ws, slug)
+			ws.land().agree().choose("Female")
+		}
+
+		assert.True(t, retryUntil(longDuration, func() bool {
+			ok := wsSup.hasReceived(Message{"PendingSize", "2/" + strconv.Itoa(maxPendingSize)})
+			return ok
+		}))
+
+		// one pending leaves
+		wsSlice[0].Close()
+		wsSup.Clear()
+		assert.True(t, retryUntil(longDuration, func() bool {
+			ok := wsSup.hasReceived(Message{"PendingSize", "1/" + strconv.Itoa(maxPendingSize)})
+			return ok
+		}))
+	})
+
 	t.Run("aborts session when supervisor changes campaign State to paused", func(t *testing.T) {
-		ns := "fxt_live_ns2_to_be_paused"
+		ns := "fxt_live_to_be_paused"
 		slug := ns + "_slug"
 		defer tearDown(ns)
 
@@ -65,7 +111,7 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 	})
 
 	t.Run("persists supervisor changed State after runner stopped", func(t *testing.T) {
-		ns := "fxt_live_ns4_paused"
+		ns := "fxt_live_sup_paused"
 		defer tearDown(ns)
 
 		supWs1 := newWSStub()
@@ -87,7 +133,7 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 	})
 
 	t.Run("manages Busy state", func(t *testing.T) {
-		ns := "fxt_live_ns8_busy"
+		ns := "fxt_live_sup_busy"
 		slug := ns + "_slug"
 		perSession := 2
 		defer tearDown(ns)

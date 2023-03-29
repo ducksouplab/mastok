@@ -5,35 +5,38 @@ import (
 )
 
 type runnerClients struct {
-	participants map[*client]bool
+	// configuration
+	sizeByGroup map[string]int
+	// state
 	supervisors  map[*client]bool
-	all          map[*client]bool
-	pool         map[*client]bool
-	groupsSize   map[string]int
-	groups       map[string]map[*client]bool
+	participants map[*client]bool
+	all          map[*client]bool            // supervisors and participants: used to broadcast messages
+	pool         map[*client]bool            // participants selected for next session
+	poolByGroup  map[string]map[*client]bool // same contents as pool, but categorized
+	pending      []*client                   // participants (ordered by arrival) for following sessions
 }
 
 func newRunnerClients(g *models.Grouping, ps int) *runnerClients {
-	groupsSize := make(map[string]int)
+	sizeByGroup := make(map[string]int)
 	if g == nil {
 		// create default group
-		groupsSize[defaultGroupLabel] = ps
+		sizeByGroup[defaultGroupLabel] = ps
 	} else {
 		for _, group := range g.Groups {
-			groupsSize[group.Label] = group.Size
+			sizeByGroup[group.Label] = group.Size
 		}
 	}
 	groups := make(map[string]map[*client]bool)
-	for label := range groupsSize {
+	for label := range sizeByGroup {
 		groups[label] = make(map[*client]bool)
 	}
 	return &runnerClients{
-		participants: make(map[*client]bool),
 		supervisors:  make(map[*client]bool),
+		participants: make(map[*client]bool),
 		all:          make(map[*client]bool),
 		pool:         make(map[*client]bool), // have landed, agreed, chosen
-		groupsSize:   groupsSize,
-		groups:       groups,
+		poolByGroup:  groups,
+		sizeByGroup:  sizeByGroup,
 	}
 }
 
@@ -41,35 +44,12 @@ func (rc *runnerClients) isEmpty() bool {
 	return len(rc.all) == 0
 }
 
-func (rc *runnerClients) participantsCount() (count int) {
-	for _, participants := range rc.groups {
-		count += len(participants)
-	}
-	return
+func (rc *runnerClients) poolSize() (count int) {
+	return len(rc.pool)
 }
 
-func (rc *runnerClients) tentativePool() ([]*client, bool) {
-	ok := true
-	// all groups have to be full
-	for label, size := range rc.groupsSize {
-		isGroupFull := len(rc.groups[label]) == size
-		ok = ok && isGroupFull
-	}
-	if ok {
-		var flatAgreeingParticipants []*client
-		for _, group := range rc.groups {
-			for participant := range group {
-				flatAgreeingParticipants = append(flatAgreeingParticipants, participant)
-			}
-		}
-		return flatAgreeingParticipants, true
-	}
-	return nil, false
-}
-
-func (rc *runnerClients) has(c *client) bool {
-	_, ok := rc.all[c]
-	return ok
+func (rc *runnerClients) pendingSize() (count int) {
+	return len(rc.pending)
 }
 
 func (rc *runnerClients) add(c *client) {
@@ -81,24 +61,71 @@ func (rc *runnerClients) add(c *client) {
 	}
 }
 
-func (rc *runnerClients) choose(c *client, label string) {
-	rc.groups[label][c] = true
-	rc.pool[c] = true
+func (rc *runnerClients) isGroupFull(label string) bool {
+	return len(rc.poolByGroup[label]) == rc.sizeByGroup[label]
 }
 
-func (rc *runnerClients) delete(c *client) (wasAgreeing bool) {
+func (rc *runnerClients) tentativeAddToPool(c *client) bool {
+	if rc.isGroupFull(c.groupLabel) {
+		rc.pending = append(rc.pending, c)
+		return false
+	} else {
+		rc.pool[c] = true
+		rc.poolByGroup[c.groupLabel][c] = true
+		return true
+	}
+}
+
+func (rc *runnerClients) isPoolReady() bool {
+	ok := true
+	// all groups have to be full
+	for label := range rc.sizeByGroup {
+		isFull := rc.isGroupFull(label)
+		ok = ok && isFull
+	}
+	return ok
+}
+
+func (rc *runnerClients) fillPoolFromPending() (update bool) {
+	if len(rc.pending) == 0 {
+		return
+	}
+	// reset pending
+	oldPending := make([]*client, len(rc.pending))
+	copy(oldPending, rc.pending)
+	rc.pending = []*client{}
+	// fill
+	for _, c := range oldPending {
+		added := rc.tentativeAddToPool(c)
+		update = update || added
+	}
+	return
+}
+
+func sliceDelete(cSlice []*client, toRemove *client) (newSlice []*client) {
+	for _, c := range cSlice {
+		if c != toRemove {
+			newSlice = append(newSlice, c)
+		}
+	}
+	return
+}
+
+func (rc *runnerClients) delete(c *client) (wasInPool bool) {
 	delete(rc.all, c)
-	delete(rc.pool, c)
 
 	if c.isSupervisor {
 		delete(rc.supervisors, c)
 	} else {
 		delete(rc.participants, c)
+		delete(rc.pool, c)
 
-		for _, group := range rc.groups {
-			_, wasInGroup := group[c]
+		group := rc.poolByGroup[c.groupLabel]
+		if _, isInGroup := group[c]; isInGroup {
 			delete(group, c)
-			wasAgreeing = wasAgreeing || wasInGroup
+			wasInPool = true
+		} else {
+			rc.pending = sliceDelete(rc.pending, c)
 		}
 	}
 	return

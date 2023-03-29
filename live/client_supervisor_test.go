@@ -11,22 +11,20 @@ import (
 
 func TestClient_Supervisor_Integration(t *testing.T) {
 	t.Run("supervisor has runner", func(t *testing.T) {
-		ns := "fxt_live_sup"
+		ns := "fxt_sup"
 		defer tearDown(ns)
 
-		ws := newWSStub()
-		RunSupervisor(ws, ns)
+		runSupervisorStub(ns)
 
 		_, ok := hasRunner(ns)
 		assert.Equal(t, true, ok)
 	})
 
 	t.Run("supervisor receives PoolSize", func(t *testing.T) {
-		ns := "fxt_live_sup"
+		ns := "fxt_sup"
 		defer tearDown(ns)
 
-		ws := newWSStub()
-		RunSupervisor(ws, ns)
+		ws, _ := runSupervisorStub(ns)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			_, ok := ws.hasReceivedKind("PoolSize")
@@ -35,22 +33,19 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 	})
 
 	t.Run("supervisor receives PendingSize", func(t *testing.T) {
-		ns := "fxt_live_sup_grouping"
-		slug := ns + "_slug"
+		ns := "fxt_sup_grouping"
 		defer tearDown(ns)
 
-		wsSup := newWSStub()
-		s := RunSupervisor(wsSup, ns)
+		wsSup, campaign := runSupervisorStub(ns)
 
 		// the fixture data is what we expected
-		assert.Equal(t, 3, s.runner.campaign.PerSession)
-		assert.Contains(t, s.runner.campaign.Grouping, "Male:1")
-		assert.Contains(t, s.runner.campaign.Grouping, "Female:1")
-		assert.Contains(t, s.runner.campaign.Grouping, "Other:1")
+		assert.Equal(t, 3, campaign.PerSession)
+		assert.Contains(t, campaign.Grouping, "Male:1")
+		assert.Contains(t, campaign.Grouping, "Female:1")
+		assert.Contains(t, campaign.Grouping, "Other:1")
 
 		// first participants in pool
-		ws := newWSStub()
-		RunParticipant(ws, slug)
+		ws := runParticipantStub(ns)
 		ws.land().agree().choose("Female")
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
@@ -59,9 +54,8 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		}))
 
 		// other participants pending
-		wsSlice := makeWSStubs(2)
+		wsSlice := runParticipantStubs(ns, 2)
 		for _, ws := range wsSlice {
-			RunParticipant(ws, slug)
 			ws.land().agree().choose("Female")
 		}
 
@@ -80,25 +74,20 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 	})
 
 	t.Run("aborts session when supervisor changes campaign State to paused", func(t *testing.T) {
-		ns := "fxt_live_to_be_paused"
-		slug := ns + "_slug"
+		ns := "fxt_to_be_paused"
 		defer tearDown(ns)
 
-		// 1 supervisor
-		supWs := newWSStub()
-		RunSupervisor(supWs, ns)
+		wsSup, campaign := runSupervisorStub(ns)
 		// 3 participants (session won't start)
-		wsSlice := makeWSStubs(3)
+		wsSlice := runParticipantStubs(ns, 2)
 		for _, ws := range wsSlice {
-			RunParticipant(ws, slug)
 			ws.land().agree()
 		}
 		// the fixture data is what we expected
-		runner, _ := hasRunner(ns)
-		assert.Equal(t, 4, runner.campaign.PerSession)
-		assert.Equal(t, "Running", runner.campaign.State)
+		assert.Equal(t, 4, campaign.PerSession)
+		assert.Equal(t, "Running", campaign.State)
 		// every participants received the new state
-		supWs.push(Message{"State", "Paused"})
+		wsSup.push(Message{"State", "Paused"})
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longDuration, func() bool {
 				return ws.hasReceived(Message{"State", "Unavailable"})
@@ -106,43 +95,39 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		}
 		// participants have been disconnected
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return supWs.hasReceived(Message{"PoolSize", "0/4"})
+			return wsSup.hasReceived(Message{"PoolSize", "0/4"})
 		}), "supervisor should receive PoolSize:0/4")
 	})
 
 	t.Run("persists supervisor changed State after runner stopped", func(t *testing.T) {
-		ns := "fxt_live_sup_paused"
+		ns := "fxt_sup_paused"
 		defer tearDown(ns)
 
-		supWs1 := newWSStub()
-		s := RunSupervisor(supWs1, ns)
+		wsSup1, campaign := runSupervisorStub(ns)
+
 		// the fixture data is what we expected
-		assert.Equal(t, "Paused", s.runner.campaign.State)
+		assert.Equal(t, "Paused", campaign.State)
 
 		// supervisor changes state and quits
-		supWs1.push(Message{"State", "Running"})
-		supWs1.Close()
-		<-s.runner.isDone()
+		wsSup1.push(Message{"State", "Running"})
+		wsSup1.Close()
+		runner, _ := hasRunner(ns)
+		<-runner.isDone()
 
 		// other supervisor connects
-		supWs2 := newWSStub()
-		RunSupervisor(supWs2, ns)
+		wsSup2, _ := runSupervisorStub(ns)
 		assert.True(t, retryUntil(longDuration, func() bool {
-			return supWs2.hasReceived(Message{"State", "Running"})
+			return wsSup2.hasReceived(Message{"State", "Running"})
 		}), "State should be persisted")
 	})
 
 	t.Run("manages Busy state", func(t *testing.T) {
-		ns := "fxt_live_sup_busy"
-		slug := ns + "_slug"
+		ns := "fxt_sup_busy"
 		perSession := 2
 		defer tearDown(ns)
 
-		// supervisor
-		wsSup := newWSStub()
-		s := RunSupervisor(wsSup, ns)
+		wsSup, campaign := runSupervisorStub(ns)
 		// the fixture data is what we expected
-		campaign := s.runner.campaign
 		assert.Equal(t, perSession, campaign.PerSession)
 		assert.Equal(t, 1, campaign.ConcurrentSessions)
 		assert.Equal(t, "Running", campaign.State)
@@ -151,9 +136,9 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
-		wsSlice := makeWSStubs(perSession)
+
+		wsSlice := runParticipantStubs(ns, perSession)
 		for _, ws := range wsSlice {
-			RunParticipant(ws, slug)
 			ws.land().agree()
 		}
 

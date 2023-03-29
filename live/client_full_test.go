@@ -14,13 +14,15 @@ import (
 func TestClientFull_Integration(t *testing.T) {
 
 	t.Run("creates oTree session and sends relevant SessionStart to participants and supervisors", func(t *testing.T) {
-		ns := "fxt_live_par_launched"
-		slug := ns + "_slug"
+		ns := "fxt_par_launched"
 		perSession := 4
 		defer tearDown(ns)
 
+		// 2 supervisors
+		wsSup1, campaign := runSupervisorStub(ns)
+		runSupervisorStub(ns)
+
 		// the fixture data is what we expected
-		campaign, _ := models.GetCampaignByNamespace(ns)
 		assert.Equal(t, perSession, campaign.PerSession)
 		assert.Equal(t, 0, campaign.StartedSessions)
 		assert.Equal(t, "Running", campaign.State)
@@ -29,20 +31,15 @@ func TestClientFull_Integration(t *testing.T) {
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
-		// 1 supervisor
-		wsSupSlice := makeWSStubs(2)
-		for _, wsSup := range wsSupSlice {
-			RunSupervisor(wsSup, ns)
-		}
+
 		// 4 participants
-		wsSlice := makeWSStubs(perSession)
+		wsSlice := runParticipantStubs(ns, perSession)
 		for _, ws := range wsSlice {
-			RunParticipant(ws, slug)
 			ws.land().agree()
 		}
 
 		assert.True(t, retryUntil(longerDuration, func() bool {
-			found, ok := wsSupSlice[0].hasReceivedKind("SessionStart")
+			found, ok := wsSup1.hasReceivedKind("SessionStart")
 			if ok {
 				session := found.Payload.(models.Session)
 				//http://localhost:8180/SessionStartLinks/t1wlmb4v
@@ -68,8 +65,7 @@ func TestClientFull_Integration(t *testing.T) {
 	})
 
 	t.Run("turns Campaign to completed after last SessionStart", func(t *testing.T) {
-		ns := "fxt_live_par_almost_completed"
-		slug := ns + "_slug"
+		ns := "fxt_par_almost_completed"
 		perSession := 4
 		defer tearDown(ns)
 
@@ -83,9 +79,9 @@ func TestClientFull_Integration(t *testing.T) {
 		th.InterceptOtreePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
-		wsSlice := makeWSStubs(perSession)
+
+		wsSlice := runParticipantStubs(ns, perSession)
 		for _, ws := range wsSlice {
-			RunParticipant(ws, slug)
 			ws.land().agree()
 		}
 
@@ -96,17 +92,15 @@ func TestClientFull_Integration(t *testing.T) {
 		}), "campaign should be Completed")
 
 		// outer state: new participant can't connect
-		addWs := newWSStub()
-		RunParticipant(addWs, slug)
+		wsAdditional := runParticipantStub(ns)
 		// no need to land/agree, Completed State will kick participant first thing
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return addWs.isLastWriteKind("Disconnect")
+			return wsAdditional.isLastWriteKind("Disconnect")
 		}), "participant should receive Disconnect")
 	})
 
 	t.Run("sends redirect if participant reconnects", func(t *testing.T) {
-		ns := "fxt_live_par_redirect"
-		slug := ns + "_slug"
+		ns := "fxt_par_redirect"
 		perSession := 2
 		defer tearDown(ns)
 
@@ -123,9 +117,8 @@ func TestClientFull_Integration(t *testing.T) {
 		defer th.InterceptOff()
 
 		// complete room with 2 participants
-		wsSlice := makeWSStubs(perSession)
+		wsSlice := runParticipantStubs(ns, perSession)
 		for index, ws := range wsSlice {
-			RunParticipant(ws, slug)
 			ws.landWith(fmt.Sprintf("fingerprint%v", index)).agree()
 		}
 
@@ -137,10 +130,9 @@ func TestClientFull_Integration(t *testing.T) {
 			}), "participant should receive SessionStart with oTree starting link")
 		}
 
-		// first participant reconnects
+		// first participant reconnects (same fingerprint)
 		wsSlice[0].Close()
-		ws := newWSStub()
-		RunParticipant(ws, slug)
+		ws := runParticipantStub(ns)
 		ws.landWith("fingerprint0").agree()
 
 		assert.True(t, retryUntil(longDuration, func() bool {
@@ -150,8 +142,7 @@ func TestClientFull_Integration(t *testing.T) {
 	})
 
 	t.Run("sends redirect if participant reconnects even for JoinOnce campaign", func(t *testing.T) {
-		ns := "fxt_live_par_redirect2"
-		slug := ns + "_slug"
+		ns := "fxt_par_redirect2"
 		perSession := 2
 		defer tearDown(ns)
 
@@ -168,9 +159,8 @@ func TestClientFull_Integration(t *testing.T) {
 		defer th.InterceptOff()
 
 		// complete room with 2 participants
-		wsSlice := makeWSStubs(perSession)
+		wsSlice := runParticipantStubs(ns, perSession)
 		for index, ws := range wsSlice {
-			RunParticipant(ws, slug)
 			ws.landWith(fmt.Sprintf("fingerprint%v", index)).agree()
 		}
 
@@ -182,10 +172,9 @@ func TestClientFull_Integration(t *testing.T) {
 			}), "participant should receive SessionStart with oTree starting link")
 		}
 
-		// first participant reconnects
+		// first participant reconnects (same fingerprint)
 		wsSlice[0].Close()
-		ws := newWSStub()
-		RunParticipant(ws, slug)
+		ws := runParticipantStub(ns)
 		ws.landWith("fingerprint0").agree()
 
 		assert.True(t, retryUntil(longDuration, func() bool {
@@ -195,8 +184,7 @@ func TestClientFull_Integration(t *testing.T) {
 	})
 
 	t.Run("sends reject if participant reconnect to JoinOnce campaign after session ended", func(t *testing.T) {
-		ns := "fxt_live_par_reject"
-		slug := ns + "_slug"
+		ns := "fxt_par_reject"
 		perSession := 2
 		defer tearDown(ns)
 
@@ -213,9 +201,8 @@ func TestClientFull_Integration(t *testing.T) {
 		defer th.InterceptOff()
 
 		// complete room with 2 participants
-		wsSlice := makeWSStubs(perSession)
+		wsSlice := runParticipantStubs(ns, perSession)
 		for index, ws := range wsSlice {
-			RunParticipant(ws, slug)
 			ws.landWith(fmt.Sprintf("fingerprint%v", index)).agree()
 		}
 
@@ -227,11 +214,9 @@ func TestClientFull_Integration(t *testing.T) {
 			}), "participant should receive SessionStart with oTree starting link")
 		}
 
-		// first participant reconnects
+		// first participant reconnects (same fingerprint)
 		time.Sleep((sessionDurationTest + 1) * models.SessionDurationUnit)
-		wsSlice[0].Close()
-		ws := newWSStub()
-		RunParticipant(ws, slug)
+		ws := runParticipantStub(ns)
 		ws.landWith("fingerprint0").agree()
 
 		assert.True(t, retryUntil(longDuration, func() bool {
@@ -241,8 +226,7 @@ func TestClientFull_Integration(t *testing.T) {
 	})
 
 	t.Run("does not send reject if participant reconnect to multi-join campaign after session ended", func(t *testing.T) {
-		ns := "fxt_live_par_noreject"
-		slug := ns + "_slug"
+		ns := "fxt_par_noreject"
 		perSession := 2
 		defer tearDown(ns)
 
@@ -259,9 +243,8 @@ func TestClientFull_Integration(t *testing.T) {
 		defer th.InterceptOff()
 
 		// complete room with 2 participants
-		wsSlice := makeWSStubs(perSession)
+		wsSlice := runParticipantStubs(ns, perSession)
 		for index, ws := range wsSlice {
-			RunParticipant(ws, slug)
 			ws.landWith(fmt.Sprintf("fingerprint%v", index)).agree()
 		}
 
@@ -273,11 +256,10 @@ func TestClientFull_Integration(t *testing.T) {
 			}), "participant should receive SessionStart with oTree starting link")
 		}
 
-		// first participant reconnects
+		// first participant reconnects (same fingerprint)
 		time.Sleep((sessionDurationTest + 1) * models.SessionDurationUnit)
 		wsSlice[0].Close()
-		ws := newWSStub()
-		RunParticipant(ws, slug)
+		ws := runParticipantStub(ns)
 		ws.landWith("fingerprint0").agree()
 
 		assert.False(t, retryUntil(longerDuration, func() bool {

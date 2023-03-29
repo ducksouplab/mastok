@@ -9,17 +9,16 @@ import (
 func TestClient_Grouping_Integration(t *testing.T) {
 
 	t.Run("with grouping, PoolSize is sent after Choose", func(t *testing.T) {
-		ns := "fxt_live_grp"
-		slug := ns + "_slug"
+		ns := "fxt_grp"
 		defer tearDown(ns)
 
-		ws1 := newWSStub()
-		p1 := RunParticipant(ws1, slug)
-		ws2 := newWSStub()
-		RunParticipant(ws2, slug)
+		wsSup, campaign := runSupervisorStub(ns)
+
+		ws1 := runParticipantStub(ns)
+		ws2 := runParticipantStub(ns)
 
 		// the fixture data is what we expected
-		assert.Contains(t, p1.runner.campaign.Grouping, "Male")
+		assert.Contains(t, campaign.Grouping, "Male")
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
 			_, ok := ws1.hasReceivedKind("PoolSize")
@@ -46,6 +45,10 @@ func TestClient_Grouping_Integration(t *testing.T) {
 			_, ok := ws1.hasReceivedKind("PoolSize")
 			return ok
 		}))
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			_, ok := wsSup.hasReceivedKind("PoolSize")
+			return ok
+		}))
 
 		ws2.land().agree()
 		assert.False(t, retryUntil(shortDuration, func() bool {
@@ -53,5 +56,4 @@ func TestClient_Grouping_Integration(t *testing.T) {
 			return ok
 		}))
 	})
-
 }

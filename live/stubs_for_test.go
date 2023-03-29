@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/ducksouplab/mastok/helpers"
+	"github.com/ducksouplab/mastok/models"
 )
 
 type wsStub struct {
@@ -17,6 +18,28 @@ type wsStub struct {
 	writes []Message
 }
 
+func runSupervisorStub(ns string) (ws *wsStub, campaign *models.Campaign) {
+	ws = newWSStub()
+	sup := RunSupervisor(ws, ns)
+	campaign = sup.runner.campaign
+	return
+}
+
+func runParticipantStub(ns string) (ws *wsStub) {
+	ws = newWSStub()
+	RunParticipant(ws, ns+"_slug")
+	return
+}
+
+func runParticipantStubs(ns string, size int) (wsSlice []*wsStub) {
+	for i := 0; i < size; i++ {
+		ws := newWSStub()
+		RunParticipant(ws, ns+"_slug")
+		wsSlice = append(wsSlice, ws)
+	}
+	return
+}
+
 func newWSStub() *wsStub {
 	ws := &wsStub{
 		toReadCh:    make(chan Message, 256),
@@ -26,14 +49,6 @@ func newWSStub() *wsStub {
 	}
 	go ws.loop()
 	return ws
-}
-
-func makeWSStubs(size int) []*wsStub {
-	out := make([]*wsStub, size)
-	for i := 0; i < size; i++ {
-		out[i] = newWSStub()
-	}
-	return out
 }
 
 // API for the supervisor and participant (client.go)

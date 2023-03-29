@@ -14,7 +14,7 @@ func TestRunnerStore_Unit(t *testing.T) {
 	})
 
 	t.Run("is of size 1 when first client is added", func(t *testing.T) {
-		campaign, _ := models.GetCampaignByNamespace("fxt_live_ns1")
+		campaign, _ := models.GetCampaignByNamespace("fxt_run")
 		getRunner(campaign)
 		defer deleteRunner(campaign)
 
@@ -23,7 +23,7 @@ func TestRunnerStore_Unit(t *testing.T) {
 	})
 
 	t.Run("is of size 1 when client is added twice", func(t *testing.T) {
-		campaign, _ := models.GetCampaignByNamespace("fxt_live_ns1")
+		campaign, _ := models.GetCampaignByNamespace("fxt_run")
 		getRunner(campaign)
 		getRunner(campaign)
 		defer deleteRunner(campaign)

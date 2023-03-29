@@ -31,7 +31,7 @@ func newRunner(c *models.Campaign) *runner {
 	r := runner{
 		campaign:         c,
 		grouping:         g,
-		clients:          newRunnerClients(g, c.PerSession),
+		clients:          newRunnerClients(c, g),
 		roomFingerprints: map[string]bool{}, // used only for JoinOnce campaigns
 		registerCh:       make(chan *client),
 		unregisterCh:     make(chan *client),
@@ -58,6 +58,37 @@ func (r *runner) stop() {
 	close(r.doneCh)
 }
 
+// return value: true to stop runner loop
+func (r *runner) processUnregister(target *client) (done bool) {
+	// deletes client
+	if wasInPool := r.clients.delete(target); wasInPool {
+		// tells everyone including supervisor that the room size has changed
+		for c := range r.clients.pool {
+			c.outgoingCh <- poolSizeMessage(r)
+		}
+		for c := range r.clients.supervisors {
+			c.outgoingCh <- poolSizeMessage(r)
+		}
+	} else {
+		for c := range r.clients.supervisors {
+			c.outgoingCh <- pendingSizeMessage(r)
+		}
+	}
+	if r.campaign.JoinOnce {
+		delete(r.roomFingerprints, target.fingerprint)
+	}
+	if r.clients.isEmpty() {
+		r.stop()
+		return true
+	}
+	return false
+}
+
+func (r *runner) processUnregisterWithReason(target *client, m Message) (done bool) {
+	target.outgoingCh <- m
+	return r.processUnregister(target)
+}
+
 func (r *runner) loop() {
 	for {
 		select {
@@ -73,32 +104,14 @@ func (r *runner) loop() {
 			} else {
 				// don't register
 				c.outgoingCh <- stateMessage(r.campaign, c)
-				c.outgoingCh <- participantDisconnectMessage()
+				c.outgoingCh <- disconnectMessage()
 				if r.clients.isEmpty() {
 					r.stop()
 					return
 				}
 			}
 		case c := <-r.unregisterCh:
-			// deletes client
-			if wasInPool := r.clients.delete(c); wasInPool {
-				// tells everyone including supervisor that the room size has changed
-				for c := range r.clients.pool {
-					c.outgoingCh <- poolSizeMessage(r)
-				}
-				for c := range r.clients.supervisors {
-					c.outgoingCh <- poolSizeMessage(r)
-				}
-			} else {
-				for c := range r.clients.supervisors {
-					c.outgoingCh <- pendingSizeMessage(r)
-				}
-			}
-			if c.runner.campaign.JoinOnce {
-				delete(r.roomFingerprints, c.fingerprint)
-			}
-			if r.clients.isEmpty() {
-				r.stop()
+			if done := r.processUnregister(c); done {
 				return
 			}
 		case m := <-r.participantCh:
@@ -112,31 +125,38 @@ func (r *runner) loop() {
 					}
 				}
 				if isInLiveSession { // we assume it's a reconnect, so we redirect to oTree
-					m.From.outgoingCh <- participantRedirectMessage(participation.OtreeCode)
+					if done := r.processUnregisterWithReason(m.From, landRedirectMessage(participation.OtreeCode)); done {
+						return
+					}
 					break
 				}
 				if r.campaign.JoinOnce {
-					if _, ok := r.roomFingerprints[m.Payload]; ok { // is in room?
-						m.From.outgoingCh <- participantRejectMessage()
-						break
-					}
-					if hasParticipated { // has been found in one session of this campaign
-						m.From.outgoingCh <- participantRejectMessage()
+					_, isAlreadyThere := r.roomFingerprints[m.Payload]
+					if isAlreadyThere || hasParticipated {
+						if done := r.processUnregisterWithReason(m.From, landRejectMessage()); done {
+							return
+						}
 						break
 					}
 					r.roomFingerprints[m.Payload] = true
 				}
 				// finally lands in room
-				m.From.outgoingCh <- participantConsentMessage(r.campaign)
+				m.From.outgoingCh <- consentMessage(r.campaign)
 			} else if m.Kind == "Choose" {
-				added := r.clients.tentativeAddToPool(m.From)
-				if !added {
-					for c := range r.clients.supervisors {
-						c.outgoingCh <- pendingSizeMessage(r)
+				addedToPool, addedToPending := r.clients.tentativeJoin(m.From)
+				if !addedToPool {
+					if addedToPending {
+						for c := range r.clients.supervisors {
+							c.outgoingCh <- pendingSizeMessage(r)
+						}
+						break
+					} else {
+						if done := r.processUnregisterWithReason(m.From, roomFullMessage()); done {
+							return
+						}
 					}
-					break
 				}
-				// inform everyone (participants and supervisors) about the new room size
+				// inform everyone (participants in pool and supervisors) about the new room size
 				for c := range r.clients.pool {
 					c.outgoingCh <- poolSizeMessage(r)
 				}
@@ -144,7 +164,7 @@ func (r *runner) loop() {
 					c.outgoingCh <- poolSizeMessage(r)
 				}
 				// starts session when there is valid pool pending
-				ready := r.clients.isPoolReady()
+				ready := r.clients.isPoolFull()
 				if ready {
 					session, participantCodes, err := models.CreateSession(r.campaign)
 					if err != nil {
@@ -155,9 +175,12 @@ func (r *runner) loop() {
 							code := participantCodes[participantIndex]
 							c.outgoingCh <- sessionStartParticipantMessage(code)
 							models.CreateParticipation(session, c.fingerprint, code)
-							c.outgoingCh <- participantDisconnectMessage()
+							if done := r.processUnregisterWithReason(c, disconnectMessage()); done {
+								return
+							}
 							participantIndex++
 						}
+
 						for c := range r.clients.supervisors {
 							c.outgoingCh <- sessionStartSupervisorMessage(session)
 							c.outgoingCh <- stateMessage(r.campaign, c) // if state becomes Busy
@@ -165,15 +188,15 @@ func (r *runner) loop() {
 								c.runner.tickStateMessage()
 							}
 						}
-						// now pool has been emptied, refill it from pending participants
-						if updated := r.clients.fillPoolFromPending(); updated {
-							for c := range r.clients.pool { // new pool
+						if updated := r.clients.resetPoolFromPending(); updated {
+							// now pool has been emptied, refill it from pending participants
+							for c := range r.clients.pool { // it's a new pool
 								c.outgoingCh <- poolSizeMessage(r)
 							}
-							for c := range r.clients.supervisors { // both pool and pending have changed
-								c.outgoingCh <- poolSizeMessage(r)
-								c.outgoingCh <- pendingSizeMessage(r)
-							}
+						}
+						for c := range r.clients.supervisors {
+							c.outgoingCh <- poolSizeMessage(r)
+							c.outgoingCh <- pendingSizeMessage(r)
 						}
 					}
 				}
@@ -186,7 +209,9 @@ func (r *runner) loop() {
 					newMessageState := stateMessage(r.campaign, c)
 					c.outgoingCh <- newMessageState
 					if newMessageState.Payload == "Unavailable" {
-						c.outgoingCh <- participantDisconnectMessage()
+						if done := r.processUnregisterWithReason(c, disconnectMessage()); done {
+							return
+						}
 					}
 				}
 			}

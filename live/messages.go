@@ -46,26 +46,33 @@ func sessionStartSupervisorMessage(session models.Session) Message {
 	}
 }
 
-func participantDisconnectMessage() Message {
+// campaign is not running or after SessionStart
+func disconnectMessage() Message {
 	return Message{
 		Kind: "Disconnect",
 	}
 }
 
-func participantRejectMessage() Message {
+func landRejectMessage() Message {
 	return Message{
 		Kind: "Reject",
 	}
 }
 
-func participantRedirectMessage(code string) Message {
+func landRedirectMessage(code string) Message {
 	return Message{
 		Kind:    "Redirect",
 		Payload: otree.ParticipantStartURL(code),
 	}
 }
 
-func participantConsentMessage(c *models.Campaign) Message {
+func roomFullMessage() Message {
+	return Message{
+		Kind: "Full",
+	}
+}
+
+func consentMessage(c *models.Campaign) Message {
 	return Message{
 		Kind:    "Consent",
 		Payload: helpers.MarkdownToHTML(c.Consent),

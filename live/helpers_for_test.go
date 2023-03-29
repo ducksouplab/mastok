@@ -1,6 +1,9 @@
 package live
 
-import "time"
+import (
+	"log"
+	"time"
+)
 
 func getRunnerStoreSize() int {
 	rs.Lock()
@@ -10,12 +13,14 @@ func getRunnerStoreSize() int {
 }
 
 func tearDown(namespace string) {
+	log.Printf("[teardown] started for namespace: " + namespace)
 	if sharedRunner, ok := hasRunner(namespace); ok {
 		for client := range sharedRunner.clients.all {
 			client.ws.Close()
 		}
 		<-sharedRunner.isDone()
 	}
+	log.Printf("[teardown] done for namespace: " + namespace)
 }
 
 // from https://quii.gitbook.io/learn-go-with-tests/build-an-application/websockets

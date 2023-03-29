@@ -2,15 +2,20 @@ package live
 
 import (
 	"errors"
+	"log"
 
 	"github.com/ducksouplab/mastok/helpers"
 	"github.com/ducksouplab/mastok/models"
 )
 
 type wsStub struct {
+	// for logging
+	label string
+	// channels
 	toReadCh    chan Message
 	writtenToCh chan Message
-	clearCh     chan struct{}
+	clearAllCh  chan struct{}
+	clearTillCh chan Message
 	// closing
 	done   bool
 	doneCh chan struct{}
@@ -19,32 +24,34 @@ type wsStub struct {
 }
 
 func runSupervisorStub(ns string) (ws *wsStub, campaign *models.Campaign) {
-	ws = newWSStub()
+	ws = newWSStub(ns + "#supervisor")
 	sup := RunSupervisor(ws, ns)
 	campaign = sup.runner.campaign
 	return
 }
 
 func runParticipantStub(ns string) (ws *wsStub) {
-	ws = newWSStub()
+	ws = newWSStub(ns + "#participant")
 	RunParticipant(ws, ns+"_slug")
 	return
 }
 
 func runParticipantStubs(ns string, size int) (wsSlice []*wsStub) {
 	for i := 0; i < size; i++ {
-		ws := newWSStub()
+		ws := newWSStub(ns + "#participant")
 		RunParticipant(ws, ns+"_slug")
 		wsSlice = append(wsSlice, ws)
 	}
 	return
 }
 
-func newWSStub() *wsStub {
+func newWSStub(l string) *wsStub {
 	ws := &wsStub{
+		label:       l,
 		toReadCh:    make(chan Message, 256),
 		writtenToCh: make(chan Message, 256),
-		clearCh:     make(chan struct{}),
+		clearAllCh:  make(chan struct{}),
+		clearTillCh: make(chan Message),
 		doneCh:      make(chan struct{}),
 	}
 	go ws.loop()
@@ -61,7 +68,7 @@ func (ws *wsStub) ReadJSON(m any) error {
 			*pointer = msg
 			return nil
 		case <-ws.doneCh:
-			return errors.New("ws stub closed")
+			return errors.New("[stub] done while ReadJSON for " + ws.label)
 		}
 	}
 }
@@ -72,13 +79,17 @@ func (ws *wsStub) WriteJSON(m any) error {
 		case ws.writtenToCh <- m.(Message):
 			return nil
 		case <-ws.doneCh:
-			return errors.New("ws stub closed")
+			return errors.New("[stub] done while WriteJSON for " + ws.label)
 		}
 	}
 }
 
-func (ws *wsStub) Clear() {
-	ws.clearCh <- struct{}{}
+func (ws *wsStub) ClearAllMessages() {
+	ws.clearAllCh <- struct{}{}
+}
+
+func (ws *wsStub) ClearTillMessage(m Message) {
+	ws.clearTillCh <- m
 }
 
 // closing stops reading, which in turn unregister client from runner
@@ -86,6 +97,7 @@ func (ws *wsStub) Clear() {
 func (ws *wsStub) Close() error {
 	if !ws.done {
 		ws.done = true
+		log.Printf("[stub] Close called for " + ws.label)
 		close(ws.doneCh)
 	}
 	return nil
@@ -162,8 +174,20 @@ func (ws *wsStub) loop() {
 		select {
 		case w := <-ws.writtenToCh:
 			ws.writes = append(ws.writes, w)
-		case <-ws.clearCh:
+		case <-ws.clearAllCh:
 			ws.writes = []Message{}
+		case till := <-ws.clearTillCh:
+			discard := true
+			newWrites := []Message{}
+			for _, m := range ws.writes {
+				if !discard {
+					newWrites = append(newWrites, m)
+				}
+				if till.Kind == m.Kind && (till.Payload == "*" || till.Payload == m.Payload) {
+					discard = false
+				}
+			}
+			ws.writes = newWrites
 		}
 	}
 }

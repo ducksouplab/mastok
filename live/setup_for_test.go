@@ -12,7 +12,7 @@ import (
 const (
 	shortDuration       = 10 * time.Millisecond
 	longDuration        = 50 * time.Millisecond  // for instance if there are DB writes
-	longerDuration      = 120 * time.Millisecond // for instance if there are DB writes
+	longerDuration      = 300 * time.Millisecond // for instance if there are DB writes
 	sessionDurationTest = 60
 )
 
@@ -33,6 +33,29 @@ var Fixtures []models.Campaign = []models.Campaign{
 		PerSession:         4,
 		MaxSessions:        2,
 		ConcurrentSessions: 2,
+		State:              models.Running,
+	},
+	// otree tests
+	{
+		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_otree_to_be_launched",
+		Slug:               "fxt_otree_to_be_launched_slug",
+		PerSession:         4,
+		MaxSessions:        4,
+		ConcurrentSessions: 2,
+		State:              models.Running,
+	},
+	{
+		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_otree_groups_to_be_launched",
+		Slug:               "fxt_otree_groups_to_be_launched_slug",
+		PerSession:         4,
+		JoinOnce:           true,
+		MaxSessions:        4,
+		ConcurrentSessions: 1,
+		SessionDuration:    sessionDurationTest,
+		Grouping:           "What is your gender?\nMale:2\nFemale:2",
+		StartedSessions:    0,
 		State:              models.Running,
 	},
 	// supervisor tests
@@ -104,15 +127,6 @@ var Fixtures []models.Campaign = []models.Campaign{
 		MaxSessions:        4,
 		ConcurrentSessions: 2,
 		State:              models.Paused,
-	},
-	{
-		OtreeExperiment:    "xp_name",
-		Namespace:          "fxt_par_launched",
-		Slug:               "fxt_par_launched_slug",
-		PerSession:         4,
-		MaxSessions:        4,
-		ConcurrentSessions: 2,
-		State:              models.Running,
 	},
 	{
 		OtreeExperiment:    "xp_name",

@@ -6,7 +6,9 @@ import (
 
 type runnerClients struct {
 	// configuration
-	sizeByGroup map[string]int
+	sizeByGroup       map[string]int
+	maxPendingByGroup map[string]int
+	perSession        int
 	// state
 	supervisors  map[*client]bool
 	participants map[*client]bool
@@ -16,27 +18,37 @@ type runnerClients struct {
 	pending      []*client                   // participants (ordered by arrival) for following sessions
 }
 
-func newRunnerClients(g *models.Grouping, ps int) *runnerClients {
+func newRunnerClients(c *models.Campaign, g *models.Grouping) *runnerClients {
 	sizeByGroup := make(map[string]int)
 	if g == nil {
 		// create default group
-		sizeByGroup[defaultGroupLabel] = ps
+		sizeByGroup[defaultGroupLabel] = c.PerSession
 	} else {
 		for _, group := range g.Groups {
 			sizeByGroup[group.Label] = group.Size
 		}
 	}
+
 	groups := make(map[string]map[*client]bool)
 	for label := range sizeByGroup {
 		groups[label] = make(map[*client]bool)
 	}
+
+	maxPendingByGroup := make(map[string]int)
+	margin := (c.MaxSessions - c.StartedSessions) + 1
+	for label, size := range sizeByGroup {
+		maxPendingByGroup[label] = size * margin
+	}
+
 	return &runnerClients{
-		supervisors:  make(map[*client]bool),
-		participants: make(map[*client]bool),
-		all:          make(map[*client]bool),
-		pool:         make(map[*client]bool), // have landed, agreed, chosen
-		poolByGroup:  groups,
-		sizeByGroup:  sizeByGroup,
+		sizeByGroup:       sizeByGroup,
+		maxPendingByGroup: maxPendingByGroup,
+		perSession:        c.PerSession,
+		supervisors:       make(map[*client]bool),
+		participants:      make(map[*client]bool),
+		all:               make(map[*client]bool),
+		pool:              make(map[*client]bool), // have landed, agreed, chosen
+		poolByGroup:       groups,
 	}
 }
 
@@ -65,39 +77,44 @@ func (rc *runnerClients) isGroupFull(label string) bool {
 	return len(rc.poolByGroup[label]) == rc.sizeByGroup[label]
 }
 
-func (rc *runnerClients) tentativeAddToPool(c *client) bool {
+func (rc *runnerClients) isPendingForGroupFull(label string) bool {
+	var pendingForGroupCount int
+	for _, c := range rc.pending {
+		if c.groupLabel == label {
+			pendingForGroupCount++
+		}
+	}
+	return pendingForGroupCount > rc.maxPendingByGroup[label]
+}
+
+func (rc *runnerClients) isPoolFull() bool {
+	return len(rc.pool) == rc.perSession
+}
+
+func (rc *runnerClients) tentativeJoin(c *client) (addedToPool bool, addedToPending bool) {
 	if rc.isGroupFull(c.groupLabel) {
-		rc.pending = append(rc.pending, c)
-		return false
+		if rc.isPendingForGroupFull(c.groupLabel) {
+			return false, false
+		} else {
+			rc.pending = append(rc.pending, c)
+			return false, true
+		}
 	} else {
 		rc.pool[c] = true
 		rc.poolByGroup[c.groupLabel][c] = true
-		return true
+		return true, false
 	}
 }
 
-func (rc *runnerClients) isPoolReady() bool {
-	ok := true
-	// all groups have to be full
-	for label := range rc.sizeByGroup {
-		isFull := rc.isGroupFull(label)
-		ok = ok && isFull
-	}
-	return ok
-}
-
-func (rc *runnerClients) fillPoolFromPending() (update bool) {
-	if len(rc.pending) == 0 {
-		return
-	}
+func (rc *runnerClients) resetPoolFromPending() (update bool) {
 	// reset pending
 	oldPending := make([]*client, len(rc.pending))
 	copy(oldPending, rc.pending)
 	rc.pending = []*client{}
 	// fill
 	for _, c := range oldPending {
-		added := rc.tentativeAddToPool(c)
-		update = update || added
+		addedToPool, _ := rc.tentativeJoin(c)
+		update = update || addedToPool
 	}
 	return
 }

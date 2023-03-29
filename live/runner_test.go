@@ -13,12 +13,12 @@ func TestRunner_Integration(t *testing.T) {
 		defer tearDown(ns)
 
 		// first client
-		ws1 := newWSStub()
+		ws1 := newWSStub(ns + "#participant1")
 		p1 := RunParticipant(ws1, slug)
 		runner := p1.runner
 
 		// second client
-		ws2 := newWSStub()
+		ws2 := newWSStub(ns + "#participant1")
 		p2 := RunParticipant(ws2, slug)
 		// runner is shared
 		assert.Same(t, runner, p2.runner, "participants runner should be the same")

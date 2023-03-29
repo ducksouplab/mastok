@@ -1,6 +1,7 @@
 package test_helpers
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -22,6 +23,7 @@ func InterceptOff() {
 }
 
 func InterceptOtreeGetJSON(path string, json any) {
+	log.Printf("[gock] GET " + env.OTreeURL + path)
 	gock.New(env.OTreeURL).
 		Get(path).
 		Reply(200).
@@ -29,6 +31,7 @@ func InterceptOtreeGetJSON(path string, json any) {
 }
 
 func InterceptOtreeGetPrefixJSON(prefix string, json any) {
+	log.Printf("[gock] GET prefix " + env.OTreeURL + prefix)
 	gock.New(env.OTreeURL).
 		AddMatcher(matchWithPrefix(prefix)).
 		Reply(200).
@@ -36,6 +39,7 @@ func InterceptOtreeGetPrefixJSON(prefix string, json any) {
 }
 
 func InterceptOtreePostJSON(path string, json any) {
+	log.Printf("[gock] POST " + env.OTreeURL + path)
 	gock.New(env.OTreeURL).
 		Post(path).
 		Reply(200).
@@ -47,6 +51,7 @@ func InterceptOtreeGetSessionConfigs() {
 }
 
 func InterceptOtreePostSession() {
+	//gock.Observe(gock.DumpRequest)
 	InterceptOtreePostJSON("/api/sessions/", OTREE_POST_SESSION)
 }
 

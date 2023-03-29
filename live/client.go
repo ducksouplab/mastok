@@ -50,12 +50,12 @@ func (c *client) read() (m Message, err error) {
 	return
 }
 
-func (c *client) stop() {
+func (c *client) unregister() {
 	c.runner.unregisterCh <- c
 }
 
 func (c *client) readLoop() {
-	defer c.stop()
+	defer c.unregister()
 
 	for {
 		m, err := c.read()
@@ -71,7 +71,7 @@ func (c *client) readLoop() {
 			if m.Kind == "Land" {
 				fingerprint := m.Payload.(string)
 				if len(fingerprint) == 0 {
-					c.outgoingCh <- participantRejectMessage()
+					c.outgoingCh <- landRejectMessage()
 					break
 				} else {
 					// do set client state before sharing landing with runner
@@ -103,7 +103,6 @@ func (c *client) readLoop() {
 // at most one writer to a connection since all writes happen in this goroutine
 // like in https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 func (c *client) writeLoop() {
-	defer c.stop()
 	for m := range c.outgoingCh {
 		c.write(m)
 		if helpers.Contains([]string{"Disconnect", "Redirect", "Reject"}, m.Kind) {

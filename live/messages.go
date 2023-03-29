@@ -78,12 +78,3 @@ func consentMessage(c *models.Campaign) Message {
 		Payload: helpers.MarkdownToHTML(c.Consent),
 	}
 }
-
-func (r *runner) tickStateMessage() {
-	if r.updateStateTicker != nil {
-		r.updateStateTicker.stop()
-	}
-	ticker := newTicker(models.SessionDurationUnit)
-	go ticker.loop(r)
-	r.updateStateTicker = ticker
-}

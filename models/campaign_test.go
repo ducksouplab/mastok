@@ -22,7 +22,7 @@ func TestCampaign_Unit(t *testing.T) {
 		campaign, _ := GetCampaignByNamespace(ns)
 
 		assert.Equal(t, 3, campaign.liveSessions())
-		assert.Equal(t, true, campaign.isBusy())
+		assert.Equal(t, true, campaign.IsBusy())
 		assert.Equal(t, Busy, campaign.GetPublicState(true))
 		assert.Equal(t, Unavailable, campaign.GetPublicState(false))
 	})

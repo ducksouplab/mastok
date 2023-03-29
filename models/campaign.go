@@ -146,7 +146,7 @@ func (c *Campaign) appendSession(s *Session) (err error) {
 	return
 }
 
-func (c *Campaign) isBusy() bool {
+func (c *Campaign) IsBusy() bool {
 	return c.State == Running && (c.liveSessions() >= c.ConcurrentSessions)
 }
 
@@ -161,7 +161,7 @@ func (c *Campaign) liveSessions() (count int) {
 
 func (c *Campaign) GetPublicState(isSupervisor bool) (state string) {
 	// initializes
-	if c.isBusy() {
+	if c.IsBusy() {
 		state = Busy
 	} else {
 		state = c.State

@@ -76,5 +76,29 @@ var OTREE_GET_SESSION = resource{
 			"label":                         nil,
 			"payoff_in_real_world_currency": 0.0,
 		},
+		{
+			"id_in_session":                 5,
+			"code":                          "4hx7jKe6",
+			"label":                         nil,
+			"payoff_in_real_world_currency": 0.0,
+		},
+		{
+			"id_in_session":                 6,
+			"code":                          "l9eh20jc",
+			"label":                         nil,
+			"payoff_in_real_world_currency": 0.0,
+		},
+		{
+			"id_in_session":                 7,
+			"code":                          "p38ev2f3",
+			"label":                         nil,
+			"payoff_in_real_world_currency": 0.0,
+		},
+		{
+			"id_in_session":                 8,
+			"code":                          "3cw8k1b4",
+			"label":                         nil,
+			"payoff_in_real_world_currency": 0.0,
+		},
 	},
 }

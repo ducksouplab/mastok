@@ -164,18 +164,11 @@ func (c *Campaign) IsLive() bool {
 	return c.State == Running || c.IsBusy()
 }
 
-func (c *Campaign) GetPublicState(isSupervisor bool) (state string) {
-	// initializes
+func (c *Campaign) GetLiveState() (state string) {
 	if c.IsBusy() {
-		state = Busy
-	} else {
-		state = c.State
+		return Busy
 	}
-	// filters if not supervisor
-	if !isSupervisor && (state != Running) {
-		return Unavailable
-	}
-	return
+	return c.State
 }
 
 func (c *Campaign) FormatCreatedAt() string {

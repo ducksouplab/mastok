@@ -23,7 +23,6 @@ func TestCampaign_Unit(t *testing.T) {
 
 		assert.Equal(t, 3, campaign.liveSessions())
 		assert.Equal(t, true, campaign.IsBusy())
-		assert.Equal(t, Busy, campaign.GetPublicState(true))
-		assert.Equal(t, Unavailable, campaign.GetPublicState(false))
+		assert.Equal(t, Busy, campaign.GetLiveState())
 	})
 }

@@ -11,10 +11,10 @@ import (
 // in case there is no grouping
 const defaultGroupLabel = "default"
 
-func stateMessage(c *models.Campaign, cl *client) Message {
+func stateMessage(state string) Message {
 	return Message{
 		Kind:    "State",
-		Payload: c.GetPublicState(cl.isSupervisor),
+		Payload: state,
 	}
 }
 

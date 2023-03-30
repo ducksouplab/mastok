@@ -41,9 +41,14 @@ type runner struct {
 	doneCh chan struct{}
 }
 
+// Busy is a temporary state, participants can wait
+func isOn(state string) bool {
+	return state == models.Running || state == models.Busy
+}
+
 func newRunner(c *models.Campaign) *runner {
 	group := c.GetGrouping()
-	state := c.GetPublicState(true)
+	state := c.State
 
 	r := runner{
 		campaign:         c,
@@ -90,9 +95,9 @@ func (r *runner) stop() {
 
 // when process* methods return true, the runner loop is supposed to be stopped
 func (r *runner) processRegister(target *client) (done bool) {
-	if r.campaign.State == "Running" || target.isSupervisor {
+	if isOn(r.state) || target.isSupervisor {
 		r.clients.add(target)
-		target.outgoingCh <- stateMessage(r.campaign, target)
+		target.outgoingCh <- stateMessage(r.campaign.GetLiveState())
 
 		if target.isSupervisor {
 			// only inform supervisor client about the room size right away
@@ -100,7 +105,7 @@ func (r *runner) processRegister(target *client) (done bool) {
 		}
 	} else {
 		// don't register
-		target.outgoingCh <- stateMessage(r.campaign, target)
+		target.outgoingCh <- stateMessage(models.Unavailable)
 		target.outgoingCh <- disconnectMessage()
 		if r.clients.isEmpty() {
 			r.stop()
@@ -198,12 +203,23 @@ func (r *runner) processState(newState string) (done bool) {
 	// persist
 	r.campaign.State = newState
 	models.DB.Save(r.campaign)
-
-	// isLive := r.campaign.IsLive()
-	for c := range r.clients.all {
-		newMessageState := stateMessage(r.campaign, c)
-		c.outgoingCh <- newMessageState
-		if newMessageState.Payload == "Unavailable" {
+	// notice supervisors
+	for c := range r.clients.supervisors {
+		c.outgoingCh <- stateMessage(newState)
+	}
+	// may turn on runner
+	liveState := r.campaign.GetLiveState()
+	on := isOn(liveState)
+	oldOn := isOn(r.state)
+	if !oldOn && on {
+		r.startTicker()
+	}
+	// notice or disconnect participants
+	for c := range r.clients.participants {
+		if on {
+			c.outgoingCh <- stateMessage(newState)
+		} else {
+			c.outgoingCh <- stateMessage(models.Unavailable)
 			if done := r.processUnregisterWithReason(c, disconnectMessage()); done {
 				return true
 			}
@@ -213,11 +229,11 @@ func (r *runner) processState(newState string) (done bool) {
 }
 
 func (r *runner) checkIfStillBusy() {
-	newState := r.campaign.GetPublicState(true)
-	if newState != models.Busy {
+	if !r.campaign.IsBusy() {
+		newState := r.campaign.State
 		r.state = newState
 		for c := range r.clients.supervisors {
-			c.outgoingCh <- stateMessage(r.campaign, c)
+			c.outgoingCh <- stateMessage(newState)
 		}
 	}
 }
@@ -248,10 +264,10 @@ func (r *runner) processIfPoolReady() (done bool) {
 	// notice supervisors
 	for c := range r.clients.supervisors {
 		c.outgoingCh <- sessionStartSupervisorMessage(newSession)
-		c.outgoingCh <- stateMessage(r.campaign, c) // if state becomes Busy
+		c.outgoingCh <- stateMessage(r.campaign.GetLiveState()) // if state becomes Busy
 	}
 	// update state (may become Busy or Completed)
-	r.state = r.campaign.GetPublicState(true)
+	r.state = r.campaign.GetLiveState()
 	// pool is now empty (due to processUnregisterWithReason abose), try to fill it with pending
 	if updated := r.clients.resetPoolFromPending(); updated {
 		// if has been filled (at least with one participant), send sizes updates

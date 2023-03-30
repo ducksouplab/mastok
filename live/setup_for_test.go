@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	shortDuration       = 10 * time.Millisecond
-	longDuration        = 50 * time.Millisecond  // for instance if there are DB writes
-	longerDuration      = 300 * time.Millisecond // for instance if there are DB writes
 	sessionDurationTest = 60
+	shortDuration       = 10 * time.Millisecond
+	longDuration        = 100 * time.Millisecond // for instance if there are DB writes
+	longerDuration      = 300 * time.Millisecond // more DB writes
 )
 
 func TestMain(m *testing.M) {

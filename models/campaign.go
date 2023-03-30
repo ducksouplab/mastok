@@ -159,6 +159,11 @@ func (c *Campaign) liveSessions() (count int) {
 	return
 }
 
+// Busy is a temporary state, participants can wait
+func (c *Campaign) IsLive() bool {
+	return c.State == Running || c.IsBusy()
+}
+
 func (c *Campaign) GetPublicState(isSupervisor bool) (state string) {
 	// initializes
 	if c.IsBusy() {

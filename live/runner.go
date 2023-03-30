@@ -2,16 +2,31 @@ package live
 
 import (
 	"log"
+	"time"
 
+	"github.com/ducksouplab/mastok/env"
 	"github.com/ducksouplab/mastok/models"
 )
 
 const maxPendingSize = 50
 
+var checkStartPeriod time.Duration
+
+func init() {
+	if env.Mode == "TEST" {
+		checkStartPeriod = 3 * time.Millisecond
+	} else {
+		checkStartPeriod = 1 * time.Second
+	}
+}
+
 // clients hold references to any (supervisor or participant) client
 type runner struct {
-	campaign         *models.Campaign
-	grouping         *models.Grouping // ready only, cached from campaign
+	// configuration
+	campaign *models.Campaign
+	grouping *models.Grouping // ready only, cached from campaign
+	// state
+	state            string
 	clients          *runnerClients
 	roomFingerprints map[string]bool
 	// manage broadcasting
@@ -20,42 +35,47 @@ type runner struct {
 	// other incoming events
 	participantCh chan FromParticipantMessage
 	supervisorCh  chan Message
-	// done
-	updateStateTicker *ticker
-	doneCh            chan struct{}
+	// ticker
+	checkStartTicker *time.Ticker
+	// signals end
+	doneCh chan struct{}
 }
 
 func newRunner(c *models.Campaign) *runner {
-	g := c.GetGrouping()
+	group := c.GetGrouping()
+	state := c.GetPublicState(true)
 
 	r := runner{
 		campaign:         c,
-		grouping:         g,
-		clients:          newRunnerClients(c, g),
+		grouping:         group,
+		state:            state,
+		clients:          newRunnerClients(c, group),
 		roomFingerprints: map[string]bool{}, // used only for JoinOnce campaigns
 		registerCh:       make(chan *client),
 		unregisterCh:     make(chan *client),
 		// messages coming from participants or supervisor
 		participantCh: make(chan FromParticipantMessage),
 		supervisorCh:  make(chan Message),
+		// ticker
+		checkStartTicker: time.NewTicker(checkStartPeriod),
 		// signals end
 		doneCh: make(chan struct{}),
 	}
 
-	if c.GetPublicState(true) == models.Busy {
-		r.tickStateMessage()
+	if state != models.Running && state != models.Busy {
+		r.stopTicker()
 	}
 
 	return &r
 }
 
-func (r *runner) tickStateMessage() {
-	if r.updateStateTicker != nil {
-		r.updateStateTicker.stop()
-	}
-	ticker := newTicker(models.SessionDurationUnit)
-	go ticker.loop(r)
-	r.updateStateTicker = ticker
+func (r *runner) startTicker() {
+	r.checkStartTicker.Stop()
+	r.checkStartTicker = time.NewTicker(checkStartPeriod)
+}
+
+func (r *runner) stopTicker() {
+	r.checkStartTicker.Stop()
 }
 
 func (r *runner) isDone() chan struct{} {
@@ -63,6 +83,7 @@ func (r *runner) isDone() chan struct{} {
 }
 
 func (r *runner) stop() {
+	r.stopTicker()
 	deleteRunner(r.campaign)
 	close(r.doneCh)
 }
@@ -173,46 +194,12 @@ func (r *runner) processTentativeJoin(target *client) (done bool) {
 	return false
 }
 
-func (r *runner) processStartSession() (done bool) {
-	session, participantCodes, err := models.CreateSession(r.campaign)
-	if err != nil {
-		log.Println("[runner] session creation failed: ", err)
-	} else {
-		participantIndex := 0
-		for c := range r.clients.pool {
-			code := participantCodes[participantIndex]
-			c.outgoingCh <- sessionStartParticipantMessage(code)
-			models.CreateParticipation(session, c.fingerprint, code)
-			if done := r.processUnregisterWithReason(c, disconnectMessage()); done {
-				return true
-			}
-			participantIndex++
-		}
-
-		for c := range r.clients.supervisors {
-			c.outgoingCh <- sessionStartSupervisorMessage(session)
-			c.outgoingCh <- stateMessage(r.campaign, c) // if state becomes Busy
-			if c.runner.campaign.GetPublicState(true) == models.Busy {
-				c.runner.tickStateMessage()
-			}
-		}
-		if updated := r.clients.resetPoolFromPending(); updated {
-			// now pool has been emptied, refill it from pending participants
-			for c := range r.clients.pool { // it's a new pool
-				c.outgoingCh <- poolSizeMessage(r)
-			}
-		}
-		for c := range r.clients.supervisors {
-			c.outgoingCh <- poolSizeMessage(r)
-			c.outgoingCh <- pendingSizeMessage(r)
-		}
-	}
-	return false
-}
-
-func (r *runner) processState(state string) (done bool) {
-	r.campaign.State = state
+func (r *runner) processState(newState string) (done bool) {
+	// persist
+	r.campaign.State = newState
 	models.DB.Save(r.campaign)
+
+	// isLive := r.campaign.IsLive()
 	for c := range r.clients.all {
 		newMessageState := stateMessage(r.campaign, c)
 		c.outgoingCh <- newMessageState
@@ -225,9 +212,74 @@ func (r *runner) processState(state string) (done bool) {
 	return false
 }
 
+func (r *runner) checkIfStillBusy() {
+	newState := r.campaign.GetPublicState(true)
+	if newState != models.Busy {
+		r.state = newState
+		for c := range r.clients.supervisors {
+			c.outgoingCh <- stateMessage(r.campaign, c)
+		}
+	}
+}
+
+func (r *runner) processIfPoolReady() (done bool) {
+	// check if there is a valid pool pending
+	ready := r.clients.isPoolFull() && !r.campaign.IsBusy()
+	if !ready {
+		return false
+	}
+	// start session
+	newSession, participantCodes, err := models.CreateSession(r.campaign)
+	if err != nil {
+		log.Println("[runner] session creation failed: ", err)
+		return false
+	}
+	// send SessionStart with oTree URL forged with a unique code
+	participantIndex := 0
+	for c := range r.clients.pool {
+		code := participantCodes[participantIndex]
+		c.outgoingCh <- sessionStartParticipantMessage(code)
+		models.CreateParticipation(newSession, c.fingerprint, code)
+		if done := r.processUnregisterWithReason(c, disconnectMessage()); done {
+			return true
+		}
+		participantIndex++
+	}
+	// notice supervisors
+	for c := range r.clients.supervisors {
+		c.outgoingCh <- sessionStartSupervisorMessage(newSession)
+		c.outgoingCh <- stateMessage(r.campaign, c) // if state becomes Busy
+	}
+	// update state (may become Busy or Completed)
+	r.state = r.campaign.GetPublicState(true)
+	// pool is now empty (due to processUnregisterWithReason abose), try to fill it with pending
+	if updated := r.clients.resetPoolFromPending(); updated {
+		// if has been filled (at least with one participant), send sizes updates
+		for c := range r.clients.pool { // it's a new pool
+			c.outgoingCh <- poolSizeMessage(r)
+		}
+		for c := range r.clients.supervisors {
+			c.outgoingCh <- poolSizeMessage(r)
+			c.outgoingCh <- pendingSizeMessage(r)
+		}
+	}
+
+	return false
+}
+
 func (r *runner) loop() {
 	for {
 		select {
+		case <-r.checkStartTicker.C:
+			if r.state == models.Busy {
+				r.checkIfStillBusy()
+			} else if r.state == models.Running {
+				if done := r.processIfPoolReady(); done {
+					return
+				}
+			} else { // Paused or Completed
+				r.stopTicker()
+			}
 		case c := <-r.registerCh:
 			if done := r.processRegister(c); done {
 				return
@@ -244,13 +296,6 @@ func (r *runner) loop() {
 			} else if m.Kind == "Choose" {
 				if done := r.processTentativeJoin(m.From); done {
 					return
-				}
-				// starts session when there is valid pool pending
-				ready := r.clients.isPoolFull() && !r.campaign.IsBusy()
-				if ready {
-					if done := r.processStartSession(); done {
-						return
-					}
 				}
 			}
 		case m := <-r.supervisorCh:

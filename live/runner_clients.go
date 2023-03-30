@@ -1,10 +1,13 @@
 package live
 
 import (
+	"sync"
+
 	"github.com/ducksouplab/mastok/models"
 )
 
 type runnerClients struct {
+	mu sync.RWMutex
 	// configuration
 	sizeByGroup       map[string]int
 	maxPendingByGroup map[string]int
@@ -41,6 +44,7 @@ func newRunnerClients(c *models.Campaign, g *models.Grouping) *runnerClients {
 	}
 
 	return &runnerClients{
+		mu:                sync.RWMutex{},
 		sizeByGroup:       sizeByGroup,
 		maxPendingByGroup: maxPendingByGroup,
 		perSession:        c.PerSession,
@@ -52,25 +56,15 @@ func newRunnerClients(c *models.Campaign, g *models.Grouping) *runnerClients {
 	}
 }
 
-func (rc *runnerClients) isEmpty() bool {
-	return len(rc.all) == 0
-}
+// helpers
 
-func (rc *runnerClients) poolSize() (count int) {
-	return len(rc.pool)
-}
-
-func (rc *runnerClients) pendingSize() (count int) {
-	return len(rc.pending)
-}
-
-func (rc *runnerClients) add(c *client) {
-	rc.all[c] = true
-	if c.isSupervisor {
-		rc.supervisors[c] = true
-	} else {
-		rc.participants[c] = true
+func sliceDelete(cSlice []*client, toRemove *client) (newSlice []*client) {
+	for _, c := range cSlice {
+		if c != toRemove {
+			newSlice = append(newSlice, c)
+		}
 	}
+	return
 }
 
 func (rc *runnerClients) isGroupFull(label string) bool {
@@ -87,11 +81,54 @@ func (rc *runnerClients) isPendingForGroupFull(label string) bool {
 	return pendingForGroupCount > rc.maxPendingByGroup[label]
 }
 
+// read methods
+
+func (rc *runnerClients) isEmpty() bool {
+	rc.mu.RLock()
+	defer rc.mu.RUnlock()
+
+	return len(rc.all) == 0
+}
+
+func (rc *runnerClients) poolSize() (count int) {
+	rc.mu.RLock()
+	defer rc.mu.RUnlock()
+
+	return len(rc.pool)
+}
+
+func (rc *runnerClients) pendingSize() (count int) {
+	rc.mu.RLock()
+	defer rc.mu.RUnlock()
+
+	return len(rc.pending)
+}
+
 func (rc *runnerClients) isPoolFull() bool {
+	rc.mu.RLock()
+	defer rc.mu.RUnlock()
+
 	return len(rc.pool) == rc.perSession
 }
 
+// read-write methods
+
+func (rc *runnerClients) add(c *client) {
+	rc.mu.Lock()
+	defer rc.mu.Unlock()
+
+	rc.all[c] = true
+	if c.isSupervisor {
+		rc.supervisors[c] = true
+	} else {
+		rc.participants[c] = true
+	}
+}
+
 func (rc *runnerClients) tentativeJoin(c *client) (addedToPool bool, addedToPending bool) {
+	rc.mu.Lock()
+	defer rc.mu.Unlock()
+
 	if rc.isGroupFull(c.groupLabel) {
 		if rc.isPendingForGroupFull(c.groupLabel) {
 			return false, false
@@ -108,27 +145,25 @@ func (rc *runnerClients) tentativeJoin(c *client) (addedToPool bool, addedToPend
 
 func (rc *runnerClients) resetPoolFromPending() (update bool) {
 	// reset pending
+	rc.mu.Lock()
 	oldPending := make([]*client, len(rc.pending))
 	copy(oldPending, rc.pending)
 	rc.pending = []*client{}
+	rc.mu.Unlock()
+
 	// fill
 	for _, c := range oldPending {
 		addedToPool, _ := rc.tentativeJoin(c)
 		update = update || addedToPool
 	}
-	return
-}
 
-func sliceDelete(cSlice []*client, toRemove *client) (newSlice []*client) {
-	for _, c := range cSlice {
-		if c != toRemove {
-			newSlice = append(newSlice, c)
-		}
-	}
 	return
 }
 
 func (rc *runnerClients) delete(c *client) (wasInPool bool) {
+	rc.mu.Lock()
+	defer rc.mu.Unlock()
+
 	delete(rc.all, c)
 
 	if c.isSupervisor {

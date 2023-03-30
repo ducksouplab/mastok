@@ -46,6 +46,28 @@ func sessionStartSupervisorMessage(session models.Session) Message {
 	}
 }
 
+func pendingMessage() Message {
+	return Message{
+		Kind: "Pending",
+	}
+}
+
+func consentMessage(c *models.Campaign) Message {
+	return Message{
+		Kind:    "Consent",
+		Payload: helpers.MarkdownToHTML(c.Consent),
+	}
+}
+
+func groupingMessage(c *models.Campaign) Message {
+	return Message{
+		Kind:    "Consent",
+		Payload: c.Consent,
+	}
+}
+
+// Disconnect messages below
+
 // campaign is not running or after SessionStart
 func disconnectMessage() Message {
 	return Message{
@@ -66,15 +88,8 @@ func landRedirectMessage(code string) Message {
 	}
 }
 
-func roomFullMessage() Message {
+func groupFullMessage() Message {
 	return Message{
 		Kind: "Full",
-	}
-}
-
-func consentMessage(c *models.Campaign) Message {
-	return Message{
-		Kind:    "Consent",
-		Payload: helpers.MarkdownToHTML(c.Consent),
 	}
 }

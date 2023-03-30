@@ -170,7 +170,7 @@ func (r *runner) processLand(target *client, fingerprint string) (done bool) {
 		}
 		r.roomFingerprints[fingerprint] = true
 	}
-	// finally lands in room
+	// finally lands
 	target.outgoingCh <- consentMessage(r.campaign)
 	return false
 }
@@ -179,12 +179,13 @@ func (r *runner) processTentativeJoin(target *client) (done bool) {
 	addedToPool, addedToPending := r.clients.tentativeJoin(target)
 	if !addedToPool {
 		if addedToPending {
+			target.outgoingCh <- pendingMessage()
 			for c := range r.clients.supervisors {
 				c.outgoingCh <- pendingSizeMessage(r)
 			}
 			return false
 		} else {
-			if done := r.processUnregisterWithReason(target, roomFullMessage()); done {
+			if done := r.processUnregisterWithReason(target, groupFullMessage()); done {
 				return true
 			}
 		}

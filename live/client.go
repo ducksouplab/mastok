@@ -82,9 +82,11 @@ func (c *client) readLoop() {
 			} else if m.Kind == "Agree" {
 				if c.hasLanded { // can't agree before landing
 					c.hasAgreed = true
-					c.runner.participantCh <- FromParticipantMessage{Kind: m.Kind, From: c}
-					// when there is not grouping, Agree implies Choose
-					if c.runner.grouping == nil {
+					if c.runner.grouping != nil {
+						// direct reply without forwarding to runner
+						c.outgoingCh <- groupingMessage(c.runner.campaign)
+					} else {
+						// when there is not grouping, Agree implies Choose
 						c.groupLabel = defaultGroupLabel
 						c.runner.participantCh <- FromParticipantMessage{Kind: "Choose", Payload: defaultGroupLabel, From: c}
 					}

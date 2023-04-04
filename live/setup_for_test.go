@@ -58,6 +58,73 @@ var Fixtures []models.Campaign = []models.Campaign{
 		StartedSessions:    0,
 		State:              models.Running,
 	},
+	{
+		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_otree_busy",
+		Slug:               "fxt_otree_busy_slug",
+		PerSession:         5,
+		MaxSessions:        3,
+		ConcurrentSessions: 1,
+		SessionDuration:    100 * sessionDurationTest, // important for test
+		StartedSessions:    0,
+		State:              models.Running,
+	},
+	{
+		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_otree_concurrent",
+		Slug:               "fxt_otree_concurrent_slug",
+		PerSession:         2,
+		MaxSessions:        10,
+		ConcurrentSessions: 2,
+		SessionDuration:    sessionDurationTest,
+		StartedSessions:    0,
+		State:              models.Running,
+	},
+	// connect tests
+	{
+		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_connect_grouping",
+		Slug:               "fxt_connect_grouping_slug",
+		PerSession:         4,
+		MaxSessions:        4,
+		ConcurrentSessions: 1,
+		Grouping:           "What is your gender?\nMale:2\nFemale:2",
+		StartedSessions:    0,
+		State:              models.Running,
+	},
+	{
+		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_connect_pending_busy",
+		Slug:               "fxt_connect_pending_busy_slug",
+		PerSession:         4,
+		JoinOnce:           true,
+		MaxSessions:        4,
+		ConcurrentSessions: 1,
+		SessionDuration:    100 * sessionDurationTest, // important for test
+		Grouping:           "What is your gender?\nMale:2\nFemale:2",
+		StartedSessions:    0,
+		State:              models.Running,
+	},
+	{
+		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_par_pending",
+		Slug:               "fxt_par_pending_slug",
+		PerSession:         4,
+		MaxSessions:        3,
+		ConcurrentSessions: 2,
+		StartedSessions:    0,
+		State:              models.Busy, // important for test
+	},
+	{
+		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_par_connect_full",
+		Slug:               "fxt_par_connect_full_slug",
+		PerSession:         4,
+		MaxSessions:        3,
+		ConcurrentSessions: 2,
+		StartedSessions:    1,
+		State:              models.Busy, // important for test
+	},
 	// supervisor tests
 	{
 		OtreeExperiment:    "xp_name",

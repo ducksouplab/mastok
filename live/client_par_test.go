@@ -17,8 +17,7 @@ func TestClient_Participant_Integration(t *testing.T) {
 		ws := runParticipantStub(ns)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("State")
-			return ok
+			return ws.hasReceivedKind("State")
 		}), "participant should receive State")
 	})
 
@@ -29,22 +28,19 @@ func TestClient_Participant_Integration(t *testing.T) {
 		ws := runParticipantStub(ns)
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("PoolSize")
-			return ok
+			return ws.hasReceivedKind("PoolSize")
 		}))
 
 		ws.land()
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("PoolSize")
-			return ok
+			return ws.hasReceivedKind("PoolSize")
 		}))
 
 		ws.agree()
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("PoolSize")
-			return ok
+			return ws.hasReceivedKind("PoolSize")
 		}), "participant should receive PoolSize")
 	})
 

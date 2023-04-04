@@ -28,7 +28,7 @@ func init() {
 	}
 	Port = GetEnvOr("MASTOK_PORT", "8190")
 	Origin = GetEnvOr("MASTOK_ORIGIN", "http://localhost:8190")
-	WebPrefix = GetEnvOr("MASTOK_WEB_PREFIX", "/")
+	WebPrefix = GetEnvOr("MASTOK_WEB_PREFIX", "")
 	ProjectRoot = GetEnvOr("MASTOK_PROJECT_ROOT", ".") + "/"
 	BasicLogin = GetEnvOr("MASTOK_LOGIN", "mastok")
 	BasicPassword = GetEnvOr("MASTOK_PASSWORD", "mastok")

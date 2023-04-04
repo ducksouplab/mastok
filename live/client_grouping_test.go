@@ -8,7 +8,7 @@ import (
 
 func TestClient_Grouping_Integration(t *testing.T) {
 
-	t.Run("with grouping, PoolSize is sent after Choose", func(t *testing.T) {
+	t.Run("with grouping, PoolSize is sent after Connect", func(t *testing.T) {
 		ns := "fxt_grp"
 		defer tearDown(ns)
 
@@ -21,39 +21,33 @@ func TestClient_Grouping_Integration(t *testing.T) {
 		assert.Contains(t, campaign.Grouping, "Male")
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws1.hasReceivedKind("PoolSize")
-			return ok
+			return ws1.hasReceivedKind("PoolSize")
 		}))
 
 		ws1.land()
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws1.hasReceivedKind("PoolSize")
-			return ok
+			return ws1.hasReceivedKind("PoolSize")
 		}))
 
 		ws1.agree()
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws1.hasReceivedKind("PoolSize")
-			return ok
+			return ws1.hasReceivedKind("PoolSize")
 		}))
 
-		ws1.choose("Male")
+		ws1.connectWithGroup("Male")
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws1.hasReceivedKind("PoolSize")
-			return ok
+			return ws1.hasReceivedKind("PoolSize")
 		}))
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := wsSup.hasReceivedKind("PoolSize")
-			return ok
+			return wsSup.hasReceivedKind("PoolSize")
 		}))
 
 		ws2.land().agree()
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws2.hasReceivedKind("PoolSize")
-			return ok
+			return ws2.hasReceivedKind("PoolSize")
 		}))
 	})
 }

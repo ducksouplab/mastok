@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ducksouplab/mastok/cache"
+	"github.com/ducksouplab/mastok/env"
 	"github.com/ducksouplab/mastok/helpers"
 	"github.com/ducksouplab/mastok/live"
 	"github.com/ducksouplab/mastok/models"
@@ -127,6 +128,6 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 			return
 		}
 
-		c.Redirect(http.StatusFound, "/campaigns/supervise/"+namespace)
+		c.Redirect(http.StatusFound, env.WebPrefix+"/campaigns/supervise/"+namespace)
 	})
 }

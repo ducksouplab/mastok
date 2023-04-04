@@ -61,35 +61,17 @@ func consentMessage(c *models.Campaign) Message {
 
 func groupingMessage(c *models.Campaign) Message {
 	return Message{
-		Kind:    "Consent",
-		Payload: c.Consent,
+		Kind:    "Grouping",
+		Payload: c.Grouping,
 	}
 }
 
 // Disconnect messages below
 
 // campaign is not running or after SessionStart
-func disconnectMessage() Message {
+func disconnectMessage(reason string) Message {
 	return Message{
-		Kind: "Disconnect",
-	}
-}
-
-func landRejectMessage() Message {
-	return Message{
-		Kind: "Reject",
-	}
-}
-
-func landRedirectMessage(code string) Message {
-	return Message{
-		Kind:    "Redirect",
-		Payload: otree.ParticipantStartURL(code),
-	}
-}
-
-func groupFullMessage() Message {
-	return Message{
-		Kind: "Full",
+		Kind:    "Disconnect",
+		Payload: reason,
 	}
 }

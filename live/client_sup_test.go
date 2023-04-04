@@ -27,8 +27,7 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		ws, _ := runSupervisorStub(ns)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("PoolSize")
-			return ok
+			return ws.hasReceivedKind("PoolSize")
 		}), "supervisor should receive PoolSize")
 	})
 
@@ -46,17 +45,16 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 
 		// first participants in pool
 		ws := runParticipantStub(ns)
-		ws.land().agree().choose("Female")
+		ws.land().agree().connectWithGroup("Female")
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := wsSup.hasReceivedKind("PoolSize")
-			return ok
+			return wsSup.hasReceivedKind("PoolSize")
 		}))
 
 		// other participants pending
 		wsSlice := runParticipantStubs(ns, 2)
 		for _, ws := range wsSlice {
-			ws.land().agree().choose("Female")
+			ws.land().agree().connectWithGroup("Female")
 		}
 
 		assert.True(t, retryUntil(longDuration, func() bool {

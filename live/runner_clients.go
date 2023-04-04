@@ -78,7 +78,7 @@ func (rc *runnerClients) isPendingForGroupFull(label string) bool {
 			pendingForGroupCount++
 		}
 	}
-	return pendingForGroupCount > rc.maxPendingByGroup[label]
+	return pendingForGroupCount >= rc.maxPendingByGroup[label]
 }
 
 // read methods
@@ -148,7 +148,7 @@ func (rc *runnerClients) resetPoolFromPending() (update bool) {
 	rc.mu.Lock()
 	oldPending := make([]*client, len(rc.pending))
 	copy(oldPending, rc.pending)
-	rc.pending = []*client{}
+	rc.pending = nil // nil is a valid slice https://github.com/uber-go/guide/blob/master/style.md#nil-is-a-valid-slice
 	rc.mu.Unlock()
 
 	// fill

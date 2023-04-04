@@ -3,7 +3,6 @@ package live
 import (
 	"log"
 
-	"github.com/ducksouplab/mastok/helpers"
 	"github.com/ducksouplab/mastok/models"
 )
 
@@ -71,7 +70,7 @@ func (c *client) readLoop() {
 			if m.Kind == "Land" {
 				fingerprint := m.Payload.(string)
 				if len(fingerprint) == 0 {
-					c.outgoingCh <- landRejectMessage()
+					c.outgoingCh <- disconnectMessage("LandingFailed")
 					break
 				} else {
 					// do set client state before sharing landing with runner
@@ -86,12 +85,12 @@ func (c *client) readLoop() {
 						// direct reply without forwarding to runner
 						c.outgoingCh <- groupingMessage(c.runner.campaign)
 					} else {
-						// when there is not grouping, Agree implies Choose
+						// when there is not grouping, Agree implies Connect
 						c.groupLabel = defaultGroupLabel
-						c.runner.participantCh <- FromParticipantMessage{Kind: "Choose", Payload: defaultGroupLabel, From: c}
+						c.runner.participantCh <- FromParticipantMessage{Kind: "Connect", Payload: defaultGroupLabel, From: c}
 					}
 				}
-			} else if m.Kind == "Choose" {
+			} else if m.Kind == "Connect" {
 				groupLabel := m.Payload.(string)
 				if len(groupLabel) != 0 && c.hasAgreed { // can't agree before landing
 					c.groupLabel = groupLabel
@@ -107,7 +106,7 @@ func (c *client) readLoop() {
 func (c *client) writeLoop() {
 	for m := range c.outgoingCh {
 		c.write(m)
-		if helpers.Contains([]string{"Disconnect", "Redirect", "Reject"}, m.Kind) {
+		if m.Kind == "Disconnect" {
 			// stops for loop
 			return
 		}
@@ -135,14 +134,13 @@ func runClient(isSupervisor bool, ws wsConn, identifier string) *client {
 		isSupervisor: isSupervisor,
 		ws:           ws,
 		runner:       r,
-		outgoingCh:   make(chan Message, 256),
+		outgoingCh:   make(chan Message, 512),
 	}
 	log.Println("[client] running for: " + identifier)
 
 	go c.readLoop()
 	go c.writeLoop()
 
-	// participants have to Land first
 	c.runner.registerCh <- c
 	return c
 }

@@ -3,6 +3,7 @@ package live
 import (
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/ducksouplab/mastok/helpers"
 	"github.com/ducksouplab/mastok/models"
@@ -48,8 +49,8 @@ func runParticipantStubs(ns string, size int) (wsSlice []*wsStub) {
 func newWSStub(l string) *wsStub {
 	ws := &wsStub{
 		label:       l,
-		toReadCh:    make(chan Message, 256),
-		writtenToCh: make(chan Message, 256),
+		toReadCh:    make(chan Message),
+		writtenToCh: make(chan Message),
 		clearAllCh:  make(chan struct{}),
 		clearTillCh: make(chan Message),
 		doneCh:      make(chan struct{}),
@@ -128,8 +129,8 @@ func (ws *wsStub) agree() *wsStub {
 	return ws
 }
 
-func (ws *wsStub) choose(groupLabel string) *wsStub {
-	ws.push(Message{"Choose", groupLabel})
+func (ws *wsStub) connectWithGroup(groupLabel string) *wsStub {
+	ws.push(Message{"Connect", groupLabel})
 	return ws
 }
 
@@ -160,7 +161,16 @@ func (ws *wsStub) hasReceived(test Message) bool {
 	return false
 }
 
-func (ws *wsStub) hasReceivedKind(kind string) (found Message, ok bool) {
+func (ws *wsStub) hasReceivedKind(kind string) bool {
+	for _, write := range ws.writes {
+		if write.Kind == kind {
+			return true
+		}
+	}
+	return false
+}
+
+func (ws *wsStub) firstOfKind(kind string) (found Message, ok bool) {
 	for _, write := range ws.writes {
 		if write.Kind == kind {
 			return write, true
@@ -169,16 +179,37 @@ func (ws *wsStub) hasReceivedKind(kind string) (found Message, ok bool) {
 	return Message{}, false
 }
 
+func (ws *wsStub) countKind(kind string) (count int) {
+	for _, write := range ws.writes {
+		if write.Kind == kind {
+			count++
+		}
+	}
+	return
+}
+
+// same kind, payload as prefix
+func (ws *wsStub) hasReceivedWithPayloadPrefix(test Message) bool {
+	for _, write := range ws.writes {
+		payload := write.Payload.(string)
+		prefix := test.Payload.(string)
+		if write.Kind == test.Kind && strings.HasPrefix(payload, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
 func (ws *wsStub) loop() {
 	for {
 		select {
 		case w := <-ws.writtenToCh:
 			ws.writes = append(ws.writes, w)
 		case <-ws.clearAllCh:
-			ws.writes = []Message{}
+			ws.writes = nil // nil is a valid slice https://github.com/uber-go/guide/blob/master/style.md#nil-is-a-valid-slice
 		case till := <-ws.clearTillCh:
 			discard := true
-			newWrites := []Message{}
+			var newWrites []Message
 			for _, m := range ws.writes {
 				if !discard {
 					newWrites = append(newWrites, m)

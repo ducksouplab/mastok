@@ -34,6 +34,7 @@ func InterceptOtreeGetPrefixJSON(prefix string, json any) {
 	log.Printf("[gock] GET prefix " + env.OTreeURL + prefix)
 	gock.New(env.OTreeURL).
 		AddMatcher(matchWithPrefix(prefix)).
+		Persist(). // can be called multiple times
 		Reply(200).
 		JSON(json)
 }
@@ -42,6 +43,7 @@ func InterceptOtreePostJSON(path string, json any) {
 	log.Printf("[gock] POST " + env.OTreeURL + path)
 	gock.New(env.OTreeURL).
 		Post(path).
+		Persist(). // can be called multiple times
 		Reply(200).
 		JSON(json)
 }

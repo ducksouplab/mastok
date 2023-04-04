@@ -97,16 +97,18 @@ func (r *runner) stop() {
 func (r *runner) processRegister(target *client) (done bool) {
 	if isOn(r.state) || target.isSupervisor {
 		r.clients.add(target)
-		target.outgoingCh <- stateMessage(r.campaign.GetLiveState())
 
 		if target.isSupervisor {
+			target.outgoingCh <- stateMessage(r.campaign.GetLiveState()) // // can be busy
 			// only inform supervisor client about the room size right away
 			target.outgoingCh <- poolSizeMessage(r)
+		} else {
+			target.outgoingCh <- stateMessage(r.campaign.State)
 		}
 	} else {
 		// don't register
 		target.outgoingCh <- stateMessage(models.Unavailable)
-		target.outgoingCh <- disconnectMessage()
+		target.outgoingCh <- disconnectMessage("Unavailable")
 		if r.clients.isEmpty() {
 			r.stop()
 			return true
@@ -155,7 +157,7 @@ func (r *runner) processLand(target *client, fingerprint string) (done bool) {
 		}
 	}
 	if isInLiveSession { // we assume it's a reconnect, so we redirect to oTree
-		if done := r.processUnregisterWithReason(target, landRedirectMessage(participation.OtreeCode)); done {
+		if done := r.processUnregisterWithReason(target, disconnectMessage("Redirect:"+participation.OtreeCode)); done {
 			return true
 		}
 		return false
@@ -163,7 +165,7 @@ func (r *runner) processLand(target *client, fingerprint string) (done bool) {
 	if r.campaign.JoinOnce {
 		_, isAlreadyThere := r.roomFingerprints[fingerprint]
 		if isAlreadyThere || hasParticipated {
-			if done := r.processUnregisterWithReason(target, landRejectMessage()); done {
+			if done := r.processUnregisterWithReason(target, disconnectMessage("LandingFailed")); done {
 				return true
 			}
 			return false
@@ -185,7 +187,7 @@ func (r *runner) processTentativeJoin(target *client) (done bool) {
 			}
 			return false
 		} else {
-			if done := r.processUnregisterWithReason(target, groupFullMessage()); done {
+			if done := r.processUnregisterWithReason(target, disconnectMessage("Full")); done {
 				return true
 			}
 		}
@@ -221,7 +223,7 @@ func (r *runner) processState(newState string) (done bool) {
 			c.outgoingCh <- stateMessage(newState)
 		} else {
 			c.outgoingCh <- stateMessage(models.Unavailable)
-			if done := r.processUnregisterWithReason(c, disconnectMessage()); done {
+			if done := r.processUnregisterWithReason(c, disconnectMessage("Unavailable")); done {
 				return true
 			}
 		}
@@ -257,19 +259,19 @@ func (r *runner) processIfPoolReady() (done bool) {
 		code := participantCodes[participantIndex]
 		c.outgoingCh <- sessionStartParticipantMessage(code)
 		models.CreateParticipation(newSession, c.fingerprint, code)
-		if done := r.processUnregisterWithReason(c, disconnectMessage()); done {
+		if done := r.processUnregisterWithReason(c, disconnectMessage("Start")); done {
 			return true
 		}
 		participantIndex++
 	}
+	// update state (may become Busy or Completed)
+	r.state = r.campaign.GetLiveState()
 	// notice supervisors
 	for c := range r.clients.supervisors {
 		c.outgoingCh <- sessionStartSupervisorMessage(newSession)
-		c.outgoingCh <- stateMessage(r.campaign.GetLiveState()) // if state becomes Busy
+		c.outgoingCh <- stateMessage(r.state) // if state becomes Busy
 	}
-	// update state (may become Busy or Completed)
-	r.state = r.campaign.GetLiveState()
-	// pool is now empty (due to processUnregisterWithReason abose), try to fill it with pending
+	// pool is now empty (due to processUnregisterWithReason above), try to fill it with pending
 	if updated := r.clients.resetPoolFromPending(); updated {
 		// if has been filled (at least with one participant), send sizes updates
 		for c := range r.clients.pool { // it's a new pool
@@ -310,7 +312,7 @@ func (r *runner) loop() {
 				if done := r.processLand(m.From, m.Payload); done {
 					return
 				}
-			} else if m.Kind == "Choose" {
+			} else if m.Kind == "Connect" {
 				if done := r.processTentativeJoin(m.From); done {
 					return
 				}

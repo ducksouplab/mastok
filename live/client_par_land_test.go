@@ -19,7 +19,7 @@ func TestClient_Participant_Unit(t *testing.T) {
 		ws.push(Message{"Land", ""})
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("Reject")
+			ok := ws.hasReceived(Message{"Disconnect", "LandingFailed"})
 			return ok
 		}))
 	})
@@ -32,7 +32,7 @@ func TestClient_Participant_Unit(t *testing.T) {
 		ws.push(Message{"Land", "fingerprint"})
 
 		assert.False(t, retryUntil(longDuration, func() bool {
-			_, ok := ws.hasReceivedKind("Reject")
+			ok := ws.hasReceived(Message{"Disconnect", "LandingFailed"})
 			return ok
 		}))
 	})
@@ -54,7 +54,7 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		ws2.landWith("fingerprint1")
 
 		assert.True(t, retryUntil(longDuration, func() bool {
-			_, ok := ws2.hasReceivedKind("Reject")
+			ok := ws2.hasReceived(Message{"Disconnect", "LandingFailed"})
 			return ok
 		}))
 	})
@@ -73,20 +73,19 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		ws2.landWith("fingerprint1")
 
 		assert.False(t, retryUntil(longDuration, func() bool {
-			_, ok := ws2.hasReceivedKind("Reject")
+			ok := ws2.hasReceived(Message{"Disconnect", "LandingFailed"})
 			return ok
 		}))
 	})
 
-	t.Run("participant should not receive Consent before landing", func(t *testing.T) {
+	t.Run("participant does not receive Consent before landing", func(t *testing.T) {
 		ns := "fxt_par"
 		defer tearDown(ns)
 
 		ws := runParticipantStub(ns)
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("Consent")
-			return ok
+			return ws.hasReceivedKind("Consent")
 		}))
 	})
 
@@ -98,8 +97,7 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		ws.land()
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			_, ok := ws.hasReceivedKind("Consent")
-			return ok
+			return ws.hasReceivedKind("Consent")
 		}))
 	})
 
@@ -129,8 +127,7 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		// assert session has started
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longDuration, func() bool {
-				_, ok := ws.hasReceivedKind("SessionStart")
-				return ok
+				return ws.hasReceivedKind("SessionStart")
 			}), "participant should receive SessionStart with oTree starting link")
 		}
 
@@ -140,8 +137,8 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		ws.landWith("fingerprint0").agree()
 
 		assert.True(t, retryUntil(longDuration, func() bool {
-			_, found := ws.hasReceivedKind("Redirect")
-			return found
+			ok := ws.hasReceivedWithPayloadPrefix(Message{"Disconnect", "Redirect:"})
+			return ok
 		}), "participant should receive Redirect")
 	})
 
@@ -171,8 +168,7 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		// assert session has started
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longDuration, func() bool {
-				_, ok := ws.hasReceivedKind("SessionStart")
-				return ok
+				return ws.hasReceivedKind("SessionStart")
 			}), "participant should receive SessionStart with oTree starting link")
 		}
 
@@ -182,8 +178,8 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		ws.landWith("fingerprint0").agree()
 
 		assert.True(t, retryUntil(longDuration, func() bool {
-			_, found := ws.hasReceivedKind("Redirect")
-			return found
+			ok := ws.hasReceivedWithPayloadPrefix(Message{"Disconnect", "Redirect:"})
+			return ok
 		}), "participant should receive Redirect")
 	})
 
@@ -213,8 +209,7 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		// assert session has started
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longDuration, func() bool {
-				_, ok := ws.hasReceivedKind("SessionStart")
-				return ok
+				return ws.hasReceivedKind("SessionStart")
 			}), "participant should receive SessionStart with oTree starting link")
 		}
 
@@ -224,8 +219,8 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		ws.landWith("fingerprint0").agree()
 
 		assert.True(t, retryUntil(longDuration, func() bool {
-			_, found := ws.hasReceivedKind("Reject")
-			return found
+			ok := ws.hasReceived(Message{"Disconnect", "LandingFailed"})
+			return ok
 		}))
 	})
 
@@ -255,8 +250,7 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		// assert session has started
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longerDuration, func() bool {
-				_, ok := ws.hasReceivedKind("SessionStart")
-				return ok
+				return ws.hasReceivedKind("SessionStart")
 			}), "participant should receive SessionStart with oTree starting link")
 		}
 
@@ -267,8 +261,8 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		ws.landWith("fingerprint0").agree()
 
 		assert.False(t, retryUntil(longerDuration, func() bool {
-			_, found := ws.hasReceivedKind("Reject")
-			return found
+			ok := ws.hasReceived(Message{"Disconnect", "LandingFailed"})
+			return ok
 		}))
 	})
 }

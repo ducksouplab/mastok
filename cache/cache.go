@@ -42,7 +42,7 @@ func GetExperiments() []string {
 		return expCache.names
 	}
 	// or (re)fetch and update cache
-	configs := []otree.ExperimentConfig{}
+	var configs []otree.ExperimentConfig
 	err := otree.GetOTreeJSON("/api/session_configs", &configs)
 	if err != nil {
 		log.Fatal(err)

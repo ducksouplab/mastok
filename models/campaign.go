@@ -147,7 +147,7 @@ func (c *Campaign) appendSession(s *Session) (err error) {
 }
 
 func (c *Campaign) IsBusy() bool {
-	return c.State == Running && (c.liveSessions() >= c.ConcurrentSessions)
+	return c.State == Busy || (c.State == Running && (c.liveSessions() >= c.ConcurrentSessions))
 }
 
 func (c *Campaign) liveSessions() (count int) {

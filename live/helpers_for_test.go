@@ -12,6 +12,9 @@ func getRunnerStoreSize() int {
 	return len(rs.index)
 }
 
+// possible problem if test does not last long enough and clients are still added
+// after last asserts
+// a solution could be to somehow wait for ws stubs to have their processing finished
 func tearDown(namespace string) {
 	log.Printf("[teardown] started for namespace: " + namespace)
 	if sharedRunner, ok := hasRunner(namespace); ok {

@@ -28,7 +28,7 @@ func poolSizeMessage(r *runner) Message {
 func pendingSizeMessage(r *runner) Message {
 	return Message{
 		Kind:    "PendingSize",
-		Payload: strconv.Itoa(r.clients.pendingSize()) + "/" + strconv.Itoa(maxPendingSize),
+		Payload: strconv.Itoa(r.clients.pendingSize()) + "/" + strconv.Itoa(r.clients.maxPending),
 	}
 }
 

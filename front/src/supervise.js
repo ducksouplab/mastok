@@ -43,7 +43,7 @@ const start = function (namespace) {
 
   ws.onmessage = (event) => {
     const { kind, payload } = looseJSONParse(event.data);
-    // console.log(kind, payload);
+    console.log(kind, payload);
     if(kind === 'State') {
       document.getElementById("state").innerHTML = payload;
       if(payload === "Paused") {
@@ -71,7 +71,9 @@ const start = function (namespace) {
       } 
     } else if(kind === 'PoolSize') {
       updateHasParticipants(payload);
-      document.getElementById("pool-size").innerHTML = payload;
+      document.getElementById("pool-size").innerText = payload;
+    } else if(kind === 'PendingSize') {
+      document.getElementById("pending-size").innerText = payload;
     } else if(kind === 'SessionStart') {
       hide("size-container");
       show("new-container");
@@ -96,7 +98,7 @@ const start = function (namespace) {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[supervise] version 0.2.0");
+  console.log("[supervise] version 0.3.0");
   const namespaceMatch = /campaigns\/supervise\/(.*)$/.exec(
     window.location.pathname
   );

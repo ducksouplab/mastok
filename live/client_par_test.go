@@ -88,7 +88,7 @@ func TestClient_Participant_Integration(t *testing.T) {
 
 		// 2 participants
 		wsSlice := runParticipantStubs(ns, 2)
-		wsSlice[0].push(Message{"State", "Paused"})
+		wsSlice[0].send(Message{"State", "Paused"})
 
 		// no one should have received the State update
 		for _, ws := range wsSlice {

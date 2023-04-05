@@ -57,10 +57,12 @@ const start = function (slug) {
   };
 
   ws.onclose = (event) => {
+    showOnly("unavailable-container");
     console.log(event);
   };
 
   ws.onerror = (event) => {
+    showOnly("unavailable-container");
     console.log(event);
   };
 

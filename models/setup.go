@@ -59,27 +59,27 @@ func ReinitDevDB() {
 			Namespace:          "dev_campaign_1",
 			Slug:               "dev_campaign_1_slug",
 			PerSession:         4,
-			MaxSessions:        2,
+			MaxSessions:        6,
 			ConcurrentSessions: 1,
 			Consent:            consentString,
 			State:              Running,
 		}
-		var session = Session{
-			Code:     "nztdjo76",
-			OtreeId:  "mk:dev_campaign_1:1",
-			Size:     4,
-			AdminUrl: "http://localhost:8180/SessionStartLinks/nztdjo76",
-		}
+		// var session = Session{
+		// 	Code:     "nztdjo76",
+		// 	OtreeId:  "mk:dev_campaign_1:1",
+		// 	Size:     4,
+		// 	AdminUrl: "http://localhost:8180/SessionStartLinks/nztdjo76",
+		// }
 		if err := DB.Create(&campaign).Error; err != nil {
 			log.Fatal(err)
 		}
-		campaign.appendSession(&session)
+		// campaign.appendSession(&session)
 		// simple campaign
 		var otherCampaign = Campaign{
 			OtreeExperiment:    "chatroulette",
 			Namespace:          "dev_campaign_2",
 			Slug:               "dev_campaign_2_slug",
-			PerSession:         2,
+			PerSession:         4,
 			MaxSessions:        4,
 			ConcurrentSessions: 1,
 			Grouping:           "What is your gender?\nMale:2\nFemale:2\nChoose",

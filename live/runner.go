@@ -8,8 +8,6 @@ import (
 	"github.com/ducksouplab/mastok/models"
 )
 
-const maxPendingSize = 50
-
 var checkStartPeriod time.Duration
 
 func init() {
@@ -99,9 +97,10 @@ func (r *runner) processRegister(target *client) (done bool) {
 		r.clients.add(target)
 
 		if target.isSupervisor {
-			target.outgoingCh <- stateMessage(r.campaign.GetLiveState()) // // can be busy
+			target.outgoingCh <- stateMessage(r.campaign.GetLiveState()) // can be busy
 			// only inform supervisor client about the room size right away
 			target.outgoingCh <- poolSizeMessage(r)
+			target.outgoingCh <- pendingSizeMessage(r)
 		} else {
 			target.outgoingCh <- stateMessage(r.campaign.State)
 		}
@@ -120,7 +119,7 @@ func (r *runner) processRegister(target *client) (done bool) {
 func (r *runner) processUnregister(target *client) (done bool) {
 	// deletes client
 	if wasInPool := r.clients.delete(target); wasInPool {
-		// tells everyone including supervisor that the room size has changed
+		// tells the pool and supervisors that the room size has changed
 		for c := range r.clients.pool {
 			c.outgoingCh <- poolSizeMessage(r)
 		}

@@ -57,6 +57,8 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 			ws.land().agree().connectWithGroup("Female")
 		}
 
+		// 3 groups * 1 person per group * (4 sessions + 1)
+		maxPendingSize := 15
 		assert.True(t, retryUntil(longDuration, func() bool {
 			ok := wsSup.hasReceived(Message{"PendingSize", "2/" + strconv.Itoa(maxPendingSize)})
 			return ok
@@ -85,7 +87,7 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		assert.Equal(t, 4, campaign.PerSession)
 		assert.Equal(t, "Running", campaign.State)
 		// every participants received the new state
-		wsSup.push(Message{"State", "Paused"})
+		wsSup.send(Message{"State", "Paused"})
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longDuration, func() bool {
 				return ws.hasReceived(Message{"State", "Unavailable"})
@@ -107,7 +109,7 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		assert.Equal(t, "Paused", campaign.State)
 
 		// supervisor changes state and quits
-		wsSup1.push(Message{"State", "Running"})
+		wsSup1.send(Message{"State", "Running"})
 		wsSup1.Close()
 		runner, _ := hasRunner(ns)
 		<-runner.isDone()

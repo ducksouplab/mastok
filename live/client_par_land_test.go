@@ -16,7 +16,7 @@ func TestClient_Participant_Unit(t *testing.T) {
 		defer tearDown(ns)
 
 		ws := runParticipantStub(ns)
-		ws.push(Message{"Land", ""})
+		ws.send(Message{"Land", ""})
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
 			ok := ws.hasReceived(Message{"Disconnect", "LandingFailed"})
@@ -29,7 +29,7 @@ func TestClient_Participant_Unit(t *testing.T) {
 		defer tearDown(ns)
 
 		ws := runParticipantStub(ns)
-		ws.push(Message{"Land", "fingerprint"})
+		ws.send(Message{"Land", "fingerprint"})
 
 		assert.False(t, retryUntil(longDuration, func() bool {
 			ok := ws.hasReceived(Message{"Disconnect", "LandingFailed"})

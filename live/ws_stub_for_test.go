@@ -109,28 +109,28 @@ func (ws *wsStub) Close() error {
 
 // to the other side of the websocket, we may push (for future ReadJSON)
 // or pull (what has been WriteJSON)
-func (ws *wsStub) push(m Message) {
+func (ws *wsStub) send(m Message) {
 	ws.toReadCh <- m
 }
 
 // write helpers
 func (ws *wsStub) landWith(fingerprint string) *wsStub {
-	ws.push(Message{"Land", fingerprint})
+	ws.send(Message{"Land", fingerprint})
 	return ws
 }
 
 func (ws *wsStub) land() *wsStub {
-	ws.push(Message{"Land", helpers.RandomHexString(64)})
+	ws.send(Message{"Land", helpers.RandomHexString(64)})
 	return ws
 }
 
 func (ws *wsStub) agree() *wsStub {
-	ws.push(Message{"Agree", ""})
+	ws.send(Message{"Agree", ""})
 	return ws
 }
 
 func (ws *wsStub) connectWithGroup(groupLabel string) *wsStub {
-	ws.push(Message{"Connect", groupLabel})
+	ws.send(Message{"Connect", groupLabel})
 	return ws
 }
 

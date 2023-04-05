@@ -10,6 +10,7 @@ type runnerClients struct {
 	sizeByGroup       map[string]int
 	maxPendingByGroup map[string]int
 	perSession        int
+	maxPending        int
 	// state
 	supervisors  map[*client]bool
 	participants map[*client]bool
@@ -35,15 +36,19 @@ func newRunnerClients(c *models.Campaign, g *models.Grouping) *runnerClients {
 		groups[label] = make(map[*client]bool)
 	}
 
+	maxPending := 0
 	maxPendingByGroup := make(map[string]int)
 	margin := (c.MaxSessions - c.StartedSessions) + 1
 	for label, size := range sizeByGroup {
-		maxPendingByGroup[label] = size * margin
+		max := size * margin
+		maxPendingByGroup[label] = max
+		maxPending += max
 	}
 
 	return &runnerClients{
 		sizeByGroup:       sizeByGroup,
 		maxPendingByGroup: maxPendingByGroup,
+		maxPending:        maxPending,
 		perSession:        c.PerSession,
 		supervisors:       make(map[*client]bool),
 		participants:      make(map[*client]bool),
@@ -120,6 +125,21 @@ func (rc *runnerClients) tentativeJoin(c *client) (addedToPool bool, addedToPend
 		rc.poolByGroup[c.groupLabel][c] = true
 		return true, false
 	}
+}
+
+func (rc *runnerClients) addOneToPoolFromPending() (update bool) {
+	// reset pending
+	oldPending := make([]*client, len(rc.pending))
+	copy(oldPending, rc.pending)
+	rc.pending = nil // nil is a valid slice https://github.com/uber-go/guide/blob/master/style.md#nil-is-a-valid-slice
+
+	// fill
+	for _, c := range oldPending {
+		addedToPool, _ := rc.tentativeJoin(c)
+		update = update || addedToPool
+	}
+
+	return
 }
 
 func (rc *runnerClients) resetPoolFromPending() (update bool) {

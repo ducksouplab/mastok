@@ -83,8 +83,10 @@
 						</div>
 						<div id="size-container">
 							<dl>
-								<dt>Size</dt>
+								<dt>Pool size for next session</dt>
 								<dd><span id="pool-size">...</span></dd>
+								<dt>Other participants pending</dt>
+								<dd><span id="pending-size">...</span></dd>
 								<dt>Share URL</dt>
 								<dd><input id="share-url" readonly value="{{ .Campaign.ShareURL }}"></dd>
 							</dl>
@@ -114,7 +116,7 @@
 								<tr>
 									<td>{{ .FormatCreatedAt }}</td>
 									<td>{{ .OtreeId }}</td>
-									<td><a href="{{ .AdminUrl }}" target="_blan">{{ .Code }}</a></td>
+									<td><a href="{{ .AdminUrl }}" target="_blank">{{ .Code }}</a></td>
 								</tr>
 								{{end}}
 							</tbody>

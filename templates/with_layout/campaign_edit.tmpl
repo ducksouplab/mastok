@@ -9,7 +9,7 @@
     {{end}}
   </div>
 </div>
-<form action="/campaigns/edit/{{ .Campaign.Namespace }}" method="POST">
+<form action="{{ WebPrefix }}/campaigns/edit/{{ .Campaign.Namespace }}" method="POST">
   <div class="row">
     <div class="col">
       <div class="mb-3">

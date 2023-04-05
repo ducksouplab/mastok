@@ -46,7 +46,9 @@ The following environment variables, regarding Mastok's own configuration:
 And regarding connection to other services (no default values are provided):
 
 - `MASTOK_DATABASE_URL` (like `postgres://ps_user:pg_password@localhost/mastok`) to connect to the database 
-- `MASTOK_OTREE_URL` (like `http://localhost:8180`) to reach oTree
+- `MASTOK_OTREE_API_URL` (like `http://localhost:8180`) to reach oTree REST API
+- `MASTOK_OTREE_PUBLIC_URL` (like `http://host.com/otree`) to reach oTree public pages
+- please note having two `MASTOK_OTREE_*_URL` may be useful if Mastok connects to the REST API in a different way than the clients (participants), but they should point to the same running oTree instance
 - `MASTOK_OTREE_REST_KEY` to authenticate to oTree API
 
 ## DuckSoup Docker image

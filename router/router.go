@@ -74,7 +74,7 @@ func NewRouter(r *gin.Engine) *gin.Engine {
 		env.BasicLogin: env.BasicPassword,
 	}))
 	authorizedGroup.GET("/", func(c *gin.Context) {
-		c.Redirect(http.StatusFound, "/dashboard")
+		c.Redirect(http.StatusFound, env.WebPrefix+"/dashboard")
 	})
 	// add routes
 	addDashboardRoutesTo(authorizedGroup)

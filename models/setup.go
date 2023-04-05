@@ -68,7 +68,7 @@ func ReinitDevDB() {
 		// 	Code:     "nztdjo76",
 		// 	OtreeId:  "mk:dev_campaign_1:1",
 		// 	Size:     4,
-		// 	AdminUrl: "http://localhost:8180/SessionStartLinks/nztdjo76",
+		// 	AdminUrl: "http://otree.host.com/SessionStartLinks/nztdjo76",
 		// }
 		if err := DB.Create(&campaign).Error; err != nil {
 			log.Fatal(err)

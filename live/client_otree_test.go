@@ -41,7 +41,6 @@ func TestClient_Otree_Integration(t *testing.T) {
 			found, ok := wsSup1.firstOfKind("SessionStart")
 			if ok {
 				session := found.Payload.(models.Session)
-				//http://localhost:8180/SessionStartLinks/t1wlmb4v
 				return strings.Contains(session.AdminUrl, "/SessionStartLinks/")
 			}
 			return false
@@ -54,7 +53,6 @@ func TestClient_Otree_Integration(t *testing.T) {
 				if ok {
 					url := found.Payload.(string)
 					urlsMap[url] = true
-					//http://localhost:8180/InitializeParticipant/brutjmj7
 					return strings.Contains(url, "/InitializeParticipant/")
 				}
 				return false

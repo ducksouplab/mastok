@@ -27,9 +27,9 @@ var OTREE_GET_SESSION_CONFIGS = []resource{
 
 // created with: session_config_name='chatroulette' num_participants:=4 modified_session_config_fields:='{"id": "mk:namespace"}'
 var OTREE_POST_SESSION = resource{
-	"admin_url":        env.OTreeURL + "/SessionStartLinks/5c7drkqy",
+	"admin_url":        env.OTreePublicURL + "/SessionStartLinks/5c7drkqy",
 	"code":             "5c7drkqy",
-	"session_wide_url": env.OTreeURL + "/join/nubogeke",
+	"session_wide_url": env.OTreePublicURL + "/join/nubogeke",
 }
 
 var OTREE_GET_SESSION = resource{
@@ -49,8 +49,8 @@ var OTREE_GET_SESSION = resource{
 		"num_demo_participants":         10,
 	},
 	"REAL_WORLD_CURRENCY_CODE": "EUR",
-	"session_wide_url":         "http://localhost:8180/join/fonatoje",
-	"admin_url":                "http://localhost:8180/SessionStartLinks/t1wlmb4v",
+	"session_wide_url":         "http://otree.host.com/join/fonatoje",
+	"admin_url":                "http://otree.host.com/SessionStartLinks/t1wlmb4v",
 	"participants": []resource{
 		{
 			"id_in_session":                 1,

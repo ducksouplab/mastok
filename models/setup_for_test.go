@@ -57,7 +57,7 @@ func TestMain(m *testing.M) {
 		Code:       "codenum1",
 		OtreeId:    "mk:fxt_models_ns3_busy:1",
 		Size:       4,
-		AdminUrl:   env.OTreeURL + "/SessionStartLinks/codenum1",
+		AdminUrl:   env.OTreePublicURL + "/SessionStartLinks/codenum1",
 	}
 	busyCampaign.appendSession(&oldSession)
 	for i := 0; i < 3; i++ {
@@ -69,7 +69,7 @@ func TestMain(m *testing.M) {
 			Code:       "codenum" + suffix,
 			OtreeId:    "mk:fxt_models_ns3_busy:" + suffix,
 			Size:       4,
-			AdminUrl:   env.OTreeURL + "/SessionStartLinks/codenum" + suffix,
+			AdminUrl:   env.OTreePublicURL + "/SessionStartLinks/codenum" + suffix,
 		}
 		busyCampaign.appendSession(&currentSession)
 	}

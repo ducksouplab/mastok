@@ -13,7 +13,7 @@ var BasicLogin, BasicPassword, Mode, Origin, Port, ProjectRoot, WebPrefix string
 var AllowedOrigins []string
 
 // connection to other services
-var DatabaseURL, OTreeURL, OTreeKey string
+var DatabaseURL, OTreeAPIURL, OTreePublicURL, OTreeKey string
 
 // CAUTION: other init functions in "config" package may be called before this
 func init() {
@@ -34,7 +34,8 @@ func init() {
 	BasicPassword = GetEnvOr("MASTOK_PASSWORD", "mastok")
 	// no default value provided
 	DatabaseURL = os.Getenv("MASTOK_DATABASE_URL")
-	OTreeURL = os.Getenv("MASTOK_OTREE_URL")
+	OTreeAPIURL = os.Getenv("MASTOK_OTREE_API_URL")
+	OTreePublicURL = os.Getenv("MASTOK_OTREE_PUBLIC_URL")
 	OTreeKey = os.Getenv("MASTOK_OTREE_REST_KEY")
 	// derived
 	AllowedOrigins = []string{Origin}

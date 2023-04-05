@@ -35,7 +35,9 @@ WORKDIR /app
 
 COPY --from=builder /build/mastok .
 # check .dockerignore to see generated scripts are excluded first...
+COPY consent.md .
 COPY front/static ./front/static
+COPY templates ./templates
 # ... but added from build
 COPY --from=builder /build/front/static/assets/scripts ./front/static/assets/scripts
 

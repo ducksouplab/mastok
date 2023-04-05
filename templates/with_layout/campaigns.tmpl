@@ -1,7 +1,7 @@
 {{define "content"}}
 <div class="row">
 	<div class="col">
-		<h1>Campaigns <a href="/campaigns/new" type="button" class="btn btn-primary float-end">New</a></h1>
+		<h1>Campaigns <a href="{{ WebPrefix }}/campaigns/new" type="button" class="btn btn-primary float-end">New</a></h1>
 		<table class="table">
 			<thead>
 				<tr>
@@ -29,7 +29,7 @@
 					<td>{{if .Grouping}}yes{{else}}no{{end}}</td>
 					<td>{{ .StartedSessions }}</td>
 					<td>{{ .State }}</td>
-					<td><a href="/campaigns/supervise/{{ .Namespace }}" class="float-end">Supervise</a></td>
+					<td><a href="{{ WebPrefix }}/campaigns/supervise/{{ .Namespace }}" class="float-end">Supervise</a></td>
 				</tr>
 				{{end}}
 			</tbody>

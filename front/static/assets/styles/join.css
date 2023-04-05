@@ -9,3 +9,7 @@ h5 {
 .card-body {
   min-height: 120px;
 }
+
+label {
+  cursor: pointer;
+}

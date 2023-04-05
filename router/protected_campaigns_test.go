@@ -188,7 +188,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		assert.Equal(t, 422, res.Code)
 	})
 
-	t.Run("fails creating if Grouping and PerSession don't match", func(t *testing.T) {
+	t.Run("fails creating if Grouping is missing Action", func(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
@@ -201,13 +201,26 @@ func TestCampaigns_Integration(t *testing.T) {
 		assert.Equal(t, 422, res.Code)
 	})
 
+	t.Run("fails creating if Grouping and PerSession don't match", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("namespace6")
+		cf.perSession = "4"
+		cf.grouping = "What is your gender?\nMale:2\nFemale:3\nChoose"
+		data := campaignFormData(cf)
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
 	t.Run("creates if Grouping and PerSession match", func(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
 		cf := newCampaignForm("namespace7")
 		cf.perSession = "7"
-		cf.grouping = "What is your gender?\nMale:4\nFemale:3"
+		cf.grouping = "What is your gender?\nMale:4\nFemale:3\nChoose"
 		data := campaignFormData(cf)
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)

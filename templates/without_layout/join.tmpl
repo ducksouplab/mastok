@@ -20,6 +20,15 @@
           <div id="consent-container" style="display: none;">
             <p class="card-text consent"></p>
           </div>
+          <div id="grouping-container" style="display: none;">
+            <p class="card-text grouping">
+              <form id="grouping-form">
+                <h5 id="grouping-question" class="card-title"></h5>
+                <div id="grouping-answers" class="mb-3"></div>
+                <button id="grouping-submit" type="submit" class="btn btn-primary" style="display: none;"></button>
+              </form>
+            </p>
+          </div>
           <div id="waiting-container" class="text-center" style="display: none;">
             <h5 class="card-title">Waiting for participants</h5>
             <p class="card-text">Connected <span class="pool-size">...</span></p>
@@ -33,8 +42,17 @@
               </div>
             </div>
           </div>
+          <div id="pending-container" class="text-center" style="display: none;">
+            <h5 class="card-title">Waiting for next session</h5>
+          </div>
+          <div id="full-container" class="text-center" style="display: none;">
+            <h5 class="card-title">Too many users connected</h5>
+          </div>
           <div id="unavailable-container" class="text-center" style="display: none;">
             <h5 class="card-title">Unavailable</h5>
+          </div>
+          <div id="landing-failed-container" class="text-center" style="display: none;">
+            <h5 class="card-title">Too many users connected from this network</h5>
           </div>
         </div>
       </div>

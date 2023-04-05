@@ -10,9 +10,13 @@ const looseJSONParse = (str) => {
 
 const containers = [
   "consent-container",
+  "grouping-container",
   "waiting-container",
   "joining-container",
+  "pending-container",
+  "full-container",
   "unavailable-container",
+  "landing-failed-container",
 ];
 
 const show = (id) => {
@@ -67,16 +71,18 @@ const start = function (slug) {
       document.querySelector("#consent-container p").innerHTML =
         processConcent(payload);
       hide("alert-container");
-      showOnly("consent-container");
       // ease checkboxes clicking
       const lis = document.querySelectorAll("#consent-container li");
       for (const li of lis) {
         li.addEventListener("click", () => {
-          value = li.querySelector("input").checked;
-          li.querySelector("input").checked = !value;
+          const checkbox = li.querySelector("input");
+          if (!checkbox.disabled) {
+            value = checkbox.checked;
+            checkbox.checked = !value;
+          }
         });
       }
-      // submit
+      // on submit
       document
         .querySelector("#consent-container button")
         .addEventListener("click", () => {
@@ -92,6 +98,39 @@ const start = function (slug) {
             show("alert-container");
           }
         });
+      // show
+      showOnly("consent-container");
+    } else if (kind === "Grouping") {
+      const [question, ...answers] = payload.split("\n");
+      const action = answers.pop(); // mutates answers
+      document.getElementById("grouping-question").innerText = question;
+      document.getElementById("grouping-submit").innerText = action;
+      const groupingAnswers = document.getElementById("grouping-answers");
+      for (let a of answers) {
+        const [text, _] = a.split(":");
+        const answerEl = document.createElement("div");
+        answerEl.classList.add("form-check");
+        answerEl.innerHTML = `<input class="form-check-input" type="radio" value="${text}" name="group" id="answer-${text}" required>
+        <label class="form-check-label" for="answer-${text}">${text}</label>`;
+        groupingAnswers.append(answerEl);
+      }
+      // show submit button
+      const formChecks = document.querySelectorAll("#grouping-answers .form-check");
+      for (const c of formChecks) {
+        c.addEventListener("click", () => {
+          document.getElementById("grouping-submit").style.display = "";
+        });
+      }
+      // 
+      document
+        .querySelector("#grouping-form")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const choice = document.querySelector('input[name="group"]:checked').value;
+          ws.send(JSON.stringify({ kind: "Connect", payload: choice }));
+        });
+      // show
+      showOnly("grouping-container");
     } else if (kind === "PoolSize") {
       let sizes = document.querySelectorAll(".pool-size");
       for (let s of sizes) {
@@ -99,20 +138,34 @@ const start = function (slug) {
       }
       showOnly("waiting-container");
     } else if (kind === "SessionStart") {
+      // participant is joining experiment
       showOnly("joining-container");
       setTimeout(() => {
         document.location.href = payload;
       }, 3000);
+    } else if (kind === "Pending") {
+      showOnly("pending-container");
+    } else if (kind === "Disconnect" && payload.startsWith("Redirect")) {
+      // instant redirect since participant is rejoining experiment
+      const target = payload.replace("Redirect:", "");
+      document.location.href = target;
+    } else if (kind === "Disconnect" && payload == "Full") {
+      showOnly("full-container");
+      ws.close();
     } else if (kind === "State" && payload == "Unavailable") {
       showOnly("unavailable-container");
-    } else if (kind === "Participant" && payload == "Disconnect") {
+      ws.close();
+    } else if (kind === "State" && payload == "LandingFailed") {
+      showOnly("landing-failed-container");
+      ws.close();
+    } else if (kind === "Disconnect") {
       ws.close();
     }
   };
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[supervise] version 0.2.0");
+  console.log("[supervise] version 0.3.0");
   const slugMatch = /join\/(.*)$/.exec(window.location.pathname);
   if (slugMatch) {
     const slug = slugMatch[1];

@@ -56,6 +56,7 @@ type Group struct {
 type Grouping struct {
 	Question string
 	Groups   []Group
+	Action   string
 }
 
 func GetCampaignByNamespace(namespace string) (c *Campaign, ok bool) {
@@ -96,12 +97,22 @@ func RawParseGroupingString(groupingStr string) (grouping Grouping, err error) {
 	scanner := bufio.NewScanner(strings.NewReader(groupingStr))
 	var question string
 	var groups []Group
+	var action string
+	var lines []string
+
 	for scanner.Scan() {
 		line := scanner.Text()
-		if len(question) == 0 {
-			question = line
-		} else {
-			splits := strings.Split(line, ":")
+		lines = append(lines, line)
+	}
+	length := len(lines)
+	if length < 4 {
+		return grouping, errors.New("not enough lines in Grouping definition")
+	} else {
+		question = lines[0]
+		action = lines[length-1]
+		groupStrings := lines[1 : length-1]
+		for _, s := range groupStrings {
+			splits := strings.Split(s, ":")
 			size, err := strconv.Atoi(splits[1])
 			if err != nil {
 				return grouping, err
@@ -109,7 +120,7 @@ func RawParseGroupingString(groupingStr string) (grouping Grouping, err error) {
 			groups = append(groups, Group{splits[0], size})
 		}
 	}
-	return Grouping{question, groups}, nil
+	return Grouping{question, groups, action}, nil
 }
 
 // returns nil if empty or invalid

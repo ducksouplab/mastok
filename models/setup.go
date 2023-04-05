@@ -82,6 +82,7 @@ func ReinitDevDB() {
 			PerSession:         2,
 			MaxSessions:        4,
 			ConcurrentSessions: 1,
+			Grouping:           "What is your gender?\nMale:2\nFemale:2\nChoose",
 			SessionDuration:    2,
 			Consent:            consentString,
 			State:              Running,

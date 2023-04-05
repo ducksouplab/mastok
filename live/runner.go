@@ -246,6 +246,13 @@ func (r *runner) processIfPoolReady() (done bool) {
 	// check if there is a valid pool pending
 	ready := r.clients.isPoolFull() && !r.campaign.IsBusy()
 	if !ready {
+		// update supervisors clients with state if has changed
+		if r.state != r.campaign.GetLiveState() {
+			r.state = r.campaign.GetLiveState()
+			for c := range r.clients.supervisors {
+				c.outgoingCh <- stateMessage(r.campaign.GetLiveState()) // may not be Busy anymore
+			}
+		}
 		return false
 	}
 	// start session

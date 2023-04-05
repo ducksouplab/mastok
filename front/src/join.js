@@ -1,5 +1,9 @@
 import fingerprint from "./fingerprint";
 
+const state = {
+  starting: false
+};
+
 const looseJSONParse = (str) => {
   try {
     return JSON.parse(str);
@@ -57,7 +61,9 @@ const start = function (slug) {
   };
 
   ws.onclose = (event) => {
-    showOnly("unavailable-container");
+    if (!state.starting) {
+      showOnly("unavailable-container");
+    }
     console.log(event);
   };
 
@@ -133,13 +139,14 @@ const start = function (slug) {
         });
       // show
       showOnly("grouping-container");
-    } else if (kind === "PoolSize") {
+    } else if (kind === "PoolSize" && !state.starting) {
       let sizes = document.querySelectorAll(".pool-size");
       for (let s of sizes) {
         s.innerHTML = payload;
       }
       showOnly("waiting-container");
     } else if (kind === "SessionStart") {
+      state.starting = true;
       // participant is joining experiment
       showOnly("joining-container");
       setTimeout(() => {

@@ -49,10 +49,10 @@ func ReinitTestDB() {
 }
 
 func ReinitDevDB() {
+	consentString := helpers.ReadFile("consent.md")
 	if env.Mode == "RESET_DEV" {
 		os.Remove(env.ProjectRoot + "local.db")
 		ConnectAndMigrate()
-		consentString := helpers.ReadFile("consent.md")
 		// dev fixtures
 		var campaign = Campaign{
 			OtreeExperiment:    "chatroulette",
@@ -74,21 +74,23 @@ func ReinitDevDB() {
 			log.Fatal(err)
 		}
 		// campaign.appendSession(&session)
-		// simple campaign
-		var otherCampaign = Campaign{
-			OtreeExperiment:    "chatroulette",
-			Namespace:          "dev_campaign_2",
-			Slug:               "dev_campaign_2_slug",
-			PerSession:         4,
-			MaxSessions:        4,
-			ConcurrentSessions: 1,
-			Grouping:           "What is your gender?\nMale:2\nFemale:2\nChoose",
-			SessionDuration:    2,
-			Consent:            consentString,
-			State:              Running,
-		}
-		if err := DB.Create(&otherCampaign).Error; err != nil {
-			log.Fatal(err)
-		}
+
+	}
+	// TO BE REMOVED, for the moment we create one in staging/prod too
+	// simple campaign
+	var otherCampaign = Campaign{
+		OtreeExperiment:    "chatroulette",
+		Namespace:          "dev_campaign_2",
+		Slug:               "dev_campaign_2_slug",
+		PerSession:         4,
+		MaxSessions:        4,
+		ConcurrentSessions: 1,
+		Grouping:           "What is your gender?\nMale:2\nFemale:2\nChoose",
+		SessionDuration:    2,
+		Consent:            consentString,
+		State:              Running,
+	}
+	if err := DB.Create(&otherCampaign).Error; err != nil {
+		log.Fatal(err)
 	}
 }

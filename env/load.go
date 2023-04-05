@@ -36,7 +36,7 @@ func init() {
 	DatabaseURL = os.Getenv("MASTOK_DATABASE_URL")
 	OTreeAPIURL = os.Getenv("MASTOK_OTREE_API_URL")
 	OTreePublicURL = os.Getenv("MASTOK_OTREE_PUBLIC_URL")
-	OTreeKey = os.Getenv("MASTOK_OTREE_REST_KEY")
+	OTreeKey = os.Getenv("MASTOK_OTREE_API_KEY")
 	// derived
 	AllowedOrigins = []string{Origin}
 	if Mode == "ENV" {

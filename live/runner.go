@@ -119,12 +119,14 @@ func (r *runner) processRegister(target *client) (done bool) {
 func (r *runner) processUnregister(target *client) (done bool) {
 	// deletes client
 	if wasInPool := r.clients.delete(target); wasInPool {
+		r.clients.addOneToPoolFromPending()
 		// tells the pool and supervisors that the room size has changed
 		for c := range r.clients.pool {
 			c.outgoingCh <- poolSizeMessage(r)
 		}
 		for c := range r.clients.supervisors {
 			c.outgoingCh <- poolSizeMessage(r)
+			c.outgoingCh <- pendingSizeMessage(r)
 		}
 	} else {
 		for c := range r.clients.supervisors {
@@ -254,13 +256,12 @@ func (r *runner) processIfPoolReady() (done bool) {
 	}
 	// send SessionStart with oTree URL forged with a unique code
 	participantIndex := 0
+	var inSession []*client
 	for c := range r.clients.pool {
+		inSession = append(inSession, c)
 		code := participantCodes[participantIndex]
 		c.outgoingCh <- sessionStartParticipantMessage(code)
 		models.CreateParticipation(newSession, c.fingerprint, code)
-		if done := r.processUnregisterWithReason(c, disconnectMessage("Start")); done {
-			return true
-		}
 		participantIndex++
 	}
 	// update state (may become Busy or Completed)
@@ -270,15 +271,10 @@ func (r *runner) processIfPoolReady() (done bool) {
 		c.outgoingCh <- sessionStartSupervisorMessage(newSession)
 		c.outgoingCh <- stateMessage(r.state) // if state becomes Busy
 	}
-	// pool is now empty (due to processUnregisterWithReason above), try to fill it with pending
-	if updated := r.clients.resetPoolFromPending(); updated {
-		// if has been filled (at least with one participant), send sizes updates
-		for c := range r.clients.pool { // it's a new pool
-			c.outgoingCh <- poolSizeMessage(r)
-		}
-		for c := range r.clients.supervisors {
-			c.outgoingCh <- poolSizeMessage(r)
-			c.outgoingCh <- pendingSizeMessage(r)
+	// empty the pool (unregister will fill the pool from pending if possible)
+	for _, c := range inSession {
+		if done := r.processUnregisterWithReason(c, disconnectMessage("Start")); done {
+			return true
 		}
 	}
 

@@ -60,6 +60,15 @@ func newRunnerClients(c *models.Campaign, g *models.Grouping) *runnerClients {
 
 // helpers
 
+func sliceContains(cSlice []*client, target *client) bool {
+	for _, c := range cSlice {
+		if target == c {
+			return true
+		}
+	}
+	return false
+}
+
 func sliceDelete(cSlice []*client, toRemove *client) (newSlice []*client) {
 	for _, c := range cSlice {
 		if c != toRemove {
@@ -117,8 +126,12 @@ func (rc *runnerClients) tentativeJoin(c *client) (addedToPool bool, addedToPend
 		if rc.isPendingForGroupFull(c.groupLabel) {
 			return false, false
 		} else {
-			rc.pending = append(rc.pending, c)
-			return false, true
+			if sliceContains(rc.pending, c) { // don't append twice
+				return false, false
+			} else {
+				rc.pending = append(rc.pending, c)
+				return false, true
+			}
 		}
 	} else {
 		rc.pool[c] = true
@@ -127,31 +140,18 @@ func (rc *runnerClients) tentativeJoin(c *client) (addedToPool bool, addedToPend
 	}
 }
 
-func (rc *runnerClients) addOneToPoolFromPending() (update bool) {
-	// reset pending
-	oldPending := make([]*client, len(rc.pending))
-	copy(oldPending, rc.pending)
-	rc.pending = nil // nil is a valid slice https://github.com/uber-go/guide/blob/master/style.md#nil-is-a-valid-slice
-
-	// fill
-	for _, c := range oldPending {
-		addedToPool, _ := rc.tentativeJoin(c)
-		update = update || addedToPool
+func (rc *runnerClients) addOneToPoolFromPending() (updated bool) {
+	var added *client
+	for _, c := range rc.pending {
+		if addedToPool, _ := rc.tentativeJoin(c); addedToPool {
+			added = c
+			updated = true
+			break
+		}
 	}
 
-	return
-}
-
-func (rc *runnerClients) resetPoolFromPending() (update bool) {
-	// reset pending
-	oldPending := make([]*client, len(rc.pending))
-	copy(oldPending, rc.pending)
-	rc.pending = nil // nil is a valid slice https://github.com/uber-go/guide/blob/master/style.md#nil-is-a-valid-slice
-
-	// fill
-	for _, c := range oldPending {
-		addedToPool, _ := rc.tentativeJoin(c)
-		update = update || addedToPool
+	if updated {
+		rc.pending = sliceDelete(rc.pending, added)
 	}
 
 	return

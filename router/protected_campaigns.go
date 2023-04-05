@@ -81,7 +81,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 			return
 		}
 
-		c.Redirect(http.StatusFound, "/campaigns")
+		c.Redirect(http.StatusFound, env.WebPrefix+"/campaigns")
 	})
 	// EDIT
 	g.GET("/campaigns/edit/:namespace", func(c *gin.Context) {

@@ -1,13 +1,11 @@
 package live
 
 import (
-	"sync"
-
 	"github.com/ducksouplab/mastok/models"
 )
 
+// not guarded by lock since managed by a runner whose concurrency is dealt with channels
 type runnerClients struct {
-	mu sync.RWMutex
 	// configuration
 	sizeByGroup       map[string]int
 	maxPendingByGroup map[string]int
@@ -44,7 +42,6 @@ func newRunnerClients(c *models.Campaign, g *models.Grouping) *runnerClients {
 	}
 
 	return &runnerClients{
-		mu:                sync.RWMutex{},
 		sizeByGroup:       sizeByGroup,
 		maxPendingByGroup: maxPendingByGroup,
 		perSession:        c.PerSession,
@@ -84,39 +81,24 @@ func (rc *runnerClients) isPendingForGroupFull(label string) bool {
 // read methods
 
 func (rc *runnerClients) isEmpty() bool {
-	rc.mu.RLock()
-	defer rc.mu.RUnlock()
-
 	return len(rc.all) == 0
 }
 
 func (rc *runnerClients) poolSize() (count int) {
-	rc.mu.RLock()
-	defer rc.mu.RUnlock()
-
 	return len(rc.pool)
 }
 
 func (rc *runnerClients) pendingSize() (count int) {
-	rc.mu.RLock()
-	defer rc.mu.RUnlock()
-
 	return len(rc.pending)
 }
 
 func (rc *runnerClients) isPoolFull() bool {
-	rc.mu.RLock()
-	defer rc.mu.RUnlock()
-
 	return len(rc.pool) == rc.perSession
 }
 
 // read-write methods
 
 func (rc *runnerClients) add(c *client) {
-	rc.mu.Lock()
-	defer rc.mu.Unlock()
-
 	rc.all[c] = true
 	if c.isSupervisor {
 		rc.supervisors[c] = true
@@ -126,9 +108,6 @@ func (rc *runnerClients) add(c *client) {
 }
 
 func (rc *runnerClients) tentativeJoin(c *client) (addedToPool bool, addedToPending bool) {
-	rc.mu.Lock()
-	defer rc.mu.Unlock()
-
 	if rc.isGroupFull(c.groupLabel) {
 		if rc.isPendingForGroupFull(c.groupLabel) {
 			return false, false
@@ -145,11 +124,9 @@ func (rc *runnerClients) tentativeJoin(c *client) (addedToPool bool, addedToPend
 
 func (rc *runnerClients) resetPoolFromPending() (update bool) {
 	// reset pending
-	rc.mu.Lock()
 	oldPending := make([]*client, len(rc.pending))
 	copy(oldPending, rc.pending)
 	rc.pending = nil // nil is a valid slice https://github.com/uber-go/guide/blob/master/style.md#nil-is-a-valid-slice
-	rc.mu.Unlock()
 
 	// fill
 	for _, c := range oldPending {
@@ -161,9 +138,6 @@ func (rc *runnerClients) resetPoolFromPending() (update bool) {
 }
 
 func (rc *runnerClients) delete(c *client) (wasInPool bool) {
-	rc.mu.Lock()
-	defer rc.mu.Unlock()
-
 	delete(rc.all, c)
 
 	if c.isSupervisor {

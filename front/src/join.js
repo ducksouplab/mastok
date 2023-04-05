@@ -117,9 +117,9 @@ const start = function (slug) {
         groupingAnswers.append(answerEl);
       }
       // show submit button
-      const formChecks = document.querySelectorAll("#grouping-answers .form-check");
+      const formChecks = document.querySelectorAll("#grouping-answers input");
       for (const c of formChecks) {
-        c.addEventListener("click", () => {
+        c.addEventListener("change", () => {
           document.getElementById("grouping-submit").style.display = "";
         });
       }

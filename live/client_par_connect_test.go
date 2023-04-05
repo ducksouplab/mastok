@@ -112,6 +112,37 @@ func TestClient_Participant_Connect_Integration(t *testing.T) {
 		}))
 	})
 
+	t.Run("participant is moved from Pending to Pool when other quits Pool", func(t *testing.T) {
+		ns := "fxt_par_connect_full"
+		defer tearDown(ns)
+
+		campaign, _ := models.GetCampaignByNamespace(ns)
+
+		// the fixture data is what we expected
+		assert.Equal(t, 4, campaign.PerSession)
+		assert.Equal(t, campaign.State, "Busy")
+		assert.Equal(t, campaign.Grouping, "")
+		assert.Equal(t, campaign.PerSession, 4)
+
+		wsParticipants := runParticipantStubs(ns, 8)
+		for _, ws := range wsParticipants {
+			ws.land().agree()
+		}
+		wsFirstInPool := wsParticipants[0]
+		wsFirstInPending := wsParticipants[4]
+		wsSecondInPending := wsParticipants[5]
+
+		wsFirstInPool.Close()
+
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			return wsFirstInPending.hasReceivedKind("PoolSize")
+		}))
+
+		assert.False(t, retryUntil(shortDuration, func() bool {
+			return wsSecondInPending.hasReceivedKind("PoolSize")
+		}))
+	})
+
 	t.Run("participant can't connect if pending is full", func(t *testing.T) {
 		ns := "fxt_par_connect_full"
 		defer tearDown(ns)

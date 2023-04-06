@@ -52,7 +52,7 @@ const processConsent = (html) => {
   return output;
 };
 
-const submitConsent = () => {
+const submitConsent = (ws) => {
   const checkboxes = document.querySelectorAll("#consent-container input[type=\"checkbox\"]");
   let accepted = true
   for (const c of checkboxes) {
@@ -113,7 +113,7 @@ const start = function (slug) {
       // on submit
       const submitButton = document.querySelector("#consent-container button");
       if (submitButton) {
-        submitButton.addEventListener("click", submitConsent);
+        submitButton.addEventListener("click", () => submitConsent(ws));
       }
       // show
       showOnly("consent-container");

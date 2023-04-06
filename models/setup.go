@@ -58,7 +58,7 @@ func ReinitDevDB() {
 			OtreeExperiment:    "chatroulette",
 			Namespace:          "dev_campaign_1",
 			Slug:               "dev_campaign_1_slug",
-			PerSession:         4,
+			PerSession:         2,
 			MaxSessions:        6,
 			ConcurrentSessions: 1,
 			Consent:            consentString,

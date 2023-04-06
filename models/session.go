@@ -49,7 +49,7 @@ func CreateSession(c *Campaign) (session Session, participantCodes []string, err
 	o := otree.Session{}
 
 	// GET code
-	if err = otree.PostOTreeJSON("/api/sessions/", args, &o); err != nil {
+	if err = otree.PostOTreeJSON("/api/sessions", args, &o); err != nil {
 		return
 	}
 	// GET more details (participant codes) and override s

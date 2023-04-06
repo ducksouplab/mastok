@@ -46,6 +46,7 @@ var sessionDetails2 = resource{
 }
 
 func TestSessions_Show(t *testing.T) {
+	// calls that'll be made within router handler
 	th.InterceptOtreeGetJSON("/api/sessions", sessionsData)
 	th.InterceptOtreeGetJSON("/api/sessions/code1", sessionDetails1)
 	th.InterceptOtreeGetJSON("/api/sessions/code2", sessionDetails2)

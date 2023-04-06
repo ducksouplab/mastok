@@ -22,6 +22,7 @@ func addSessionsRoutesTo(g *gin.RouterGroup) {
 		for i := range sessions { // use index to write to sessions
 			code := sessions[i].Code
 			sc := otree.NestedSessionDetails{}
+
 			err := otree.GetOTreeJSON("/api/sessions/"+code, &sc)
 			if err != nil {
 				log.Println(err)

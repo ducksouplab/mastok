@@ -168,6 +168,15 @@ var Fixtures []models.Campaign = []models.Campaign{
 	},
 	{
 		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_sup_paused2",
+		Slug:               "fxt_sup_paused2_slug",
+		PerSession:         8,
+		MaxSessions:        4,
+		ConcurrentSessions: 2,
+		State:              models.Paused,
+	},
+	{
+		OtreeExperiment:    "xp_name",
 		Namespace:          "fxt_sup_busy",
 		Slug:               "fxt_sup_busy_slug",
 		PerSession:         2,

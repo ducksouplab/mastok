@@ -2,3 +2,6 @@ FROM golang:1.20.2-bullseye
 
 # browse local sqlite db while developing
 RUN apt-get update && apt install sqlite3
+
+# for golang test output display
+RUN go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest

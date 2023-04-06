@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/ducksouplab/mastok/env"
@@ -15,6 +16,7 @@ func ParticipantStartURL(participantCode string) string {
 }
 
 func GetOTreeJSON(path string, target any) error {
+	log.Printf("[otree] GET request to %v", env.OTreeAPIURL+path)
 	// request
 	req, _ := http.NewRequest(http.MethodGet, env.OTreeAPIURL+path, nil)
 	req.Header.Add("otree-rest-key", env.OTreeKey)

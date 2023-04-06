@@ -99,6 +99,25 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		}), "supervisor should receive PoolSize:0/4")
 	})
 
+	t.Run("participant receives Running when supervisor updates Paused->Running", func(t *testing.T) {
+		ns := "fxt_sup_paused2"
+		defer tearDown(ns)
+
+		wsSup, campaign := runSupervisorStub(ns)
+
+		// the fixture data is what we expected
+		assert.Equal(t, "Paused", campaign.State)
+
+		wsSup.send(Message{"State", "Running"})
+
+		ws := runParticipantStub(ns)
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			t.Logf(">>>>>>>>>>>> %+v", ws.writes)
+			return ws.hasReceived(Message{"State", "Running"})
+		}))
+
+	})
+
 	t.Run("persists supervisor changed State after runner stopped", func(t *testing.T) {
 		ns := "fxt_sup_paused"
 		defer tearDown(ns)

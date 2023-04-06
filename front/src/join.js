@@ -24,11 +24,17 @@ const containers = [
 ];
 
 const show = (id) => {
-  document.getElementById(id).style.display = "";
+  const target = document.getElementById(id);
+  if (target) {
+    target.style.display = "";
+  }
 };
 
 const hide = (id) => {
-  document.getElementById(id).style.display = "none";
+  const target = document.getElementById(id);
+  if (target) {
+    target.style.display = "none";
+  }
 };
 
 const showOnly = (id) => {
@@ -37,7 +43,7 @@ const showOnly = (id) => {
   }
 };
 
-const processConcent = (html) => {
+const processConsent = (html) => {
   let output = html.replaceAll("<a ", '<a target="_blank"');
   output = html.replaceAll(
     '<input type="checkbox" disabled',
@@ -45,6 +51,20 @@ const processConcent = (html) => {
   );
   return output;
 };
+
+const submitConsent = () => {
+  const checkboxes = document.querySelectorAll("#consent-container input[type=\"checkbox\"]");
+  let accepted = true
+  for (const c of checkboxes) {
+    accepted = accepted && c.checked
+  }
+  if(accepted) {
+    hide("alert-container");
+    ws.send(JSON.stringify({ kind: "Agree" }));
+  } else {
+    show("alert-container");
+  }
+}
 
 const start = function (slug) {
   const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
@@ -77,7 +97,7 @@ const start = function (slug) {
     console.log(kind, payload);
     if (kind === "Consent") {
       document.querySelector("#consent-container p").innerHTML =
-        processConcent(payload);
+        processConsent(payload);
       hide("alert-container");
       // ease checkboxes clicking
       const lis = document.querySelectorAll("#consent-container li");
@@ -91,21 +111,10 @@ const start = function (slug) {
         });
       }
       // on submit
-      document
-        .querySelector("#consent-container button")
-        .addEventListener("click", () => {
-          const checkboxes = document.querySelectorAll("#consent-container input[type=\"checkbox\"]");
-          let accepted = true
-          for (const c of checkboxes) {
-            accepted = accepted && c.checked
-          }
-          if(accepted) {
-            hide("alert-container");
-            ws.send(JSON.stringify({ kind: "Agree" }));
-          } else {
-            show("alert-container");
-          }
-        });
+      const submitButton = document.querySelector("#consent-container button");
+      if (submitButton) {
+        submitButton.addEventListener("click", submitConsent);
+      }
       // show
       showOnly("consent-container");
     } else if (kind === "Grouping") {

@@ -147,13 +147,13 @@ func TestClient_Otree_Integration(t *testing.T) {
 
 		wsSup, campaign := runSupervisorStub(ns)
 
-		// // the fixture data is what we expected
+		// the fixture data is what we expected
 		assert.Equal(t, 2, campaign.PerSession)
 		assert.Equal(t, 2, campaign.ConcurrentSessions)
 		assert.Equal(t, campaign.Grouping, "")
 
-		// // oTree interception is needed when SessionStart
-		th.InterceptOtreePostSession()
+		// oTree interception is needed when SessionStart
+		th.InterceptOtreeMultiplePostSession()
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
 

@@ -40,17 +40,28 @@ var groupingValidator validator.Func = func(fl validator.FieldLevel) bool {
 	return size == perSessionInt
 }
 
+var consentValidator validator.Func = func(fl validator.FieldLevel) bool {
+	consentString := fl.Field().String()
+	ok := strings.Contains(consentString, "[accept]")
+	ok = ok && strings.Contains(consentString, "[/accept]")
+	return ok
+}
+
 func addCustomValidators() {
 	// add custom validators
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("namespaceValidate", namespaceValidator)
 		v.RegisterValidation("groupingValidate", groupingValidator)
+		v.RegisterValidation("consentValidate", consentValidator)
 	}
 }
 
 func changeErrorMessage(err string) string {
 	if strings.Contains(err, "Campaign.Grouping") {
 		return "Format invalid: grouping rule (or check the sum of groups matches 'Participants per session')"
+	}
+	if strings.Contains(err, "Campaign.Consent") {
+		return "Format invalid: consent needs an [accept]Accept[/accept] tag"
 	}
 	output := strings.Replace(err, "UNIQUE constraint failed", "Already taken", 1)
 	output = strings.Replace(output, "campaigns.", "", 1)

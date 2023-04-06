@@ -32,6 +32,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		PerSession:         4,
 		MaxSessions:        2,
 		ConcurrentSessions: 2,
+		Consent:            "#Title\ntext\n[accept]Accept[/accept]",
 		State:              models.Running,
 	},
 	{
@@ -41,6 +42,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		PerSession:         4,
 		MaxSessions:        2,
 		ConcurrentSessions: 2,
+		Consent:            "#Title\ntext\n[accept]Accept[/accept]",
 		State:              models.Running,
 	},
 }

@@ -35,6 +35,7 @@ func newCampaignForm(namespace string) campaignForm {
 		concurrentSessions: "2",
 		sessionDuration:    "15",
 		waitingLimit:       "5",
+		consent:            "#Title\ntext\n[accept]Accept[/accept]",
 	}
 }
 
@@ -49,6 +50,7 @@ func newCampaignFormFromModel(c *models.Campaign) campaignForm {
 		concurrentSessions: strconv.Itoa(c.ConcurrentSessions),
 		sessionDuration:    strconv.Itoa(c.SessionDuration),
 		waitingLimit:       strconv.Itoa(c.WaitingLimit),
+		consent:            c.Consent,
 	}
 }
 
@@ -104,38 +106,36 @@ func TestCampaignsSupervise_Unit(t *testing.T) {
 	})
 }
 
-func TestCampaigns_Integration(t *testing.T) {
+func TestCampaigns_Post_Integration(t *testing.T) {
 	router := getTestRouter()
 
-	t.Run("fails creating if duplicate namespace", func(t *testing.T) {
+	// Namespace tests
+
+	t.Run("fails creating if missing namespace", func(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("namespace0")
+		data := campaignFormData(cf)
+		data.Del("namespace")
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
+	t.Run("fails creating if duplicate namespace", func(t *testing.T) {
 		// fill campaign form
 		cf1 := newCampaignForm("namespace1")
 		cf2 := newCampaignForm("namespace1")
 		cf2.slug = "namespace2_different_slug"
 		data := campaignFormData(cf1)
 		dataDupNamespace := campaignFormData(cf2)
+
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
 		// POST
 		MastokPostRequestWithAuth(router, "/campaigns/new", data)
 		res := MastokPostRequestWithAuth(router, "/campaigns/new", dataDupNamespace)
-		// t.Log(res.Body.String())
-		assert.Equal(t, 422, res.Code)
-	})
-
-	t.Run("fails creating if duplicate slug", func(t *testing.T) {
-		th.InterceptOtreeGetSessionConfigs()
-		defer th.InterceptOff()
-		// fill campaign form
-		cf1 := newCampaignForm("namespace2")
-		cf2 := newCampaignForm("namespace2bis")
-		cf1.slug = "namespace3_slug"
-		cf2.slug = "namespace3_slug"
-		data := campaignFormData(cf1)
-		dataDupSlug := campaignFormData(cf2)
-		// POST
-		MastokPostRequestWithAuth(router, "/campaigns/new", data)
-		res := MastokPostRequestWithAuth(router, "/campaigns/new", dataDupSlug)
 		// t.Log(res.Body.String())
 		assert.Equal(t, 422, res.Code)
 	})
@@ -144,8 +144,8 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf := newCampaignForm("namespace3#")
-		cf.slug = "namespace4_slug"
+		cf := newCampaignForm("namespace2#")
+		cf.slug = "namespace2_slug"
 		data := campaignFormData(cf)
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
@@ -164,13 +164,47 @@ func TestCampaigns_Integration(t *testing.T) {
 		assert.Equal(t, 422, res.Code)
 	})
 
+	// Slug tests
+
 	t.Run("fails creating if missing slug", func(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf := newCampaignForm("namespace4")
+		cf := newCampaignForm("ns_for_slug1")
 		data := campaignFormData(cf)
 		data.Del("slug")
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
+	t.Run("fails creating if duplicate slug", func(t *testing.T) {
+		// fill campaign form
+		cf1 := newCampaignForm("ns_for_slug2")
+		cf2 := newCampaignForm("ns_for_slug2bis")
+		cf1.slug = "ns_for_slug_slug"
+		cf2.slug = "ns_for_slug_slug"
+		data := campaignFormData(cf1)
+		dataDupSlug := campaignFormData(cf2)
+
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// POST
+		MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", dataDupSlug)
+		// t.Log(res.Body.String())
+		assert.Equal(t, 422, res.Code)
+	})
+
+	// PerSession tests
+
+	t.Run("fails creating if missing PerSession", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("ns_for_per_session1")
+		data := campaignFormData(cf)
+		data.Del("per_session")
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
 		assert.Equal(t, 422, res.Code)
@@ -180,7 +214,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf := newCampaignForm("namespace5")
+		cf := newCampaignForm("ns_for_per_session2")
 		cf.perSession = "100"
 		data := campaignFormData(cf)
 		// POST
@@ -188,11 +222,81 @@ func TestCampaigns_Integration(t *testing.T) {
 		assert.Equal(t, 422, res.Code)
 	})
 
+	// MaxSessions tests
+
+	t.Run("fails creating if missing MaxSessions", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("ns_for_max_sessions")
+		data := campaignFormData(cf)
+		data.Del("max_sessions")
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
+	// ConcurrentSessions tests
+
+	t.Run("fails creating if missing ConcurrentSessions", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("ns_for_concurrent_sessions")
+		data := campaignFormData(cf)
+		data.Del("concurrent_sessions")
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
+	// ConcurrentSessions tests
+
+	t.Run("fails creating if missing SessionDuration", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("ns_for_session_duration")
+		data := campaignFormData(cf)
+		data.Del("session_duration")
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
+	// Consent tests
+
+	t.Run("fails creating if missing Consent", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("ns_for_consent1")
+		data := campaignFormData(cf)
+		data.Del("consent")
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
+	t.Run("fails creating if Consent misses [accept][/accept]", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("ns_for_consent2")
+		data := campaignFormData(cf)
+		data.Set("consent", "#Title")
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
+	// Grouping tests
+
 	t.Run("fails creating if Grouping is missing Action", func(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf := newCampaignForm("namespace6")
+		cf := newCampaignForm("ns_for_grouping1")
 		cf.perSession = "4"
 		cf.grouping = "What is your gender?\nMale:2\nFemale:3"
 		data := campaignFormData(cf)
@@ -205,7 +309,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf := newCampaignForm("namespace6")
+		cf := newCampaignForm("ns_for_grouping2")
 		cf.perSession = "4"
 		cf.grouping = "What is your gender?\nMale:2\nFemale:3\nChoose"
 		data := campaignFormData(cf)
@@ -218,7 +322,7 @@ func TestCampaigns_Integration(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
-		cf := newCampaignForm("namespace7")
+		cf := newCampaignForm("ns_for_grouping3")
 		cf.perSession = "7"
 		cf.grouping = "What is your gender?\nMale:4\nFemale:3\nChoose"
 		data := campaignFormData(cf)
@@ -227,17 +331,32 @@ func TestCampaigns_Integration(t *testing.T) {
 		assert.Equal(t, 302, res.Code)
 	})
 
+	t.Run("creates if Grouping is empty", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignForm("ns_for_grouping4") // no grouping by default
+		data := campaignFormData(cf)
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 302, res.Code)
+	})
+
+}
+
+func TestCampaigns_Scenario(t *testing.T) {
+	router := getTestRouter()
+
 	t.Run("create then lists then supervises then edits", func(t *testing.T) {
 		th.InterceptOtreeGetSessionConfigs()
 		defer th.InterceptOff()
 		// fill campaign form
 		ns := "namespace_scenario"
 		cf := newCampaignForm(ns)
-		cf.consent = "- [ ] checkbox1\n- [ ] checkbox2"
+		cf.consent = "- [ ] checkbox1\n- [ ] checkbox2\n[accept]Accept[/accept]"
 		data := campaignFormData(cf)
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
-		// t.Log(res.Body.String())
 		assert.Equal(t, 302, res.Code)
 		// GET list
 		res = MastokGetRequestWithAuth(router, "/campaigns")

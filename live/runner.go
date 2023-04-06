@@ -203,7 +203,8 @@ func (r *runner) processTentativeJoin(target *client) (done bool) {
 	return false
 }
 
-func (r *runner) processState(newState string) (done bool) {
+func (r *runner) processStateUpdate(newState string) (done bool) {
+	r.state = newState
 	// persist
 	r.campaign.State = newState
 	models.DB.Save(r.campaign)
@@ -321,7 +322,7 @@ func (r *runner) loop() {
 			}
 		case m := <-r.supervisorCh:
 			state := m.Payload.(string)
-			if done := r.processState(state); done {
+			if done := r.processStateUpdate(state); done {
 				return
 			}
 		}

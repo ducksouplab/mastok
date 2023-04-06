@@ -23,7 +23,7 @@ func InterceptOff() {
 }
 
 func InterceptOtreeGetJSON(path string, json any) {
-	log.Printf("[gock] GET " + env.OTreeAPIURL + path)
+	log.Printf("[gock] expected GET %v%v", env.OTreeAPIURL, path)
 	gock.New(env.OTreeAPIURL).
 		Get(path).
 		Reply(200).
@@ -31,7 +31,7 @@ func InterceptOtreeGetJSON(path string, json any) {
 }
 
 func InterceptOtreeGetPrefixJSON(prefix string, json any) {
-	log.Printf("[gock] GET prefix " + env.OTreeAPIURL + prefix)
+	log.Printf("[gock] expected GET prefix %v%v", env.OTreeAPIURL, prefix)
 	gock.New(env.OTreeAPIURL).
 		AddMatcher(matchWithPrefix(prefix)).
 		Persist(). // can be called multiple times
@@ -40,7 +40,15 @@ func InterceptOtreeGetPrefixJSON(prefix string, json any) {
 }
 
 func InterceptOtreePostJSON(path string, json any) {
-	log.Printf("[gock] POST " + env.OTreeAPIURL + path)
+	log.Printf("[gock] expected POST " + env.OTreeAPIURL + path)
+	gock.New(env.OTreeAPIURL).
+		Post(path).
+		Reply(200).
+		JSON(json)
+}
+
+func InterceptOtreeMultiplePostJSON(path string, json any) {
+	log.Printf("[gock] expected POST " + env.OTreeAPIURL + path)
 	gock.New(env.OTreeAPIURL).
 		Post(path).
 		Persist(). // can be called multiple times
@@ -54,7 +62,12 @@ func InterceptOtreeGetSessionConfigs() {
 
 func InterceptOtreePostSession() {
 	//gock.Observe(gock.DumpRequest)
-	InterceptOtreePostJSON("/api/sessions/", OTREE_POST_SESSION)
+	InterceptOtreePostJSON("/api/sessions", OTREE_POST_SESSION)
+}
+
+func InterceptOtreeMultiplePostSession() {
+	//gock.Observe(gock.DumpRequest)
+	InterceptOtreeMultiplePostJSON("/api/sessions", OTREE_POST_SESSION)
 }
 
 func InterceptOtreeGetSession() {

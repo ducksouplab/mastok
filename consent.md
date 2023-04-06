@@ -8,5 +8,5 @@ Before participating in the experiment, it is required to read and accept the fo
 - [ ] I accept *description of requirement #1*
 - [ ] I accept *description of requirement #2*
 
-[start]Start[/start]
+[accept]Accept[/accept]
 [alert]Accepting conditions above is required before starting[/alert]

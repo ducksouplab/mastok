@@ -18,18 +18,21 @@ var DatabaseURL, OTreeAPIURL, OTreePublicURL, OTreeKey string
 // CAUTION: other init functions in "config" package may be called before this
 func init() {
 	Mode = GetEnvOr("MASTOK_MODE", "PROD")
+	ProjectRoot = GetEnvOr("MASTOK_PROJECT_ROOT", ".") + "/"
 	if Mode == "DEV" {
 		if err := godotenv.Load(".env"); err != nil {
 			log.Fatal(err)
 		}
-	}
-	if Mode == "BUILD_FRONT" || Mode == "RESET_DEV" {
+	} else if Mode == "TEST" {
+		if err := godotenv.Load(ProjectRoot + "test.env"); err != nil {
+			log.Fatal(err)
+		}
+	} else if Mode == "BUILD_FRONT" || Mode == "RESET_DEV" {
 		AsCommandLine = true
 	}
 	Port = GetEnvOr("MASTOK_PORT", "8190")
 	Origin = GetEnvOr("MASTOK_ORIGIN", "http://localhost:8190")
 	WebPrefix = GetEnvOr("MASTOK_WEB_PREFIX", "")
-	ProjectRoot = GetEnvOr("MASTOK_PROJECT_ROOT", ".") + "/"
 	BasicLogin = GetEnvOr("MASTOK_LOGIN", "mastok")
 	BasicPassword = GetEnvOr("MASTOK_PASSWORD", "mastok")
 	// no default value provided

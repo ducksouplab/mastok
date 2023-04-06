@@ -66,8 +66,29 @@
       </div>
     </div>
     <div class="col">
+      <div class="mb-4">
+        <label for="consent" class="form-label">Consent in markdown format*</label>
+        <textarea name="consent" id="consent" class="form-control" rows="10" required>{{ or .Campaign.Consent ""}}</textarea>
+        <div class="form-text">
+          <div class="row">
+            <div class="col-6">
+              <p class="m-0">Write markdown</p>
+              <code># Title</code><br/>
+              <code>- [X] pre-checked checkbox</code><br/>
+              <code>- [ ] paragraph that needs to be checked</code><br/>
+              <code>...</code>
+              <p class="m-0">Must end with</p>
+              <code>[accept]Accept[/accept]</code><br/>
+            </div>
+            <div class="col-6">
+              <p class="m-0">An alert tag should be added if checkboxes are used (this alert will only be shown if the participant tries to consent without ticking checkboxes)</p>
+              <code>[alert]Accepting conditions above is required before starting[/alert]</code><br/>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="mb-3">
-        <label for="grouping" class="form-label">Grouping rule (leave empty if no grouping is needed)</label>
+        <label for="grouping" class="form-label">Grouping rule (optional, leave empty if no grouping is needed)</label>
         <textarea name="grouping" id="grouping" class="form-control" rows="5">{{ or .Campaign.Grouping ""}}</textarea>
         <div class="form-text">
           <div class="row">
@@ -90,26 +111,6 @@
           <p class="m-0">The sum of groups size must match the "Participants per session" property (on the left),</p>
           <p class="m-0"><code>Action</code> is the text displayed in the button that validates the participant choice.</p>
         </div>
-      </div>
-      <div class="mb-3">
-        <label for="consent" class="form-label">Consent in markdown format</label>
-        <textarea name="consent" id="consent" class="form-control" rows="16">{{ or .Campaign.Consent ""}}</textarea>
-        <div class="form-text">
-          <div class="row">
-            <div class="col-6">
-              <p class="m-0">For instance</p>
-              <code># Title</code><br/><br/>
-              <code>- [X] pre-checked checkbox</code><br/>
-              <code>- [ ] paragraph that needs to be checked</code><br/>
-              <code>...</code>
-            </div>
-            <div class="col-6">
-              <p class="m-0">End with</p>
-              <code>[start]Start[/start]</code><br/>
-              <code>[alert]Accepting conditions above is required before starting[/alert]</code><br/>
-            </div>
-          </div>
-          <p class="m-0">If you include checkboxes, they need to be checked by participants before starting (or the [alert]...[/alert] contents will be shown).</p>
       </div>
     </div>
   </div>

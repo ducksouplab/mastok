@@ -188,6 +188,16 @@ const start = function (slug) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("[supervise] version 0.3.0");
+
+
+  await navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: true,
+  }).then((stream) => {
+    stream.getTracks().forEach(function(track) {
+      track.stop();
+    });
+  });
   const slugMatch = /join\/(.*)$/.exec(window.location.pathname);
   if (slugMatch) {
     const slug = slugMatch[1];

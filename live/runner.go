@@ -1,7 +1,6 @@
 package live
 
 import (
-	"log"
 	"time"
 
 	"github.com/ducksouplab/mastok/env"
@@ -40,7 +39,7 @@ type runner struct {
 }
 
 // Busy is a temporary state, participants can wait
-func isOn(state string) bool {
+func isRunningOrBusy(state string) bool {
 	return state == models.Running || state == models.Busy
 }
 
@@ -65,7 +64,7 @@ func newRunner(c *models.Campaign) *runner {
 		doneCh: make(chan struct{}),
 	}
 
-	if state != models.Running && state != models.Busy {
+	if !isRunningOrBusy(state) {
 		r.stopTicker()
 	}
 
@@ -93,7 +92,7 @@ func (r *runner) stop() {
 
 // when process* methods return true, the runner loop is supposed to be stopped
 func (r *runner) processRegister(target *client) (done bool) {
-	if isOn(r.state) || target.isSupervisor {
+	if isRunningOrBusy(r.state) || target.isSupervisor {
 		r.clients.add(target)
 
 		if target.isSupervisor {
@@ -204,6 +203,7 @@ func (r *runner) processTentativeJoin(target *client) (done bool) {
 }
 
 func (r *runner) processStateUpdate(newState string) (done bool) {
+	wasRunningOrBusy := isRunningOrBusy(r.state)
 	r.state = newState
 	// persist
 	r.campaign.State = newState
@@ -214,14 +214,13 @@ func (r *runner) processStateUpdate(newState string) (done bool) {
 	}
 	// may turn on runner
 	liveState := r.campaign.GetLiveState()
-	on := isOn(liveState)
-	oldOn := isOn(r.state)
-	if !oldOn && on {
+	runningOrBusy := isRunningOrBusy(liveState)
+	if !wasRunningOrBusy && runningOrBusy {
 		r.startTicker()
 	}
 	// notice or disconnect participants
 	for c := range r.clients.participants {
-		if on {
+		if runningOrBusy {
 			c.outgoingCh <- stateMessage(newState)
 		} else {
 			c.outgoingCh <- stateMessage(models.Unavailable)
@@ -233,7 +232,7 @@ func (r *runner) processStateUpdate(newState string) (done bool) {
 	return false
 }
 
-func (r *runner) checkIfStillBusy() {
+func (r *runner) updateStateIfNoMoreBusy() {
 	if !r.campaign.IsBusy() {
 		newState := r.campaign.State
 		r.state = newState
@@ -259,7 +258,6 @@ func (r *runner) processIfPoolReady() (done bool) {
 	// start session
 	newSession, participantCodes, err := models.CreateSession(r.campaign)
 	if err != nil {
-		log.Println("[runner] session creation failed: ", err)
 		return false
 	}
 	// send SessionStart with oTree URL forged with a unique code
@@ -294,7 +292,7 @@ func (r *runner) loop() {
 		select {
 		case <-r.checkStartTicker.C:
 			if r.state == models.Busy {
-				r.checkIfStillBusy()
+				r.updateStateIfNoMoreBusy()
 			} else if r.state == models.Running {
 				if done := r.processIfPoolReady(); done {
 					return

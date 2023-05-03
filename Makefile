@@ -6,10 +6,10 @@ buildfront:
 	@go build && MASTOK_MODE=BUILD_FRONT ./mastok
 deps:
 	@go get -t -u ./... && go mod tidy
-# see why "-p 1" here https://github.com/golang/go/issues/46959 + limiting the number
-# of processes connected to the test DB
 cleantest:
 	@go clean -testcache
+# see why "-p 1" here https://github.com/golang/go/issues/46959 + limiting the number
+# of processes connected to the test DB
 test:
 	@clear && MASTOK_MODE=TEST MASTOK_PROJECT_ROOT=`pwd` go test -p 1  ./...
 testv:

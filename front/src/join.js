@@ -149,12 +149,14 @@ const start = function (slug) {
       // show
       showOnly("grouping-container");
     } else if (kind === "PoolSize" && !state.starting) {
+      document.title = `Joining [${payload}]`;
       let sizes = document.querySelectorAll(".pool-size");
       for (let s of sizes) {
         s.innerHTML = payload;
       }
       showOnly("waiting-container");
     } else if (kind === "SessionStart") {
+      document.title = "Starting...";
       state.starting = true;
       // participant is joining experiment
       showOnly("joining-container");
@@ -162,6 +164,7 @@ const start = function (slug) {
         document.location.href = payload;
       }, 3000);
     } else if (kind === "Pending") {
+      document.title = "Waiting";
       showOnly("pending-container");
     } else if (kind === "Disconnect" && payload.startsWith("Redirect")) {
       // instant redirect since participant is rejoining experiment
@@ -171,6 +174,7 @@ const start = function (slug) {
       showOnly("full-container");
       ws.close();
     } else if (kind === "State" && payload == "Unavailable") {
+      document.title = "Unavailable Experiment";
       showOnly("unavailable-container");
       ws.close();
     } else if (kind === "State" && payload == "LandingFailed") {

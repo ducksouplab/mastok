@@ -112,7 +112,7 @@ func TestClient_Participant_Connect_Integration(t *testing.T) {
 		}))
 	})
 
-	t.Run("participant is moved from Pending to Pool when other quits Pool", func(t *testing.T) {
+	t.Run("participant is moved from Pending to Joining when other quits Joining", func(t *testing.T) {
 		ns := "fxt_par_connect_full"
 		defer tearDown(ns)
 
@@ -128,18 +128,18 @@ func TestClient_Participant_Connect_Integration(t *testing.T) {
 		for _, ws := range wsParticipants {
 			ws.land().agree()
 		}
-		wsFirstInPool := wsParticipants[0]
+		wsFirstInJoining := wsParticipants[0]
 		wsFirstInPending := wsParticipants[4]
 		wsSecondInPending := wsParticipants[5]
 
-		wsFirstInPool.Close()
+		wsFirstInJoining.Close()
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return wsFirstInPending.hasReceivedKind("PoolSize")
+			return wsFirstInPending.hasReceivedKind("JoiningSize")
 		}))
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			return wsSecondInPending.hasReceivedKind("PoolSize")
+			return wsSecondInPending.hasReceivedKind("JoiningSize")
 		}))
 	})
 

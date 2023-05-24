@@ -21,27 +21,27 @@ func TestClient_Participant_Integration(t *testing.T) {
 		}), "participant should receive State")
 	})
 
-	t.Run("without grouping, PoolSize is sent after Agree", func(t *testing.T) {
+	t.Run("without grouping, JoiningSize is sent after Agree", func(t *testing.T) {
 		ns := "fxt_par"
 		defer tearDown(ns)
 
 		ws := runParticipantStub(ns)
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			return ws.hasReceivedKind("PoolSize")
+			return ws.hasReceivedKind("JoiningSize")
 		}))
 
 		ws.land()
 
 		assert.False(t, retryUntil(shortDuration, func() bool {
-			return ws.hasReceivedKind("PoolSize")
+			return ws.hasReceivedKind("JoiningSize")
 		}))
 
 		ws.agree()
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws.hasReceivedKind("PoolSize")
-		}), "participant should receive PoolSize")
+			return ws.hasReceivedKind("JoiningSize")
+		}), "participant should receive JoiningSize")
 	})
 
 	t.Run("kicks participants if State is Paused", func(t *testing.T) {

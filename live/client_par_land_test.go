@@ -127,8 +127,8 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		// assert session has started
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longDuration, func() bool {
-				return ws.hasReceivedKind("SessionStart")
-			}), "participant should receive SessionStart with oTree starting link")
+				return ws.hasReceivedKind("Starting")
+			}), "participant should receive Starting with oTree starting link")
 		}
 
 		// first participant reconnects (same fingerprint)
@@ -168,8 +168,8 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		// assert session has started
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longDuration, func() bool {
-				return ws.hasReceivedKind("SessionStart")
-			}), "participant should receive SessionStart with oTree starting link")
+				return ws.hasReceivedKind("Starting")
+			}), "participant should receive Starting with oTree starting link")
 		}
 
 		// first participant reconnects (same fingerprint)
@@ -209,8 +209,8 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		// assert session has started
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longDuration, func() bool {
-				return ws.hasReceivedKind("SessionStart")
-			}), "participant should receive SessionStart with oTree starting link")
+				return ws.hasReceivedKind("Starting")
+			}), "participant should receive Starting with oTree starting link")
 		}
 
 		// first participant reconnects (same fingerprint)
@@ -250,8 +250,8 @@ func TestClient_Participant_Landing_Integration(t *testing.T) {
 		// assert session has started
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longerDuration, func() bool {
-				return ws.hasReceivedKind("SessionStart")
-			}), "participant should receive SessionStart with oTree starting link")
+				return ws.hasReceivedKind("Starting")
+			}), "participant should receive Starting with oTree starting link")
 		}
 
 		// first participant reconnects (same fingerprint)

@@ -5,6 +5,7 @@ import "time"
 type ExperimentConfig struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+	Doc  string `json:"doc"`
 }
 
 type NestedParticipant struct {

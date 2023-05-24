@@ -17,11 +17,9 @@
     <div class="row justify-content-center">
       <div class="col-4 card">
         <div class="card-body">
-          <div id="consent-container" style="display: none;">
-            <p class="card-text consent"></p>
-          </div>
+          <div id="consent-container" style="display: none;"></div>
           <div id="grouping-container" style="display: none;">
-            <p class="card-text grouping">
+            <p class="grouping">
               <form id="grouping-form">
                 <h5 id="grouping-question" class="card-title"></h5>
                 <div id="grouping-answers" class="mb-3"></div>
@@ -31,11 +29,11 @@
           </div>
           <div id="waiting-container" class="text-center" style="display: none;">
             <h5 class="card-title">Waiting for participants</h5>
-            <p class="card-text">Connected <span class="pool-size">...</span></p>
+            <p>Connected <span class="joining-size">...</span></p>
           </div>
           <div id="joining-container" class="text-center" style="display: none;">
             <h5 class="card-title">Joining</h5>
-            <p class="card-text">Connected <span class="pool-size">...</span></p>
+            <p>Connected <span class="joining-size">...</span></p>
             <div class="d-flex justify-content-center">
               <div class="spinner-border text-secondary mb-3" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -58,6 +56,10 @@
             <h5 class="card-title">Too many users connected from this network</h5>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="row" id="instructions-container" style="display: none;">
+      <div class="col-8 offset-2">
       </div>
     </div>
   </div>

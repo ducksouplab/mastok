@@ -79,18 +79,18 @@ When participant arrives on the campaign join page (Share URL), here is a typica
 - if `Land` is accepted, the participant is asked to agree with the session rules
 - if yes, the client sends a `Agree` message to the server
 - if campaign relies on grouping participants, the participant is asked to select a group (for instance male or female), then the js client sends a `Connect` message to the server. If there is not grouping, `Connect` is not needed
-- now the participant has joined the waiting room and a `PoolSize` message update is sent from the server (or `Pending` if there are too many people in the pool)
-- when the waiting pool is full (ready), the client receives a `SessionStart` message from the server
+- now the participant has joined the waiting room and a `Joining` message update is sent from the server (or `Pending` if there are too many people in the joining pool)
+- when the joining pool is full (ready), the client receives a `SessionStart` message from the server
 
 ## Participant messages
 
-The server may send the following messages to a participant: `State`, `Consent`, `Grouping`, `PoolSize`, `Pending`, `SessionStart`, `Disconnect`.
+The server may send the following messages to a participant: `State`, `Consent`, `Grouping`, `Pending`, `Joining`, `Instructions`, `SessionStart`, `Disconnect`.
 
 A participant may send the following messages to the server: `Land`, `Agree`, `Connect`.
 
 ## Supervisor messages
 
-The server may send the following messages to a supervisor: `State`, `PoolSize`, `PendingSize`, `SessionStart`.
+The server may send the following messages to a supervisor: `State`, `JoiningSize`, `PendingSize`, `SessionStart`.
 
 A supervisor may send the following messages to the server: `State` (to update it).
 

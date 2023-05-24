@@ -26,13 +26,13 @@ func TestRunner_Integration(t *testing.T) {
 		// participants agree
 		ws1.land().agree()
 		ws2.land().agree()
-		// clients write PoolSize
+		// clients write JoiningSize
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws1.isLastWrite(Message{"PoolSize", "2/4"})
-		}), "participant should receive PoolSize:2/4")
+			return ws1.isLastWrite(Message{"JoiningSize", "2/4"})
+		}), "participant should receive JoiningSize:2/4")
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws2.isLastWrite(Message{"PoolSize", "2/4"})
-		}), "participant should receive PoolSize:2/4")
+			return ws2.hasReceived(Message{"JoiningSize", "2/4"})
+		}), "participant should receive JoiningSize:2/4")
 	})
 
 	t.Run("cleans up runner when closed", func(t *testing.T) {

@@ -69,9 +69,9 @@ const start = function (namespace) {
         hide("paused-container");
         show("completed-container");
       } 
-    } else if(kind === 'PoolSize') {
+    } else if(kind === 'JoiningSize') {
       updateHasParticipants(payload);
-      document.getElementById("pool-size").innerText = payload;
+      document.getElementById("joining-size").innerText = payload;
     } else if(kind === 'PendingSize') {
       document.getElementById("pending-size").innerText = payload;
     } else if(kind === 'SessionStart') {

@@ -11,6 +11,8 @@ import (
 // in case there is no grouping
 const defaultGroupLabel = "default"
 
+// Participant or supervisor messages
+
 func stateMessage(state string) Message {
 	return Message{
 		Kind:    "State",
@@ -18,12 +20,14 @@ func stateMessage(state string) Message {
 	}
 }
 
-func poolSizeMessage(r *runner) Message {
+func joiningSizeMessage(r *runner) Message {
 	return Message{
-		Kind:    "PoolSize",
-		Payload: strconv.Itoa(r.clients.poolSize()) + "/" + strconv.Itoa(r.campaign.PerSession),
+		Kind:    "JoiningSize",
+		Payload: strconv.Itoa(r.clients.joiningSize()) + "/" + strconv.Itoa(r.campaign.PerSession),
 	}
 }
+
+// Supervisor messages
 
 func pendingSizeMessage(r *runner) Message {
 	return Message{
@@ -32,17 +36,19 @@ func pendingSizeMessage(r *runner) Message {
 	}
 }
 
-func sessionStartParticipantMessage(code string) Message {
-	return Message{
-		Kind:    "SessionStart",
-		Payload: otree.ParticipantStartURL(code),
-	}
-}
-
-func sessionStartSupervisorMessage(session models.Session) Message {
+func sessionStartMessage(session models.Session) Message {
 	return Message{
 		Kind:    "SessionStart",
 		Payload: session,
+	}
+}
+
+// Participant messages
+
+func startingMessage(code string) Message {
+	return Message{
+		Kind:    "Starting",
+		Payload: otree.ParticipantStartURL(code),
 	}
 }
 
@@ -63,6 +69,13 @@ func groupingMessage(c *models.Campaign) Message {
 	return Message{
 		Kind:    "Grouping",
 		Payload: c.Grouping,
+	}
+}
+
+func instructionsMessage(c *models.Campaign) Message {
+	return Message{
+		Kind:    "Instructions",
+		Payload: helpers.MarkdownToHTML(c.Instructions),
 	}
 }
 

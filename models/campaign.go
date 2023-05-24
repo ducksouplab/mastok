@@ -39,8 +39,9 @@ type Campaign struct {
 	SessionDuration    int    `form:"session_duration" binding:"required" gorm:"default:10"`
 	WaitingLimit       int    `form:"waiting_limit" binding:"gte=1,lte=12" gorm:"default:5"`
 	// extra configuration
-	Consent  string `form:"consent" binding:"required,consentValidate" gorm:"size:65535"`
-	Grouping string `form:"grouping" binding:"groupingValidate=PerSession" gorm:"size:1024"`
+	Consent      string `form:"consent" binding:"required,consentValidate" gorm:"size:65535"`
+	Grouping     string `form:"grouping" binding:"groupingValidate=PerSession" gorm:"size:1024"`
+	Instructions string `form:"instructions" gorm:"size:65535"`
 	// evolving
 	State           string `gorm:"default:Paused"`
 	StartedSessions int    `gorm:"default:0"`

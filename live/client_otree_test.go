@@ -12,7 +12,7 @@ import (
 
 func TestClient_Otree_Integration(t *testing.T) {
 
-	t.Run("creates oTree session and sends relevant SessionStart to participants and supervisors", func(t *testing.T) {
+	t.Run("creates oTree session and sends relevant Starting/SessionStart to participants and supervisors", func(t *testing.T) {
 		ns := "fxt_otree_to_be_launched"
 		perSession := 4
 		defer tearDown(ns)
@@ -49,19 +49,19 @@ func TestClient_Otree_Integration(t *testing.T) {
 		urlsMap := map[string]bool{}
 		for _, ws := range wsSlice {
 			assert.True(t, retryUntil(longDuration, func() bool {
-				found, ok := ws.firstOfKind("SessionStart")
+				found, ok := ws.firstOfKind("Starting")
 				if ok {
 					url := found.Payload.(string)
 					urlsMap[url] = true
 					return strings.Contains(url, "/InitializeParticipant/")
 				}
 				return false
-			}), "participant should receive SessionStart with oTree starting link")
+			}), "participant should receive Starting with oTree starting link")
 		}
 		assert.Equal(t, len(wsSlice), len(urlsMap), "participants should received different oTree starting links")
 	})
 
-	t.Run("pool and pending are updated after StartSession", func(t *testing.T) {
+	t.Run("joining and pending are updated after SessionStart", func(t *testing.T) {
 		ns := "fxt_otree_groups_to_be_launched"
 		defer tearDown(ns)
 
@@ -92,7 +92,7 @@ func TestClient_Otree_Integration(t *testing.T) {
 
 		wsSup.ClearTillMessage(Message{"SessionStart", "*"})
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return wsSup.hasReceived(Message{"PoolSize", "3/4"})
+			return wsSup.hasReceived(Message{"JoiningSize", "3/4"})
 		}))
 	})
 

@@ -12,13 +12,13 @@ import (
 const TTL = 120
 
 var (
-	expCache experimentCache
+	cache experimentCache
 )
 
 type experimentCache struct {
 	sync.Mutex
 	updatedAt time.Time
-	names     []string
+	configs   []otree.ExperimentConfig
 }
 
 func init() {
@@ -26,7 +26,7 @@ func init() {
 		// don't load cache in command line mode
 		return
 	}
-	expCache = experimentCache{sync.Mutex{}, time.Now(), nil}
+	cache = experimentCache{sync.Mutex{}, time.Now(), nil}
 	if env.Mode != "TEST" {
 		GetExperiments()
 	}
@@ -36,25 +36,23 @@ func notExpired(t time.Time) bool {
 	return time.Since(t).Seconds() < TTL
 }
 
-func GetExperiments() []string {
+func GetExperiments() []otree.ExperimentConfig {
 	// use cache
-	if expCache.names != nil && notExpired(expCache.updatedAt) {
-		return expCache.names
+	if cache.configs != nil && notExpired(cache.updatedAt) {
+		return cache.configs
 	}
 	// or (re)fetch and update cache
 	var configs []otree.ExperimentConfig
 	err := otree.GetOTreeJSON("/api/session_configs", &configs)
 	if err != nil {
 		log.Fatal(err)
+		return nil
 	}
 
-	expCache.Lock()
-	var list []string
-	for _, config := range configs {
-		list = append(list, config.Name)
-	}
-	expCache.updatedAt = time.Now()
-	expCache.Unlock()
+	cache.Lock()
+	cache.configs = configs
+	cache.updatedAt = time.Now()
+	cache.Unlock()
 
-	return list
+	return configs
 }

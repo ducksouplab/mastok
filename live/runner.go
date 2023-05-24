@@ -98,7 +98,7 @@ func (r *runner) processRegister(target *client) (done bool) {
 		if target.isSupervisor {
 			target.outgoingCh <- stateMessage(r.campaign.GetLiveState()) // can be busy
 			// only inform supervisor client about the room size right away
-			target.outgoingCh <- poolSizeMessage(r)
+			target.outgoingCh <- joiningSizeMessage(r)
 			target.outgoingCh <- pendingSizeMessage(r)
 		} else {
 			target.outgoingCh <- stateMessage(r.campaign.State)
@@ -117,14 +117,14 @@ func (r *runner) processRegister(target *client) (done bool) {
 
 func (r *runner) processUnregister(target *client) (done bool) {
 	// deletes client
-	if wasInPool := r.clients.delete(target); wasInPool {
-		r.clients.addOneToPoolFromPending()
-		// tells the pool and supervisors that the room size has changed
-		for c := range r.clients.pool {
-			c.outgoingCh <- poolSizeMessage(r)
+	if wasInJoining := r.clients.delete(target); wasInJoining {
+		r.clients.addOneToJoiningFromPending()
+		// tells the joining pool and supervisors that the room size has changed
+		for c := range r.clients.joining {
+			c.outgoingCh <- joiningSizeMessage(r)
 		}
 		for c := range r.clients.supervisors {
-			c.outgoingCh <- poolSizeMessage(r)
+			c.outgoingCh <- joiningSizeMessage(r)
 			c.outgoingCh <- pendingSizeMessage(r)
 		}
 	} else {
@@ -178,8 +178,8 @@ func (r *runner) processLand(target *client, fingerprint string) (done bool) {
 }
 
 func (r *runner) processTentativeJoin(target *client) (done bool) {
-	addedToPool, addedToPending := r.clients.tentativeJoin(target)
-	if !addedToPool {
+	addedToJoining, addedToPending := r.clients.tentativeJoin(target)
+	if !addedToJoining {
 		if addedToPending {
 			target.outgoingCh <- pendingMessage()
 			for c := range r.clients.supervisors {
@@ -192,13 +192,15 @@ func (r *runner) processTentativeJoin(target *client) (done bool) {
 			}
 		}
 	}
-	// inform everyone (participants in pool and supervisors) about the new room size
-	for c := range r.clients.pool {
-		c.outgoingCh <- poolSizeMessage(r)
+	// inform participants in the joining pool and supervisors about the new room size
+	for c := range r.clients.joining {
+		c.outgoingCh <- joiningSizeMessage(r)
 	}
 	for c := range r.clients.supervisors {
-		c.outgoingCh <- poolSizeMessage(r)
+		c.outgoingCh <- joiningSizeMessage(r)
 	}
+	// inform target of instructions
+	target.outgoingCh <- instructionsMessage(r.campaign)
 	return false
 }
 
@@ -242,9 +244,9 @@ func (r *runner) updateStateIfNoMoreBusy() {
 	}
 }
 
-func (r *runner) processIfPoolReady() (done bool) {
-	// check if there is a valid pool pending
-	ready := r.clients.isPoolFull() && !r.campaign.IsBusy()
+func (r *runner) processIfJoiningReady() (done bool) {
+	// check if there is a valid pool ready to join
+	ready := r.clients.isJoiningFull() && !r.campaign.IsBusy()
 	if !ready {
 		// update supervisors clients with state if has changed
 		if r.state != r.campaign.GetLiveState() {
@@ -260,13 +262,13 @@ func (r *runner) processIfPoolReady() (done bool) {
 	if err != nil {
 		return false
 	}
-	// send SessionStart with oTree URL forged with a unique code
+	// send Starting with oTree URL forged with a unique code
 	participantIndex := 0
 	var inSession []*client
-	for c := range r.clients.pool {
+	for c := range r.clients.joining {
 		inSession = append(inSession, c)
 		code := participantCodes[participantIndex]
-		c.outgoingCh <- sessionStartParticipantMessage(code)
+		c.outgoingCh <- startingMessage(code)
 		models.CreateParticipation(newSession, c.fingerprint, code)
 		participantIndex++
 	}
@@ -274,10 +276,10 @@ func (r *runner) processIfPoolReady() (done bool) {
 	r.state = r.campaign.GetLiveState()
 	// notice supervisors
 	for c := range r.clients.supervisors {
-		c.outgoingCh <- sessionStartSupervisorMessage(newSession)
+		c.outgoingCh <- sessionStartMessage(newSession)
 		c.outgoingCh <- stateMessage(r.state) // if state becomes Busy
 	}
-	// empty the pool (unregister will fill the pool from pending if possible)
+	// empty the joining pool (unregister will fill the pool from pending if possible)
 	for _, c := range inSession {
 		if done := r.processUnregisterWithReason(c, disconnectMessage("Start")); done {
 			return true
@@ -294,7 +296,7 @@ func (r *runner) loop() {
 			if r.state == models.Busy {
 				r.updateStateIfNoMoreBusy()
 			} else if r.state == models.Running {
-				if done := r.processIfPoolReady(); done {
+				if done := r.processIfJoiningReady(); done {
 					return
 				}
 			} else { // Paused or Completed

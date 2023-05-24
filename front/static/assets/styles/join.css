@@ -13,3 +13,26 @@ h5 {
 label {
   cursor: pointer;
 }
+
+#instructions-container > div {
+  margin-top: 80px;
+  background-color: #fafafa;
+  padding: 16px 24px;
+  border-radius: 8px;
+}
+
+#instructions-container h1 {
+  font-size: 1.5em;
+}
+
+#instructions-container h2 {
+  font-size: 1.3em;
+}
+
+#instructions-container h3 {
+  font-size: 1.1em;
+}
+
+#instructions-container h4, #instructions-container h5, #instructions-container h6 {
+  font-size: 1em;
+}

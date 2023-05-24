@@ -12,12 +12,12 @@ type runnerClients struct {
 	perSession        int
 	maxPending        int
 	// state
-	supervisors  map[*client]bool
-	participants map[*client]bool
-	all          map[*client]bool            // supervisors and participants: used to broadcast messages
-	pool         map[*client]bool            // participants selected for next session
-	poolByGroup  map[string]map[*client]bool // same contents as pool, but categorized
-	pending      []*client                   // participants (ordered by arrival) for following sessions
+	supervisors    map[*client]bool
+	participants   map[*client]bool
+	all            map[*client]bool            // supervisors and participants: used to broadcast messages
+	joining        map[*client]bool            // participants selected for next session
+	joiningByGroup map[string]map[*client]bool // same contents as joining, but categorized
+	pendingList    []*client                   // participants (ordered by arrival) for following sessions
 }
 
 func newRunnerClients(c *models.Campaign, g *models.Grouping) *runnerClients {
@@ -53,8 +53,8 @@ func newRunnerClients(c *models.Campaign, g *models.Grouping) *runnerClients {
 		supervisors:       make(map[*client]bool),
 		participants:      make(map[*client]bool),
 		all:               make(map[*client]bool),
-		pool:              make(map[*client]bool), // have landed, agreed, chosen
-		poolByGroup:       groups,
+		joining:           make(map[*client]bool), // have landed, agreed, chosen
+		joiningByGroup:    groups,
 	}
 }
 
@@ -79,12 +79,12 @@ func sliceDelete(cSlice []*client, toRemove *client) (newSlice []*client) {
 }
 
 func (rc *runnerClients) isGroupFull(label string) bool {
-	return len(rc.poolByGroup[label]) == rc.sizeByGroup[label]
+	return len(rc.joiningByGroup[label]) == rc.sizeByGroup[label]
 }
 
 func (rc *runnerClients) isPendingForGroupFull(label string) bool {
 	var pendingForGroupCount int
-	for _, c := range rc.pending {
+	for _, c := range rc.pendingList {
 		if c.groupLabel == label {
 			pendingForGroupCount++
 		}
@@ -98,16 +98,16 @@ func (rc *runnerClients) isEmpty() bool {
 	return len(rc.all) == 0
 }
 
-func (rc *runnerClients) poolSize() (count int) {
-	return len(rc.pool)
+func (rc *runnerClients) joiningSize() (count int) {
+	return len(rc.joining)
 }
 
 func (rc *runnerClients) pendingSize() (count int) {
-	return len(rc.pending)
+	return len(rc.pendingList)
 }
 
-func (rc *runnerClients) isPoolFull() bool {
-	return len(rc.pool) == rc.perSession
+func (rc *runnerClients) isJoiningFull() bool {
+	return len(rc.joining) == rc.perSession
 }
 
 // read-write methods
@@ -121,29 +121,29 @@ func (rc *runnerClients) add(c *client) {
 	}
 }
 
-func (rc *runnerClients) tentativeJoin(c *client) (addedToPool bool, addedToPending bool) {
+func (rc *runnerClients) tentativeJoin(c *client) (addedToJoining bool, addedToPending bool) {
 	if rc.isGroupFull(c.groupLabel) {
 		if rc.isPendingForGroupFull(c.groupLabel) {
 			return false, false
 		} else {
-			if sliceContains(rc.pending, c) { // don't append twice
+			if sliceContains(rc.pendingList, c) { // don't append twice
 				return false, false
 			} else {
-				rc.pending = append(rc.pending, c)
+				rc.pendingList = append(rc.pendingList, c)
 				return false, true
 			}
 		}
 	} else {
-		rc.pool[c] = true
-		rc.poolByGroup[c.groupLabel][c] = true
+		rc.joining[c] = true
+		rc.joiningByGroup[c.groupLabel][c] = true
 		return true, false
 	}
 }
 
-func (rc *runnerClients) addOneToPoolFromPending() (updated bool) {
+func (rc *runnerClients) addOneToJoiningFromPending() (updated bool) {
 	var added *client
-	for _, c := range rc.pending {
-		if addedToPool, _ := rc.tentativeJoin(c); addedToPool {
+	for _, c := range rc.pendingList {
+		if addedToJoining, _ := rc.tentativeJoin(c); addedToJoining {
 			added = c
 			updated = true
 			break
@@ -151,27 +151,27 @@ func (rc *runnerClients) addOneToPoolFromPending() (updated bool) {
 	}
 
 	if updated {
-		rc.pending = sliceDelete(rc.pending, added)
+		rc.pendingList = sliceDelete(rc.pendingList, added)
 	}
 
 	return
 }
 
-func (rc *runnerClients) delete(c *client) (wasInPool bool) {
+func (rc *runnerClients) delete(c *client) (wasInJoining bool) {
 	delete(rc.all, c)
 
 	if c.isSupervisor {
 		delete(rc.supervisors, c)
 	} else {
 		delete(rc.participants, c)
-		delete(rc.pool, c)
+		delete(rc.joining, c)
 
-		group := rc.poolByGroup[c.groupLabel]
+		group := rc.joiningByGroup[c.groupLabel]
 		if _, isInGroup := group[c]; isInGroup {
 			delete(group, c)
-			wasInPool = true
+			wasInJoining = true
 		} else {
-			rc.pending = sliceDelete(rc.pending, c)
+			rc.pendingList = sliceDelete(rc.pendingList, c)
 		}
 	}
 	return

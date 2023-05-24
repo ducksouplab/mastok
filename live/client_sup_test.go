@@ -20,15 +20,15 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		assert.Equal(t, true, ok)
 	})
 
-	t.Run("supervisor receives PoolSize", func(t *testing.T) {
+	t.Run("supervisor receives JoiningSize", func(t *testing.T) {
 		ns := "fxt_sup"
 		defer tearDown(ns)
 
 		ws, _ := runSupervisorStub(ns)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return ws.hasReceivedKind("PoolSize")
-		}), "supervisor should receive PoolSize")
+			return ws.hasReceivedKind("JoiningSize")
+		}), "supervisor should receive JoiningSize")
 	})
 
 	t.Run("supervisor receives PendingSize", func(t *testing.T) {
@@ -43,12 +43,12 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		assert.Contains(t, campaign.Grouping, "Female:1")
 		assert.Contains(t, campaign.Grouping, "Other:1")
 
-		// first participants in pool
+		// first participants in joining pool
 		ws := runParticipantStub(ns)
 		ws.land().agree().connectWithGroup("Female")
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return wsSup.hasReceivedKind("PoolSize")
+			return wsSup.hasReceivedKind("JoiningSize")
 		}))
 
 		// other participants pending
@@ -95,8 +95,8 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		}
 		// participants have been disconnected
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			return wsSup.hasReceived(Message{"PoolSize", "0/4"})
-		}), "supervisor should receive PoolSize:0/4")
+			return wsSup.hasReceived(Message{"JoiningSize", "0/4"})
+		}), "supervisor should receive JoiningSize:0/4")
 	})
 
 	t.Run("participant receives Running when supervisor updates Paused->Running", func(t *testing.T) {

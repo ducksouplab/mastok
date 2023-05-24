@@ -13,7 +13,7 @@
   <div class="row">
     <div class="col">
       <div class="mb-3">
-        <label for="otree_experiment_id" class="form-label">oTree Experiment (can't be edited)</label>
+        <label for="otree_experiment_id" class="form-label">oTree experiment (can't be edited)</label>
         <input value="{{ .Campaign.OtreeExperiment }}" type="text" class="form-control" disabled>
       </div>
       <div class="mb-3">
@@ -59,18 +59,17 @@
     </div>
     <div class="col">
       <div class="mb-4">
-        <label for="consent" class="form-label">Consent in markdown format</label>
-        <textarea name="consent" id="consent" class="form-control" rows="10" required>{{ .Campaign.Consent }}</textarea>
+        <label for="consent" class="form-label">Consent in markdown</label>
+        <textarea name="consent" id="consent" class="form-control" rows="7" required>{{ .Campaign.Consent }}</textarea>
         <div class="form-text">
           <div class="row">
             <div class="col-6">
               <p class="m-0">Write markdown</p>
               <code># Title</code><br/>
               <code>- [X] pre-checked checkbox</code><br/>
-              <code>- [ ] paragraph that needs to be checked</code><br/>
-              <code>...</code>
-              <p class="m-0">Must end with</p>
-              <code>[accept]Accept[/accept]</code><br/>
+              <code>- [ ] paragraph that needs to be checked...</code><br/>
+              <p class="m-0">It must end with this tag ("Consent" can be changed)</p>
+              <code>[accept]Consent[/accept]</code><br/>
             </div>
             <div class="col-6">
               <p class="m-0">An alert tag should be added if checkboxes are used (this alert will only be shown if the participant tries to consent without ticking checkboxes)</p>
@@ -81,7 +80,7 @@
       </div>
       <div class="mb-3">
         <label for="grouping" class="form-label">Grouping rule (optional, leave empty if no grouping is needed)</label>
-        <textarea name="grouping" id="grouping" class="form-control" rows="5">{{ .Campaign.Grouping }}</textarea>
+        <textarea name="grouping" id="grouping" class="form-control" rows="4">{{ .Campaign.Grouping }}</textarea>
         <div class="form-text">
           <div class="row">
             <div class="col-6">
@@ -89,7 +88,7 @@
               <code>Question</code><br/>
               <code>Group1:size1</code><br/>
               <code>Group2:size2</code><br/>
-              <code>...more groups if needed...</code><br/>
+              <p class="m-0">...more groups if needed...</p>
               <code>Action</code>
             </div>
             <div class="col-6">
@@ -103,6 +102,10 @@
           <p class="m-0">The sum of groups size must match the "Participants per session" property (on the left),</p>
           <p class="m-0"><code>Action</code> is the text displayed in the button that validates the participant choice.</p>
         </div>
+      </div>
+      <div class="mb-3">
+        <label for="instructions" class="form-label">Instructions in markdown (optional, displayed when waiting)</label>
+        <textarea name="instructions" id="instructions" class="form-control" rows="4">{{ .Campaign.Instructions}}</textarea>
       </div>
     </div>
   </div>

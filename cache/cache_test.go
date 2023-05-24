@@ -14,7 +14,7 @@ func TestCache_Unit(t *testing.T) {
 
 		eCache := GetExperiments()
 
-		assert.Equal(t, "chatroulette", eCache[0])
-		assert.Equal(t, "rawroulette", eCache[1])
+		assert.Equal(t, "brainstorm", eCache[0].Name)
+		assert.Equal(t, "chatroulette", eCache[1].Name)
 	})
 }

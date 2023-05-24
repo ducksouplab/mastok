@@ -17,6 +17,7 @@ const containers = [
   "grouping-container",
   "waiting-container",
   "joining-container",
+  "instructions-container",
   "pending-container",
   "full-container",
   "unavailable-container",
@@ -96,7 +97,7 @@ const start = function (slug) {
     const { kind, payload } = looseJSONParse(event.data);
     console.log(kind, payload);
     if (kind === "Consent") {
-      document.querySelector("#consent-container p").innerHTML =
+      document.querySelector("#consent-container").innerHTML =
         processConsent(payload);
       hide("alert-container");
       // ease checkboxes clicking
@@ -148,14 +149,14 @@ const start = function (slug) {
         });
       // show
       showOnly("grouping-container");
-    } else if (kind === "PoolSize" && !state.starting) {
+    } else if (kind === "JoiningSize" && !state.starting) {
       document.title = `Joining [${payload}]`;
-      let sizes = document.querySelectorAll(".pool-size");
+      let sizes = document.querySelectorAll(".joining-size");
       for (let s of sizes) {
         s.innerHTML = payload;
       }
       showOnly("waiting-container");
-    } else if (kind === "SessionStart") {
+    } else if (kind === "Starting") {
       document.title = "Starting...";
       state.starting = true;
       // participant is joining experiment
@@ -163,6 +164,9 @@ const start = function (slug) {
       setTimeout(() => {
         document.location.href = payload;
       }, 3000);
+    } else if (kind === "Instructions") {
+      document.querySelector("#instructions-container div").innerHTML = payload;
+      show("instructions-container");
     } else if (kind === "Pending") {
       document.title = "Waiting";
       showOnly("pending-container");

@@ -175,4 +175,21 @@ func TestClient_Participant_Connect_Integration(t *testing.T) {
 			return wsFirstRejected.hasReceived(Message{"Disconnect", "Full"})
 		}))
 	})
+
+	t.Run("participant receives instructions", func(t *testing.T) {
+		ns := "fxt_instructions"
+		defer tearDown(ns)
+
+		campaign, _ := models.GetCampaignByNamespace(ns)
+
+		// the fixture data is what we expected
+		assert.Contains(t, campaign.Instructions, "Title")
+
+		ws := runParticipantStub(ns)
+		ws.land().agree()
+
+		assert.True(t, retryUntil(shortDuration, func() bool {
+			return ws.hasReceivedKind("Instructions")
+		}))
+	})
 }

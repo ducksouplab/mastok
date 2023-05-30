@@ -294,4 +294,18 @@ var Fixtures []models.Campaign = []models.Campaign{
 		StartedSessions:    0,
 		State:              models.Running,
 	},
+	// Instruction tests
+	{
+		OtreeExperiment:    "xp_name",
+		Namespace:          "fxt_instructions",
+		Slug:               "fxt_instructions_slug",
+		PerSession:         2,
+		JoinOnce:           true,
+		MaxSessions:        4,
+		ConcurrentSessions: 1,
+		SessionDuration:    sessionDurationTest,
+		Instructions:       "#Title\nParagraph\n",
+		StartedSessions:    0,
+		State:              models.Running,
+	},
 }

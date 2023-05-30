@@ -1,4 +1,4 @@
-import fingerprint from "./fingerprint";
+import fingerprint from "./lib/fingerprint";
 
 const state = {
   starting: false

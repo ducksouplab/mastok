@@ -21,3 +21,7 @@ input#share-url {
   border: 0 !important;
   outline: none;
 }
+
+.otree-select .form-text {
+  display:none;
+}

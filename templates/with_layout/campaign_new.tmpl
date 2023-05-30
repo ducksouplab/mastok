@@ -9,10 +9,10 @@
     {{end}}
   </div>
 </div>
-<form action="{{ WebPrefix }}/campaigns/new" method="POST">
+<form action="{{ WebPrefix }}/campaigns/new" method="POST" class="campaign-form">
   <div class="row">
     <div class="col">
-      <div class="mb-3">
+      <div class="mb-3 otree-select">
         <label for="otree_experiment_id" class="form-label">oTree experiment*</label>
         <select name="otree_experiment_id" id="otree_experiment_id" class="form-select"
           aria-label="Default select example" required>
@@ -20,6 +20,11 @@
           <option value="{{ .Name }}">{{ .Name }}</option>
           {{end}}
         </select>
+        <div class="otree-doc">
+          {{range .Experiments}}
+            <div class="form-text {{ .Name }}">From oTree: {{ .Doc }}</div>
+          {{end}}
+        </div>
       </div>
       <div class="mb-3">
         <label for="namespace" class="form-label">Unique namespace*</label>

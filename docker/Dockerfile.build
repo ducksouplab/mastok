@@ -12,16 +12,13 @@ COPY main.go .
 COPY consent.md .
 COPY cache ./cache
 COPY env ./env
-COPY front/build.go ./front/build.go
+COPY front ./front
 COPY helpers ./helpers
 COPY live ./live
 COPY models ./models
 COPY otree ./otree
 COPY router ./router
 COPY templates ./templates
-
-# JS source
-COPY front/src ./front/src
 
 # compile server and front
 RUN go build

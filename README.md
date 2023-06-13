@@ -51,6 +51,45 @@ And regarding connection to other services (no default values are provided):
 - please note having two `MASTOK_OTREE_*_URL` may be useful if Mastok connects to the REST API in a different way than the clients (participants), but they should point to the same running oTree instance
 - `MASTOK_OTREE_API_KEY` to authenticate to oTree API
 
+## Front-end processing
+
+JS and CSS files are processed by [esbuild](https://esbuild.github.io/) as defined in `front/build.go`.
+
+This can be launche with:
+
+```
+MASTOK_MODE=BUILD_FRONT ./mastok
+```
+
+This step also scans files in `templates/` and updates JS and CSS includes with the version defined in `front/config.yml`, for instance:
+
+```html
+<script src="{{ WebPrefix }}/assets/v1.1/js/join.js"></script>
+# changed to
+<script src="{{ WebPrefix }}/assets/v1.2/js/join.js"></script>
+```
+
+This is useful in particular to avoid cache issues.
+
+### Build assets
+
+To sumup, whenever you update and want to release a new version of JS or CSS files, you should first bump the `version` property in `front/config.yml` (always increase it, for instance from `v1.9` to `v1.10`), and then:
+
+```
+MASTOK_MODE=BUILD_FRONT ./mastok
+```
+
+### Adding a new asset
+
+Create a new file in `front/src/js` or `front/src/css`, declare it in `EntryPoints` in `front/build.go` and finally include it in your templates:
+
+```html
+# new js file
+<script src="{{ WebPrefix }}/assets/v1.1/js/new.js"></script>
+# new css file
+<link rel="stylesheet" href="{{ WebPrefix }}/assets/v1.1/css/new.css">
+```
+
 ## DuckSoup Docker image
 
 Build image:

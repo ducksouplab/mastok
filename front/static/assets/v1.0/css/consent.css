@@ -1,0 +1,16 @@
+/* front/src/css/consent.css */
+.consent h1 {
+  font-size: 1.4em;
+}
+.consent ul {
+  padding-left: 0;
+}
+.consent ul li {
+  list-style: none;
+}
+.consent ul li:hover {
+  cursor: pointer;
+}
+input[type=checkbox] {
+  cursor: pointer;
+}

@@ -11,8 +11,8 @@ import (
 
 func Build() {
 	devEnv := env.Mode == "DEV"
-	logPlugin := api.Plugin{
-		Name: "log",
+	templatesPlugin := api.Plugin{
+		Name: "Update templates",
 		Setup: func(build api.PluginBuild) {
 			build.OnEnd(func(result *api.BuildResult) (api.OnEndResult, error) {
 				if len(result.Errors) > 0 {
@@ -26,6 +26,8 @@ func Build() {
 						}
 					} else {
 						log.Println("[JS] build success")
+						updateTemplates()
+						cleanUpAssets()
 					}
 				}
 				return api.OnEndResult{}, nil
@@ -34,8 +36,15 @@ func Build() {
 	}
 
 	buildOptions := api.BuildOptions{
-		EntryPoints: []string{"front/src/join.js", "front/src/supervise.js", "front/src/form.js"},
-		// EntryNames:        "[dir]/v1/[name]",
+		EntryPoints: []string{
+			"front/src/js/form.js",
+			"front/src/js/join.js",
+			"front/src/js/supervise.js",
+			"front/src/css/consent.css",
+			"front/src/css/join.css",
+			"front/src/css/main.css",
+		},
+		EntryNames:        version + "/[dir]/[name]",
 		Bundle:            true,
 		MinifyWhitespace:  !devEnv,
 		MinifyIdentifiers: !devEnv,
@@ -46,8 +55,8 @@ func Build() {
 			{api.EngineSafari, "11"},
 			{api.EngineEdge, "79"},
 		},
-		Outdir:  "front/static/assets/scripts",
-		Plugins: []api.Plugin{logPlugin},
+		Outdir:  "front/static/assets",
+		Plugins: []api.Plugin{templatesPlugin},
 		Write:   true,
 	}
 	if devEnv {
@@ -61,10 +70,6 @@ func Build() {
 			log.Fatal(watchErr)
 		}
 	} else {
-		build := api.Build(buildOptions)
-
-		if len(build.Errors) > 0 {
-			log.Fatal("[JS] build error: " + build.Errors[0].Text)
-		}
+		api.Build(buildOptions)
 	}
 }

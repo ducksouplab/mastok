@@ -34,9 +34,10 @@ COPY --from=builder /build/mastok .
 # check .dockerignore to see generated scripts are excluded first...
 COPY consent.md .
 COPY front/static ./front/static
+COPY front/config.yml ./front/config.yml
 COPY templates ./templates
 # ... but added from build
-COPY --from=builder /build/front/static/assets/scripts ./front/static/assets/scripts
+COPY --from=builder /build/front/static/assets ./front/static/assets
 
 ENV GIN_MODE=release
 

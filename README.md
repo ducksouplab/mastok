@@ -53,19 +53,19 @@ And regarding connection to other services (no default values are provided):
 
 ## Front-end processing
 
-JS and CSS files are processed by [esbuild](https://esbuild.github.io/) as defined in `front/build.go`.
+JS and CSS files are processed by [esbuild](https://esbuild.github.io/) according to the configuration in `front/build.go`
 
-This can be launche with:
+Once `mastok` binary is built, launch JS/CSS processing with:
 
 ```
 MASTOK_MODE=BUILD_FRONT ./mastok
 ```
 
-This step also scans files in `templates/` and updates JS and CSS includes with the version defined in `front/config.yml`, for instance:
+Processed files are saved in `front/static/[version]/[js|css]/` where `version` is set and can be changed in `front/config.yml`. To ease things, whenever `version` is updated, the previous command also scans files in `templates/` and updates JS and CSS references, for instance:
 
 ```html
 <script src="{{ WebPrefix }}/assets/v1.1/js/join.js"></script>
-# changed to
+# becomes
 <script src="{{ WebPrefix }}/assets/v1.2/js/join.js"></script>
 ```
 
@@ -73,7 +73,7 @@ This is useful in particular to avoid cache issues.
 
 ### Build assets
 
-To sumup, whenever you update and want to release a new version of JS or CSS files, you should first bump the `version` property in `front/config.yml` (always increase it, for instance from `v1.9` to `v1.10`), and then:
+To sumup, whenever you update and want to release a new version of JS or CSS files, you should first bump the `version` property in `front/config.yml` (always increase it, for instance from `v1.9` to `v1.10`), and then run:
 
 ```
 MASTOK_MODE=BUILD_FRONT ./mastok
@@ -81,13 +81,19 @@ MASTOK_MODE=BUILD_FRONT ./mastok
 
 ### Adding a new asset
 
-Create a new file in `front/src/js` or `front/src/css`, declare it in `EntryPoints` in `front/build.go` and finally include it in your templates:
+Create a new file in `front/src/js` or `front/src/css`, declare it in `EntryPoints` in `front/build.go` and include it in your templates:
 
 ```html
 # new js file
 <script src="{{ WebPrefix }}/assets/v1.1/js/new.js"></script>
 # new css file
 <link rel="stylesheet" href="{{ WebPrefix }}/assets/v1.1/css/new.css">
+```
+
+Then process it, still with:
+
+```
+MASTOK_MODE=BUILD_FRONT ./mastok
 ```
 
 ## DuckSoup Docker image

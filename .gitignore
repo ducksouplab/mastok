@@ -5,7 +5,7 @@ mastok
 .env
 
 # front build assets
-front/static/assets/scripts
+front/static/assets
 
 # sqlite
 *.db

@@ -2,7 +2,7 @@
 .env
 
 # regenerated while building
-front/static/assets/scripts
+front/static/assets
 
 # not used
 .devcontainer

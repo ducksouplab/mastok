@@ -61,7 +61,7 @@ Once `mastok` binary is built, launch JS/CSS processing with:
 MASTOK_MODE=BUILD_FRONT ./mastok
 ```
 
-Processed files are saved in `front/static/[version]/[js|css]/` where `version` is set and can be changed in `front/config.yml`. To ease things, whenever `version` is updated, the previous command also scans files in `templates/` and updates JS and CSS references, for instance:
+Processed files are saved in `front/static/assets/[version]/[js|css]/` where `version` is defined and can be changed in `front/config.yml`. To ease things, whenever `version` is updated, the previous command also scans files in `templates/` and updates JS and CSS references, for instance:
 
 ```html
 <script src="{{ WebPrefix }}/assets/v1.1/js/join.js"></script>
@@ -69,7 +69,7 @@ Processed files are saved in `front/static/[version]/[js|css]/` where `version` 
 <script src="{{ WebPrefix }}/assets/v1.2/js/join.js"></script>
 ```
 
-This is useful in particular to avoid cache issues.
+This is useful to avoid cache issues.
 
 ### Build assets
 

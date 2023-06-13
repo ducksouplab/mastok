@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"log"
 	"sync"
 	"time"
@@ -18,7 +19,7 @@ var (
 type experimentCache struct {
 	sync.Mutex
 	updatedAt time.Time
-	configs   []otree.ExperimentConfig
+	configs   []otree.Config
 }
 
 func init() {
@@ -28,24 +29,24 @@ func init() {
 	}
 	cache = experimentCache{sync.Mutex{}, time.Now(), nil}
 	if env.Mode != "TEST" {
-		GetExperiments()
+		GetOTreeConfigs()
 	}
+	log.Printf("[cache] oTree experiments: %+v\n", cache.configs)
 }
 
 func notExpired(t time.Time) bool {
 	return time.Since(t).Seconds() < TTL
 }
 
-func GetExperiments() []otree.ExperimentConfig {
+func GetOTreeConfigs() []otree.Config {
 	// use cache
 	if cache.configs != nil && notExpired(cache.updatedAt) {
 		return cache.configs
 	}
 	// or (re)fetch and update cache
-	var configs []otree.ExperimentConfig
+	var configs []otree.Config
 	err := otree.GetOTreeJSON("/api/session_configs", &configs)
 	if err != nil {
-		log.Fatal(err)
 		return nil
 	}
 
@@ -55,4 +56,14 @@ func GetExperiments() []otree.ExperimentConfig {
 	cache.Unlock()
 
 	return configs
+}
+
+func GetOTreeConfig(name string) (config otree.Config, err error) {
+	for _, xp := range cache.configs {
+		if xp.Name == name {
+			return xp, nil
+		}
+	}
+	err = errors.New("not found")
+	return
 }

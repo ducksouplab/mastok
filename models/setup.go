@@ -55,7 +55,7 @@ func ReinitDevDB() {
 		consentString := helpers.ReadFile("consent.md")
 		// dev fixtures
 		var campaign = Campaign{
-			OtreeExperiment:    "chatroulette",
+			OTreeConfigName:    "chatroulette",
 			Namespace:          "dev_campaign_1",
 			Slug:               "dev_campaign_1_slug",
 			PerSession:         2,
@@ -76,7 +76,7 @@ func ReinitDevDB() {
 		// campaign.appendSession(&session)
 		// simple campaign
 		var otherCampaign = Campaign{
-			OtreeExperiment:    "chatroulette",
+			OTreeConfigName:    "chatroulette",
 			Namespace:          "dev_campaign_2",
 			Slug:               "dev_campaign_2_slug",
 			PerSession:         4,

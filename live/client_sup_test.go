@@ -112,10 +112,8 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 
 		ws := runParticipantStub(ns)
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			t.Logf(">>>>>>>>>>>> %+v", ws.writes)
 			return ws.hasReceived(Message{"State", "Running"})
 		}))
-
 	})
 
 	t.Run("persists supervisor changed State after runner stopped", func(t *testing.T) {

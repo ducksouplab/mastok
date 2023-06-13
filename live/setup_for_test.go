@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 var Fixtures []models.Campaign = []models.Campaign{
 	// runner tests
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_run",
 		Slug:               "fxt_run_slug",
 		PerSession:         4,
@@ -37,7 +37,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	},
 	// otree tests
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_otree_to_be_launched",
 		Slug:               "fxt_otree_to_be_launched_slug",
 		PerSession:         4,
@@ -46,7 +46,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_otree_groups_to_be_launched",
 		Slug:               "fxt_otree_groups_to_be_launched_slug",
 		PerSession:         4,
@@ -59,7 +59,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_otree_busy",
 		Slug:               "fxt_otree_busy_slug",
 		PerSession:         5,
@@ -70,7 +70,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_otree_concurrent",
 		Slug:               "fxt_otree_concurrent_slug",
 		PerSession:         2,
@@ -82,7 +82,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	},
 	// connect tests
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_connect_grouping",
 		Slug:               "fxt_connect_grouping_slug",
 		PerSession:         4,
@@ -93,7 +93,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_connect_pending_busy",
 		Slug:               "fxt_connect_pending_busy_slug",
 		PerSession:         4,
@@ -106,7 +106,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par_pending",
 		Slug:               "fxt_par_pending_slug",
 		PerSession:         4,
@@ -116,7 +116,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Busy, // important for test
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par_connect_full",
 		Slug:               "fxt_par_connect_full_slug",
 		PerSession:         4,
@@ -127,7 +127,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	},
 	// supervisor tests
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_sup",
 		Slug:               "fxt_sup_slug",
 		PerSession:         4,
@@ -136,7 +136,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_sup_grouping",
 		Slug:               "fxt_sup_grouping_slug",
 		PerSession:         3,
@@ -149,7 +149,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_to_be_paused",
 		Slug:               "fxt_to_be_paused_slug",
 		PerSession:         4,
@@ -158,7 +158,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_sup_paused",
 		Slug:               "fxt_sup_paused_slug",
 		PerSession:         8,
@@ -167,7 +167,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Paused,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_sup_paused2",
 		Slug:               "fxt_sup_paused2_slug",
 		PerSession:         8,
@@ -176,7 +176,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Paused,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_sup_busy",
 		Slug:               "fxt_sup_busy_slug",
 		PerSession:         2,
@@ -187,7 +187,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	},
 	// participant tests
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par",
 		Slug:               "fxt_par_slug",
 		PerSession:         4,
@@ -196,7 +196,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par_paused",
 		Slug:               "fxt_par_paused_slug",
 		PerSession:         8,
@@ -205,7 +205,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Paused,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par_completed",
 		Slug:               "fxt_par_completed_slug",
 		PerSession:         8,
@@ -214,7 +214,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Completed,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par_almost_completed",
 		Slug:               "fxt_par_almost_completed_slug",
 		PerSession:         4,
@@ -224,7 +224,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par_once",
 		Slug:               "fxt_par_once_slug",
 		PerSession:         4,
@@ -234,7 +234,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par_redirect",
 		Slug:               "fxt_par_redirect_slug",
 		PerSession:         2,
@@ -245,7 +245,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par_redirect2",
 		Slug:               "fxt_par_redirect2_slug",
 		PerSession:         2,
@@ -257,7 +257,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par_reject",
 		Slug:               "fxt_par_reject_slug",
 		PerSession:         2,
@@ -269,7 +269,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_par_noreject",
 		Slug:               "fxt_par_noreject_slug",
 		PerSession:         2,
@@ -282,7 +282,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	},
 	// grouping tests
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_grp",
 		Slug:               "fxt_grp_slug",
 		PerSession:         6,
@@ -296,7 +296,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 	},
 	// Instruction tests
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_instructions",
 		Slug:               "fxt_instructions_slug",
 		PerSession:         2,

@@ -125,11 +125,8 @@ func runClient(isSupervisor bool, ws wsConn, identifier string) *client {
 		return nil
 	}
 
-	r, err := getRunner(campaign)
-	if err != nil {
-		ws.Close()
-		return nil
-	}
+	r := getRunner(campaign)
+
 	c := &client{
 		isSupervisor: isSupervisor,
 		ws:           ws,

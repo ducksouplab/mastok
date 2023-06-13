@@ -57,7 +57,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 	// CREATE
 	g.GET("/campaigns/new", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "campaign_new.tmpl", gin.H{
-			"Experiments": cache.GetExperiments(),
+			"Experiments": cache.GetOTreeConfigs(),
 			"Campaign":    models.Campaign{},
 		})
 	})
@@ -66,7 +66,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 
 		if err := c.ShouldBind(&input); err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaign_new.tmpl", gin.H{
-				"Experiments": cache.GetExperiments(),
+				"Experiments": cache.GetOTreeConfigs(),
 				"Error":       changeErrorMessage(err.Error()),
 				"Campaign":    input,
 			})
@@ -75,7 +75,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 
 		if err := models.DB.Create(&input).Error; err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaign_new.tmpl", gin.H{
-				"Experiments": cache.GetExperiments(),
+				"Experiments": cache.GetOTreeConfigs(),
 				"Error":       changeErrorMessage(err.Error()),
 				"Campaign":    input,
 			})
@@ -108,7 +108,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 
 		var input models.Campaign
 		input.Namespace = model.Namespace
-		input.OtreeExperiment = model.OtreeExperiment
+		input.OTreeConfigName = model.OTreeConfigName
 
 		if err := c.ShouldBind(&input); err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaign_edit.tmpl", gin.H{
@@ -118,7 +118,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 			return
 		}
 		// pick fileds to update:
-		// - exclude Namespace and OtreeExperiment
+		// - exclude Namespace and OTreeConfigName
 		// - and force zero values updates for Grouping and Consent
 		selecteds := []string{"Slug", "PerSession", "JoinOnce", "MaxSessions", "ConcurrentSessions", "SessionDuration", "WaitingLimit", "Grouping", "Consent", "Instructions"}
 		if err := models.DB.Model(&model).Select(selecteds).Updates(input).Error; err != nil {

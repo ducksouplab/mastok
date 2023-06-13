@@ -1,6 +1,7 @@
 package live
 
 import (
+	"errors"
 	"time"
 
 	"github.com/ducksouplab/mastok/env"
@@ -244,7 +245,7 @@ func (r *runner) updateStateIfNoMoreBusy() {
 	}
 }
 
-func (r *runner) processIfJoiningReady() (done bool) {
+func (r *runner) processIfJoiningReady() (done bool, err error) {
 	// check if there is a valid pool ready to join
 	ready := r.clients.isJoiningFull() && !r.campaign.IsBusy()
 	if !ready {
@@ -255,12 +256,12 @@ func (r *runner) processIfJoiningReady() (done bool) {
 				c.outgoingCh <- stateMessage(r.campaign.GetLiveState()) // may not be Busy anymore
 			}
 		}
-		return false
+		return false, nil
 	}
 	// start session
 	newSession, participantCodes, err := models.CreateSession(r.campaign)
 	if err != nil {
-		return false
+		return false, errors.New("oTree CreateSession failed")
 	}
 	// send Starting with oTree URL forged with a unique code
 	participantIndex := 0
@@ -282,11 +283,11 @@ func (r *runner) processIfJoiningReady() (done bool) {
 	// empty the joining pool (unregister will fill the pool from pending if possible)
 	for _, c := range inSession {
 		if done := r.processUnregisterWithReason(c, disconnectMessage("Start")); done {
-			return true
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func (r *runner) loop() {
@@ -296,7 +297,10 @@ func (r *runner) loop() {
 			if r.state == models.Busy {
 				r.updateStateIfNoMoreBusy()
 			} else if r.state == models.Running {
-				if done := r.processIfJoiningReady(); done {
+				done, err := r.processIfJoiningReady()
+				if err != nil {
+					r.processStateUpdate(models.Unavailable)
+				} else if done {
 					return
 				}
 			} else { // Paused or Completed

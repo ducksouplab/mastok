@@ -29,10 +29,10 @@ const (
 type Campaign struct {
 	gorm.Model
 	// definition
-	OtreeExperiment    string `form:"otree_experiment_id" binding:"required"`
+	OTreeConfigName    string `form:"otree_config_name" binding:"required"`
 	Namespace          string `form:"namespace" binding:"required,namespaceValidate,min=2,max=128" gorm:"uniqueIndex"`
 	Slug               string `form:"slug" binding:"required,namespaceValidate,min=2,max=128" gorm:"uniqueIndex"`
-	PerSession         int    `form:"per_session" binding:"required,gte=1,lte=32"`
+	PerSession         int    `form:"per_session" binding:"perSessionValidate=OTreeConfigName,required,gte=1,lte=32"`
 	JoinOnce           bool   `form:"join_once" gorm:"default:false" ` // don't <require> due to https://github.com/go-playground/validator/issues/1040
 	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`
 	ConcurrentSessions int    `form:"concurrent_sessions" binding:"required,gte=1,lte=99" gorm:"default:1"`

@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 
 var Fixtures []models.Campaign = []models.Campaign{
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_router_ns1",
 		Slug:               "fxt_router_ns1_slug",
 		PerSession:         4,
@@ -36,7 +36,7 @@ var Fixtures []models.Campaign = []models.Campaign{
 		State:              models.Running,
 	},
 	{
-		OtreeExperiment:    "xp_name",
+		OTreeConfigName:    "test_config_1_to_8",
 		Namespace:          "fxt_router_ns2_edit",
 		Slug:               "fxt_router_ns2_edit_slug",
 		PerSession:         4,

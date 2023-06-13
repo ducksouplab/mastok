@@ -9,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const DISPLAYED_SESSIONS = 25
+
 func addSessionsRoutesTo(g *gin.RouterGroup) {
 	g.GET("/sessions", func(c *gin.Context) {
 		sessions := []otree.Session{}
@@ -19,6 +21,13 @@ func addSessionsRoutesTo(g *gin.RouterGroup) {
 			c.AbortWithStatus(http.StatusServiceUnavailable)
 			return
 		}
+		// most recent first
+		sessions = helpers.Reverse(sessions)
+		// limit HTTP requests
+		if len(sessions) > DISPLAYED_SESSIONS {
+			sessions = sessions[:DISPLAYED_SESSIONS]
+		}
+
 		for i := range sessions { // use index to write to sessions
 			code := sessions[i].Code
 			sc := otree.NestedSessionDetails{}
@@ -30,10 +39,11 @@ func addSessionsRoutesTo(g *gin.RouterGroup) {
 				return
 			}
 			sessions[i].Id = sc.Config.Id
+
 		}
 		// reverse since oTree returns by chronogical create, we want latest first
 		c.HTML(http.StatusOK, "sessions.tmpl", gin.H{
-			"Sessions": helpers.Reverse(sessions),
+			"Sessions": sessions,
 		})
 	})
 }

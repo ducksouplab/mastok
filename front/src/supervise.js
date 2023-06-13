@@ -44,9 +44,9 @@ const start = function (namespace) {
   ws.onmessage = (event) => {
     const { kind, payload } = looseJSONParse(event.data);
     console.log(kind, payload);
-    if(kind === 'State') {
+    if(kind === "State") {
       document.getElementById("state").innerHTML = payload;
-      if(payload === "Paused") {
+      if(payload === "Paused" || payload === "Unavailable") {
         document.getElementById("change-state-container").value = "Run";
         show("change-state-container");
         hide("size-container");
@@ -98,7 +98,7 @@ const start = function (namespace) {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[supervise] version 0.3.0");
+  console.log("[supervise] version 0.3.1");
   const namespaceMatch = /campaigns\/supervise\/(.*)$/.exec(
     window.location.pathname
   );

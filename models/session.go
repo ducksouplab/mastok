@@ -36,7 +36,7 @@ func convertFromOtree(o otree.Session) Session {
 func newSessionArgs(c *Campaign) otree.SessionArgs {
 	sessionId := OtreePrefix + c.Namespace + ":" + strconv.Itoa(c.StartedSessions+1)
 	return otree.SessionArgs{
-		SessionConfigName: c.OtreeExperiment,
+		SessionConfigName: c.OTreeConfigName,
 		NumParticipants:   c.PerSession,
 		Config: otree.NestedConfig{
 			Id: sessionId,

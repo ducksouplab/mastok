@@ -25,7 +25,8 @@ func createTemplateRenderer() multitemplate.Renderer {
 		renderer.AddFromFilesFuncs(
 			filepath.Base(t),
 			template.FuncMap{
-				"WebPrefix": func() string { return env.WebPrefix },
+				"WebPrefix":      func() string { return env.WebPrefix },
+				"OTreePublicURL": func() string { return env.OTreePublicURL },
 			},
 			env.ProjectRoot+"templates/layout.tmpl",
 			t,

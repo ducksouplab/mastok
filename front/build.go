@@ -34,7 +34,8 @@ func Build() {
 	}
 
 	buildOptions := api.BuildOptions{
-		EntryPoints:       []string{"front/src/join.js", "front/src/supervise.js", "front/src/form.js"},
+		EntryPoints: []string{"front/src/join.js", "front/src/supervise.js", "front/src/form.js"},
+		// EntryNames:        "[dir]/v1/[name]",
 		Bundle:            true,
 		MinifyWhitespace:  !devEnv,
 		MinifyIdentifiers: !devEnv,

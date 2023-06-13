@@ -11,7 +11,7 @@ import (
 )
 
 type campaignForm struct {
-	otreeExperiment    string
+	otreeConfigName    string
 	namespace          string
 	slug               string
 	perSession         string
@@ -24,9 +24,9 @@ type campaignForm struct {
 	consent            string
 }
 
-func newCampaignForm(namespace string) campaignForm {
+func newCampaignFormWithConfig(config, namespace string) campaignForm {
 	return campaignForm{
-		otreeExperiment:    "xp_name",
+		otreeConfigName:    config,
 		namespace:          namespace,
 		slug:               namespace + "_slug",
 		perSession:         "8",
@@ -39,9 +39,13 @@ func newCampaignForm(namespace string) campaignForm {
 	}
 }
 
+func newCampaignForm(namespace string) campaignForm {
+	return newCampaignFormWithConfig("test_config_1_to_8", namespace)
+}
+
 func newCampaignFormFromModel(c *models.Campaign) campaignForm {
 	return campaignForm{
-		otreeExperiment:    c.OtreeExperiment,
+		otreeConfigName:    c.OTreeConfigName,
 		namespace:          c.Namespace,
 		slug:               c.Slug,
 		perSession:         strconv.Itoa(c.PerSession),
@@ -56,7 +60,7 @@ func newCampaignFormFromModel(c *models.Campaign) campaignForm {
 
 func campaignFormData(cf campaignForm) url.Values {
 	data := url.Values{}
-	data.Set("otree_experiment_id", cf.otreeExperiment)
+	data.Set("otree_config_name", cf.otreeConfigName)
 	data.Set("namespace", cf.namespace)
 	data.Set("slug", cf.slug)
 	data.Set("per_session", cf.perSession)
@@ -222,6 +226,30 @@ func TestCampaigns_Post_Integration(t *testing.T) {
 		assert.Equal(t, 422, res.Code)
 	})
 
+	t.Run("fails creating if PerSession not allowed by oTree config", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignFormWithConfig("test_config_4", "ns_for_per_session3")
+		cf.perSession = "3"
+		data := campaignFormData(cf)
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 422, res.Code)
+	})
+
+	t.Run("creates if PerSession is allowed by oTree config", func(t *testing.T) {
+		th.InterceptOtreeGetSessionConfigs()
+		defer th.InterceptOff()
+		// fill campaign form
+		cf := newCampaignFormWithConfig("test_config_4", "ns_for_per_session4")
+		cf.perSession = "4"
+		data := campaignFormData(cf)
+		// POST
+		res := MastokPostRequestWithAuth(router, "/campaigns/new", data)
+		assert.Equal(t, 302, res.Code)
+	})
+
 	// MaxSessions tests
 
 	t.Run("fails creating if missing MaxSessions", func(t *testing.T) {
@@ -382,12 +410,12 @@ func TestCampaigns_Scenario(t *testing.T) {
 		// fill campaign form
 		ns := "fxt_router_ns2_edit"
 		forbiddenNs := "fxt_router_ns2_edit_change"
-		forbiddenOtreeExperiment := "not_valid"
+		forbiddenOTreeConfigName := "not_valid"
 		campaign, ok := models.GetCampaignByNamespace(ns)
 		assert.True(t, ok)
 		cf := newCampaignFormFromModel(campaign)
 		cf.namespace = forbiddenNs
-		cf.otreeExperiment = forbiddenOtreeExperiment
+		cf.otreeConfigName = forbiddenOTreeConfigName
 		data := campaignFormData(cf)
 		// POST
 		res := MastokPostRequestWithAuth(router, "/campaigns/edit/"+ns, data)
@@ -395,11 +423,11 @@ func TestCampaigns_Scenario(t *testing.T) {
 		// namespace has not been updated
 		res = MastokGetRequestWithAuth(router, "/campaigns/supervise/"+forbiddenNs)
 		assert.Equal(t, 404, res.Code)
-		// experiment has not been updated
+		// config has not been updated
 		res = MastokGetRequestWithAuth(router, "/campaigns/supervise/"+ns)
 		assert.Equal(t, 200, res.Code)
-		assert.Contains(t, res.Body.String(), campaign.OtreeExperiment)
-		assert.NotContains(t, res.Body.String(), forbiddenOtreeExperiment)
+		assert.Contains(t, res.Body.String(), campaign.OTreeConfigName)
+		assert.NotContains(t, res.Body.String(), forbiddenOTreeConfigName)
 	})
 
 	t.Run("fails editing if duplicate slug", func(t *testing.T) {

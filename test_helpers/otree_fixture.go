@@ -6,22 +6,28 @@ type resource map[string]any
 
 var OTREE_GET_SESSION_CONFIGS = []resource{
 	{
-		"real_world_currency_per_point": 1.0,
-		"participation_fee":             0.0,
-		"id":                            "BR",
-		"name":                          "brainstorm",
-		"display_name":                  "Brainstorm",
-		"num_demo_participants":         8,
-		"doc":                           "The number of participants must 8.",
+		"id":                       "BR",
+		"name":                     "brainstorm",
+		"num_participants_allowed": []int{8},
+		"doc":                      "The number of participants must be 8.",
 	},
 	{
-		"real_world_currency_per_point": 1.0,
-		"participation_fee":             0.0,
-		"id":                            "CH",
-		"name":                          "chatroulette",
-		"display_name":                  "Chatroulette",
-		"num_demo_participants":         8,
-		"doc":                           "The number of participants must be 4, 6 or 8.",
+		"id":                       "CH",
+		"name":                     "chatroulette",
+		"num_participants_allowed": []int{8},
+		"doc":                      "The number of participants must be 4, 6 or 8.",
+	},
+	{
+		"id":                       "TC",
+		"name":                     "test_config_1_to_8",
+		"num_participants_allowed": []int{1, 2, 3, 4, 5, 6, 7, 8},
+		"doc":                      "The number of participants must be between 1 and 8.",
+	},
+	{
+		"id":                       "TC4",
+		"name":                     "test_config_4",
+		"num_participants_allowed": []int{4},
+		"doc":                      "The number of participants must be 4.",
 	},
 }
 

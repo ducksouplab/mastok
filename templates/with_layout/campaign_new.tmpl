@@ -13,11 +13,11 @@
   <div class="row">
     <div class="col">
       <div class="mb-3 otree-select">
-        <label for="otree_experiment_id" class="form-label">oTree experiment*</label>
-        <select name="otree_experiment_id" id="otree_experiment_id" class="form-select"
+        <label for="otree_config_name" class="form-label">oTree experiment*</label>
+        <select name="otree_config_name" id="otree_config_name" class="form-select"
           aria-label="Default select example" required>
           {{range .Experiments}}
-          <option value="{{ .Name }}">{{ .Name }}</option>
+            <option value="{{ .Name }}" {{ if eq .Name $.Campaign.OTreeConfigName }}selected{{ end }}>{{ .Name }}</option>
           {{end}}
         </select>
         <div class="otree-doc">
@@ -72,7 +72,7 @@
     <div class="col">
       <div class="mb-4">
         <label for="consent" class="form-label">Consent in markdown*</label>
-        <textarea name="consent" id="consent" class="form-control" rows="7" required>{{ or .Campaign.Consent ""}}</textarea>
+        <textarea name="consent" id="consent" class="form-control" rows="7" required>{{ or .Campaign.Consent "# Optional Title\n\n...details...\n\n[accept]Consent[/accept]"}}</textarea>
         <div class="form-text">
           <div class="row">
             <div class="col-6">

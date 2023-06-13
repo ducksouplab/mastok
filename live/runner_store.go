@@ -32,10 +32,10 @@ func hasRunner(namespace string) (r *runner, ok bool) {
 }
 
 // get existing or initialize
-func getRunner(c *models.Campaign) (*runner, error) {
+func getRunner(c *models.Campaign) *runner {
 	// already running
 	if r, ok := hasRunner(c.Namespace); ok {
-		return r, nil
+		return r
 	}
 	// create runner
 	r := newRunner(c)
@@ -45,7 +45,7 @@ func getRunner(c *models.Campaign) (*runner, error) {
 	rs.Unlock()
 
 	go r.loop()
-	return r, nil
+	return r
 }
 
 func deleteRunner(c *models.Campaign) {

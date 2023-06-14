@@ -1,12 +1,12 @@
 const showOtreeDoc = (e) => {
   // hide all
-  const docs = document.querySelectorAll(".campaign-form .form-text");
+  const docs = document.querySelectorAll(".campaign-form .otree-select .form-text");
   for (const d of docs) {
     d.style.display = "none";
   }
   // show one
   const selected = e.target.value;
-  const doc = document.querySelector(`.campaign-form .form-text.${selected}`);
+  const doc = document.querySelector(`.campaign-form .otree-select .form-text.${selected}`);
   doc.style.display = "block";
 }
 

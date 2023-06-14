@@ -103,7 +103,8 @@ const start = function (slug) {
       // ease checkboxes clicking
       const lis = document.querySelectorAll("#consent-container li");
       for (const li of lis) {
-        li.addEventListener("click", () => {
+        li.addEventListener("click", (e) => {
+          if(e.target.tagName.toLowerCase() === "input") return; // don't double process input
           const checkbox = li.querySelector("input");
           if (!checkbox.disabled) {
             value = checkbox.checked;

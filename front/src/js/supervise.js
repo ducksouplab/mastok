@@ -60,7 +60,7 @@ const start = function (namespace) {
         hide("busy-container");
       } else if(payload === "Busy") {
         hide("change-state-container");
-        hide("size-container");
+        show("size-container"); // seeing pending is still interesting
         hide("paused-container");
         show("busy-container");
       } else if(payload === "Completed") {

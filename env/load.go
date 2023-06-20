@@ -8,7 +8,7 @@ import (
 )
 
 // own variables
-var AsCommandLine bool
+var AsCommandLine, LiveRedirect bool
 var BasicLogin, BasicPassword, Mode, Origin, Port, ProjectRoot, WebPrefix string
 var AllowedOrigins []string
 
@@ -40,6 +40,11 @@ func init() {
 	OTreeAPIURL = os.Getenv("MASTOK_OTREE_API_URL")
 	OTreePublicURL = os.Getenv("MASTOK_OTREE_PUBLIC_URL")
 	OTreeKey = os.Getenv("MASTOK_OTREE_API_KEY")
+	// constrained settings that apply can be changed only in DEV mode
+	LiveRedirect = true
+	if Mode == "DEV" && os.Getenv("MASTOK_DEV_LIVE_REDIRECT") == "false" {
+		LiveRedirect = false
+	}
 	// derived
 	AllowedOrigins = []string{Origin}
 	if Mode == "ENV" {

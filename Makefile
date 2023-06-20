@@ -17,6 +17,8 @@ testv:
 testfmt:
 	@clear && MASTOK_MODE=TEST MASTOK_PROJECT_ROOT=`pwd` go test -p 1 -json ./... 2>&1 | tee /tmp/gotest.log | gotestfmt -hide all
 dockerbuild:
-	@docker build -f docker/Dockerfile.build -t mastok:latest . && docker tag mastok ducksouplab/mastok
+	@docker build -f docker/Dockerfile.build --progress=plain -t mastok:latest . && docker tag mastok ducksouplab/mastok
 dockerpush:
 	@docker push ducksouplab/mastok:latest
+dockerexec:
+	@docker run -t -i --rm mastok:latest sh

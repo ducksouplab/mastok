@@ -6,6 +6,7 @@ import (
 
 	"github.com/ducksouplab/mastok/env"
 	"github.com/ducksouplab/mastok/models"
+	"github.com/ducksouplab/mastok/otree"
 )
 
 var checkStartPeriod time.Duration
@@ -27,6 +28,8 @@ type runner struct {
 	state            string
 	clients          *runnerClients
 	roomFingerprints map[string]bool
+	// internal update of campaign
+	updateCampaignCh chan *models.Campaign
 	// manage broadcasting
 	registerCh   chan *client
 	unregisterCh chan *client
@@ -54,6 +57,7 @@ func newRunner(c *models.Campaign) *runner {
 		state:            state,
 		clients:          newRunnerClients(c, group),
 		roomFingerprints: map[string]bool{}, // used only for JoinOnce campaigns
+		updateCampaignCh: make(chan *models.Campaign),
 		registerCh:       make(chan *client),
 		unregisterCh:     make(chan *client),
 		// messages coming from participants or supervisor
@@ -149,19 +153,15 @@ func (r *runner) processUnregisterWithReason(target *client, m Message) (done bo
 }
 
 func (r *runner) processLand(target *client, fingerprint string) (done bool) {
-	var isInLiveSession bool
-	participation, hasParticipated := models.GetParticipation(*r.campaign, fingerprint)
-	if hasParticipated {
-		pastSession, ok := models.GetSession(participation.SessionID)
-		if ok {
-			isInLiveSession = pastSession.IsLive()
+	participation, hasParticipated := models.GetLastParticipation(*r.campaign, fingerprint)
+	// check in case has participated to a session which is currently live
+	if env.LiveRedirect && hasParticipated {
+		if pastSession, ok := models.GetSession(participation.SessionID); ok {
+			if pastSession.IsLive() {
+				// we assume it's a reconnect, so we redirect to oTree
+				return r.processUnregisterWithReason(target, disconnectMessage("Redirect:"+otree.ParticipantStartURL(participation.OtreeCode)))
+			}
 		}
-	}
-	if isInLiveSession { // we assume it's a reconnect, so we redirect to oTree
-		if done := r.processUnregisterWithReason(target, disconnectMessage("Redirect:"+participation.OtreeCode)); done {
-			return true
-		}
-		return false
 	}
 	if r.campaign.JoinOnce {
 		_, isAlreadyThere := r.roomFingerprints[fingerprint]
@@ -306,6 +306,8 @@ func (r *runner) loop() {
 			} else { // Paused or Completed
 				r.stopTicker()
 			}
+		case campaign := <-r.updateCampaignCh:
+			r.campaign = campaign
 		case c := <-r.registerCh:
 			if done := r.processRegister(c); done {
 				return

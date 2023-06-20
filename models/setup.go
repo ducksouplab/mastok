@@ -76,15 +76,14 @@ func ReinitDevDB() {
 		// campaign.appendSession(&session)
 		// simple campaign
 		var otherCampaign = Campaign{
-			OTreeConfigName:    "chatroulette",
+			OTreeConfigName:    "ducksoup_now",
 			Namespace:          "dev_campaign_2",
 			Slug:               "dev_campaign_2_slug",
-			PerSession:         4,
-			MaxSessions:        4,
+			PerSession:         2,
+			MaxSessions:        32,
 			ConcurrentSessions: 1,
-			Grouping:           "What is your gender?\nMale:2\nFemale:2\nChoose",
-			SessionDuration:    2,
-			Consent:            consentString,
+			SessionDuration:    10,
+			Consent:            "[accept]Accept[/accept]",
 			State:              Running,
 		}
 		if err := DB.Create(&otherCampaign).Error; err != nil {

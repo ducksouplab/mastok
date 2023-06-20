@@ -165,7 +165,7 @@ const start = function (slug) {
       setTimeout(() => {
         document.location.href = payload;
       }, 3000);
-    } else if (kind === "Instructions") {
+    } else if (kind === "Instructions" && payload != "") {
       document.querySelector("#instructions-container div").innerHTML = payload;
       show("instructions-container");
     } else if (kind === "Pending") {

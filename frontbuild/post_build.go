@@ -1,4 +1,4 @@
-package front
+package frontbuild
 
 import (
 	"fmt"
@@ -54,12 +54,22 @@ func replaceIncludes(path string) {
 
 	lines := strings.Split(string(input), "\n")
 
+	var js, css bool
 	for i, line := range lines {
 		if jsLineRegex.MatchString(line) {
 			lines[i] = jsUpdateRegex.ReplaceAllString(line, "assets/"+version+"/js")
+			js = true
 		} else if cssLineRegex.MatchString(line) {
 			lines[i] = cssUpdateRegex.ReplaceAllString(line, "assets/"+version+"/css")
+			css = true
 		}
+	}
+	// log once
+	if js {
+		log.Printf("[Template] %v CSS prefixed with version %v\n", path, version)
+	}
+	if css {
+		log.Printf("[Template] %v  JS prefixed with version %v\n", path, version)
 	}
 
 	output := strings.Join(lines, "\n")

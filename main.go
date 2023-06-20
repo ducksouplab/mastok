@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/ducksouplab/mastok/env"
-	"github.com/ducksouplab/mastok/front"
+	"github.com/ducksouplab/mastok/frontbuild"
 	"github.com/ducksouplab/mastok/models"
 	"github.com/ducksouplab/mastok/router"
 	"github.com/gin-gonic/gin"
@@ -12,7 +12,7 @@ import (
 
 func main() {
 	if env.Mode == "DEV" || env.Mode == "BUILD_FRONT" {
-		front.Build()
+		frontbuild.Build()
 	} else if env.Mode == "RESET_DEV" {
 		models.ReinitDevDB()
 	}

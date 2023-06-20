@@ -117,7 +117,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 			})
 			return
 		}
-		// pick fileds to update:
+		// pick fields to update:
 		// - exclude Namespace and OTreeConfigName
 		// - and force zero values updates for Grouping and Consent
 		selecteds := []string{"Slug", "PerSession", "JoinOnce", "MaxSessions", "ConcurrentSessions", "SessionDuration", "WaitingLimit", "Grouping", "Consent", "Instructions"}
@@ -127,6 +127,9 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 				"Campaign": input,
 			})
 			return
+		} else {
+			// it would be better to do this in an AfterUpdate hook, but it introduces an import cycle
+			live.UpdateRunner(model)
 		}
 
 		c.Redirect(http.StatusFound, env.WebPrefix+"/campaigns/supervise/"+namespace)

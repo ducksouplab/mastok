@@ -12,19 +12,17 @@ COPY main.go .
 COPY consent.md .
 COPY cache ./cache
 COPY env ./env
-COPY front ./front
 COPY helpers ./helpers
+COPY frontbuild ./frontbuild
 COPY live ./live
 COPY models ./models
 COPY otree ./otree
 COPY router ./router
-COPY templates ./templates
 
-# compile server and front
+# compile server
 RUN go build
-RUN MASTOK_MODE=BUILD_FRONT ./mastok
 
-FROM golang:1.20.1-bullseye AS final
+FROM golang:1.20-bullseye AS final
 
 RUN apt-get update && apt-get upgrade -y
 
@@ -33,11 +31,10 @@ WORKDIR /app
 COPY --from=builder /build/mastok .
 # check .dockerignore to see generated scripts are excluded first...
 COPY consent.md .
-COPY front/static ./front/static
-COPY front/config.yml ./front/config.yml
+COPY front ./front
 COPY templates ./templates
-# ... but added from build
-COPY --from=builder /build/front/static/assets ./front/static/assets
+# ...and then recreated
+RUN MASTOK_MODE=BUILD_FRONT ./mastok
 
 ENV GIN_MODE=release
 

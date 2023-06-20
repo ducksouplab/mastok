@@ -54,3 +54,14 @@ func deleteRunner(c *models.Campaign) {
 
 	delete(rs.index, c.Namespace)
 }
+
+// API
+
+func UpdateRunner(c *models.Campaign) {
+	// only if already running
+	if r, ok := hasRunner(c.Namespace); ok {
+		go func() {
+			r.updateCampaignCh <- c
+		}()
+	}
+}

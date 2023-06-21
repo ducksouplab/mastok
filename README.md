@@ -117,15 +117,31 @@ There are shared types in the otree package (representing oTree REST API in and 
 
 ## Join sequence
 
-When participant arrives on the campaign join page (Share URL), here is a typical sequence:
+When a participant arrives on the campaign join page (Share URL), here is a typical sequence:
 
-- the server returns current campaign State: it must be `Running` to continue 
-- the client sends a `Land` message to share a fingerpring that acts as an identifier (then server will decide to accept, redirect or ban this participant for this particular session)
-- if `Land` is accepted, the participant is asked to agree with the session rules
-- if yes, the client sends a `Agree` message to the server
-- if campaign relies on grouping participants, the participant is asked to select a group (for instance male or female), then the js client sends a `Connect` message to the server. If there is not grouping, `Connect` is not needed
+- the server sends the current campaign State to the JS client: it must be `Running` to continue 
+- the JS client sends a `Land` message to share a fingerpring that acts as an identifier (then server will decide to accept, redirect or ban this participant for this particular session)
+- if `Land` is accepted by server:
+    - the server sends a `Consent` message
+    - the participant is asked to agree with it
+    - if yes, the JS client sends an `Agree` message to the server
+- if the campaign relies on grouping participants:
+    - the server sends a `Grouping` message
+    - the participant is asked to select a group (for instance male or female)
+    - the JS client sends a `Connect` message to the server
+    - if there was no grouping, `Connect` is not needed
 - now the participant has joined the waiting room and a `Joining` message update is sent from the server (or `Pending` if there are too many people in the joining pool)
 - when the joining pool is full (ready), the client receives a `SessionStart` message from the server
+
+## Busy state
+
+The `Busy` state means the maximum number of concurrent sessions is currently reached and new ones are on hold. This state is checked and updated periodically.
+
+New participants can't join, but they will be added to the pending pool.
+
+When we switch from `Busy` to `Running` state (a session has finished):
+- participants from the pending pool are used to fill the joining pool
+- if there are enough people in the joining pool, a new session is created, possibly switching the state back to `Busy`
 
 ## Participant messages
 

@@ -54,7 +54,7 @@ func ReinitDevDB() {
 		ConnectAndMigrate()
 		consentString := helpers.ReadFile("consent.md")
 		// dev fixtures
-		var campaign = Campaign{
+		var c1 = Campaign{
 			OTreeConfigName:    "chatroulette",
 			Namespace:          "dev_campaign_1",
 			Slug:               "dev_campaign_1_slug",
@@ -70,12 +70,12 @@ func ReinitDevDB() {
 		// 	Size:     4,
 		// 	AdminUrl: "http://otree.host.com/SessionStartLinks/nztdjo76",
 		// }
-		if err := DB.Create(&campaign).Error; err != nil {
+		if err := DB.Create(&c1).Error; err != nil {
 			log.Fatal(err)
 		}
 		// campaign.appendSession(&session)
 		// simple campaign
-		var otherCampaign = Campaign{
+		var c2 = Campaign{
 			OTreeConfigName:    "ducksoup_now",
 			Namespace:          "dev_campaign_2",
 			Slug:               "dev_campaign_2_slug",
@@ -86,7 +86,23 @@ func ReinitDevDB() {
 			Consent:            "[accept]Accept[/accept]",
 			State:              Running,
 		}
-		if err := DB.Create(&otherCampaign).Error; err != nil {
+		if err := DB.Create(&c2).Error; err != nil {
+			log.Fatal(err)
+		}
+		// simple campaign
+		var c3 = Campaign{
+			OTreeConfigName:    "ducksoup_now",
+			Namespace:          "dev_campaign_3",
+			Slug:               "dev_campaign_3_slug",
+			PerSession:         2,
+			MaxSessions:        32,
+			ConcurrentSessions: 2,
+			SessionDuration:    1,
+			Grouping:           "What is your gender?\nMale:1\nFemale:1\nChoose",
+			Consent:            "[accept]Accept[/accept]",
+			State:              Running,
+		}
+		if err := DB.Create(&c3).Error; err != nil {
 			log.Fatal(err)
 		}
 	}

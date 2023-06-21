@@ -67,7 +67,7 @@ func TestClient_Supervisor_Integration(t *testing.T) {
 		// one pending leaves
 		wsSlice[0].Close()
 		wsSup.ClearAllMessages()
-		assert.True(t, retryUntil(longDuration, func() bool {
+		assert.True(t, retryUntil(longerDuration, func() bool {
 			ok := wsSup.hasReceived(Message{"PendingSize", "1/" + strconv.Itoa(maxPendingSize)})
 			return ok
 		}))

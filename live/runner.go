@@ -9,13 +9,13 @@ import (
 	"github.com/ducksouplab/mastok/otree"
 )
 
-var checkStartPeriod time.Duration
+var updatePeriod time.Duration
 
 func init() {
 	if env.Mode == "TEST" {
-		checkStartPeriod = 3 * time.Millisecond
+		updatePeriod = 3 * time.Millisecond
 	} else {
-		checkStartPeriod = 1 * time.Second
+		updatePeriod = 1 * time.Second
 	}
 }
 
@@ -37,7 +37,7 @@ type runner struct {
 	participantCh chan FromParticipantMessage
 	supervisorCh  chan Message
 	// ticker
-	checkStartTicker *time.Ticker
+	updateTicker *time.Ticker
 	// signals end
 	done   bool
 	doneCh chan struct{}
@@ -60,7 +60,7 @@ func newRunner(c *models.Campaign) *runner {
 		participantCh: make(chan FromParticipantMessage),
 		supervisorCh:  make(chan Message),
 		// ticker
-		checkStartTicker: time.NewTicker(checkStartPeriod),
+		updateTicker: time.NewTicker(updatePeriod),
 		// signals end
 		doneCh: make(chan struct{}),
 	}
@@ -77,13 +77,17 @@ func (r *runner) isRunningOrBusy() bool {
 	return r.state == models.Running || r.state == models.Busy
 }
 
+func (r *runner) isAcceptingJoins() bool {
+	return r.state != models.Busy && !r.clients.isJoiningFull()
+}
+
 func (r *runner) startTicker() {
-	r.checkStartTicker.Stop()
-	r.checkStartTicker = time.NewTicker(checkStartPeriod)
+	r.updateTicker.Stop()
+	r.updateTicker = time.NewTicker(updatePeriod)
 }
 
 func (r *runner) stopTicker() {
-	r.checkStartTicker.Stop()
+	r.updateTicker.Stop()
 }
 
 func (r *runner) isDone() chan struct{} {
@@ -102,7 +106,7 @@ func (r *runner) stop() {
 // when process* methods return true, the runner loop is supposed to be stopped
 func (r *runner) processRegister(target *client) (done bool) {
 	if r.isRunningOrBusy() || target.isSupervisor {
-		r.clients.add(target)
+		r.clients.register(target)
 
 		if target.isSupervisor {
 			target.outgoingCh <- stateMessage(r.campaign.GetLiveState()) // can be busy
@@ -138,8 +142,11 @@ func (r *runner) cleanupLeave(target *client) (done bool) {
 
 // on js client connection closed
 func (r *runner) processUnregisterAndReplace(target *client) (done bool) {
-	if wasInJoining, wasInPending := r.clients.delete(target); wasInJoining && r.state != models.Busy {
-		r.clients.updateOneJoiningFromPending()
+	wasInJoining, wasInPending := r.clients.delete(target)
+	if wasInJoining {
+		if r.state != models.Busy {
+			r.clients.oneTentativeJoinFromPending()
+		}
 		for c := range r.clients.joining {
 			c.outgoingCh <- joiningSizeMessage(r)
 		}
@@ -194,9 +201,9 @@ func (r *runner) processLand(target *client, fingerprint string) (done bool) {
 	return false
 }
 
-func (r *runner) processTentativeJoin(target *client) (done bool) {
-	addedToJoining, addedToPending := r.clients.tentativeJoinOrPending(target)
-	if addedToJoining {
+func (r *runner) processTentativeJoinOrPending(target *client) (done bool) {
+	// first: try adding to joining
+	if r.isAcceptingJoins() && r.clients.tentativeJoin(target) {
 		// inform participants in the joining pool and supervisors about the new pool size
 		for c := range r.clients.joining {
 			c.outgoingCh <- joiningSizeMessage(r)
@@ -207,14 +214,16 @@ func (r *runner) processTentativeJoin(target *client) (done bool) {
 		// inform target of instructions
 		target.outgoingCh <- instructionsMessage(r.campaign)
 		return false
-	} else if addedToPending {
+	}
+	// second: try adding to pending
+	if r.clients.tentativePending(target) {
 		target.outgoingCh <- pendingMessage()
 		for c := range r.clients.supervisors {
 			c.outgoingCh <- pendingSizeMessage(r)
 		}
 		return false
 	}
-	// could not be added
+	// could not be added, unregisters
 	return r.processManagedUnregister(target, disconnectMessage("Full"))
 }
 
@@ -299,20 +308,23 @@ func (r *runner) processIfJoiningReady() (done bool, err error) {
 			return true, nil
 		}
 	}
-
 	return false, nil
 }
 
 func (r *runner) loop() {
 	for {
 		select {
-		case <-r.checkStartTicker.C:
+		case <-r.updateTicker.C:
 			if r.state == models.Busy {
 				r.updateStateIfNoMoreBusy()
 			} else if r.state == models.Running {
-				if updated := r.clients.updateAllJoiningFromPending(); updated {
+				if updated := r.clients.allTentativeJoinFromPending(); updated {
 					for c := range r.clients.joining {
 						c.outgoingCh <- joiningSizeMessage(r)
+					}
+					for c := range r.clients.supervisors {
+						c.outgoingCh <- joiningSizeMessage(r)
+						c.outgoingCh <- pendingSizeMessage(r)
 					}
 				}
 				if done, err := r.processIfJoiningReady(); err != nil {
@@ -340,7 +352,7 @@ func (r *runner) loop() {
 					return
 				}
 			} else if m.Kind == "Connect" {
-				if done := r.processTentativeJoin(m.From); done {
+				if done := r.processTentativeJoinOrPending(m.From); done {
 					return
 				}
 			}

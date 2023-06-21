@@ -113,7 +113,8 @@ func (rc *runnerClients) isJoiningFull() bool {
 
 // read-write methods
 
-func (rc *runnerClients) add(c *client) {
+// register for websocket communication
+func (rc *runnerClients) register(c *client) {
 	rc.all[c] = true
 	if c.isSupervisor {
 		rc.supervisors[c] = true
@@ -138,26 +139,13 @@ func (rc *runnerClients) tentativePending(c *client) (addedToPending bool) {
 func (rc *runnerClients) tentativeJoin(c *client) (addedToJoining bool) {
 	if rc.isGroupFull(c.groupLabel) {
 		return false
-	} else {
-		rc.joining[c] = true
-		rc.joiningByGroup[c.groupLabel][c] = true
-		addedToJoining = true
 	}
-	return
+	rc.joining[c] = true
+	rc.joiningByGroup[c.groupLabel][c] = true
+	return true
 }
 
-func (rc *runnerClients) tentativeJoinOrPending(c *client) (addedToJoining bool, addedToPending bool) {
-	if rc.isGroupFull(c.groupLabel) {
-		addedToPending = rc.tentativePending(c)
-	} else {
-		rc.joining[c] = true
-		rc.joiningByGroup[c.groupLabel][c] = true
-		addedToJoining = true
-	}
-	return
-}
-
-func (rc *runnerClients) updateOneJoiningFromPending() (updated bool) {
+func (rc *runnerClients) oneTentativeJoinFromPending() (updated bool) {
 	for _, c := range rc.pendingList {
 		if rc.tentativeJoin(c) {
 			rc.pendingList = sliceDelete(rc.pendingList, c)
@@ -168,7 +156,7 @@ func (rc *runnerClients) updateOneJoiningFromPending() (updated bool) {
 	return
 }
 
-func (rc *runnerClients) updateAllJoiningFromPending() (updated bool) {
+func (rc *runnerClients) allTentativeJoinFromPending() (updated bool) {
 	for _, c := range rc.pendingList {
 		if rc.tentativeJoin(c) {
 			rc.pendingList = sliceDelete(rc.pendingList, c)

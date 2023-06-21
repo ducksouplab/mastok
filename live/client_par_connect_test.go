@@ -153,9 +153,9 @@ func TestClient_Participant_Connect_Integration(t *testing.T) {
 		assert.Equal(t, campaign.StartedSessions, 1)
 
 		// accepted in pending : (MaxSessions - StartedSessions + 1) * PerSession
-		// (3 - 1 + 1) x 4 => 12 in pending (plus 4 in pool)
+		// (3 - 1 + 1) x 4 => 12 in pending
 
-		wsParticipants := runParticipantStubs(ns, 17)
+		wsParticipants := runParticipantStubs(ns, 13)
 		for _, ws := range wsParticipants {
 			ws.land().agree()
 		}

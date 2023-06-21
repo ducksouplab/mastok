@@ -168,7 +168,7 @@ func TestClient_Otree_Integration(t *testing.T) {
 		sessionStartCount := wsSup.countKind("SessionStart")
 		assert.Equal(t, 2, sessionStartCount)
 
-		time.Sleep((sessionDurationTest + 1) * models.SessionDurationUnit)
+		time.Sleep((sessionDurationTest+1)*models.SessionDurationUnit + updatePeriod)
 		sessionStartCount = wsSup.countKind("SessionStart")
 		assert.True(t, sessionStartCount >= 3)
 	})

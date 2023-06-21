@@ -4,7 +4,8 @@ import (
 	"github.com/ducksouplab/mastok/models"
 )
 
-// not guarded by lock since managed by a runner whose concurrency is dealt with channels
+// no lock since it is only used by a runner
+// whose concurrency access is restricted by a global channel select loop
 type runnerClients struct {
 	// configuration
 	sizeByGroup       map[string]int
@@ -121,47 +122,73 @@ func (rc *runnerClients) add(c *client) {
 	}
 }
 
-func (rc *runnerClients) tentativeJoin(c *client) (addedToJoining bool, addedToPending bool) {
-	if rc.isGroupFull(c.groupLabel) {
-		if rc.isPendingForGroupFull(c.groupLabel) {
-			return false, false
-		} else {
-			if sliceContains(rc.pendingList, c) { // don't append twice
-				return false, false
-			} else {
-				rc.pendingList = append(rc.pendingList, c)
-				return false, true
-			}
-		}
+func (rc *runnerClients) tentativePending(c *client) (addedToPending bool) {
+	if rc.isPendingForGroupFull(c.groupLabel) {
+		return false
 	} else {
-		rc.joining[c] = true
-		rc.joiningByGroup[c.groupLabel][c] = true
-		return true, false
+		if sliceContains(rc.pendingList, c) { // don't append twice
+			return false
+		} else {
+			rc.pendingList = append(rc.pendingList, c)
+			return true
+		}
 	}
 }
 
-func (rc *runnerClients) addOneToJoiningFromPending() (updated bool) {
-	var added *client
+func (rc *runnerClients) tentativeJoin(c *client) (addedToJoining bool) {
+	if rc.isGroupFull(c.groupLabel) {
+		return false
+	} else {
+		rc.joining[c] = true
+		rc.joiningByGroup[c.groupLabel][c] = true
+		addedToJoining = true
+	}
+	return
+}
+
+func (rc *runnerClients) tentativeJoinOrPending(c *client) (addedToJoining bool, addedToPending bool) {
+	if rc.isGroupFull(c.groupLabel) {
+		addedToPending = rc.tentativePending(c)
+	} else {
+		rc.joining[c] = true
+		rc.joiningByGroup[c.groupLabel][c] = true
+		addedToJoining = true
+	}
+	return
+}
+
+func (rc *runnerClients) updateOneJoiningFromPending() (updated bool) {
 	for _, c := range rc.pendingList {
-		if addedToJoining, _ := rc.tentativeJoin(c); addedToJoining {
-			added = c
+		if rc.tentativeJoin(c) {
+			rc.pendingList = sliceDelete(rc.pendingList, c)
 			updated = true
 			break
 		}
 	}
-
-	if updated {
-		rc.pendingList = sliceDelete(rc.pendingList, added)
-	}
-
 	return
 }
 
-func (rc *runnerClients) delete(c *client) (wasInJoining bool) {
-	delete(rc.all, c)
+func (rc *runnerClients) updateAllJoiningFromPending() (updated bool) {
+	for _, c := range rc.pendingList {
+		if rc.tentativeJoin(c) {
+			rc.pendingList = sliceDelete(rc.pendingList, c)
+			updated = true
+			// update all: no break
+		}
+	}
+	return
+}
 
+func (rc *runnerClients) delete(c *client) (wasInJoining bool, wasInPending bool) {
+	// it may happen that delete is called twice (starts then quits joining + js client readLoop stop)
+	if _, ok := rc.all[c]; !ok {
+		return false, false
+	}
+
+	delete(rc.all, c)
 	if c.isSupervisor {
 		delete(rc.supervisors, c)
+		return false, false
 	} else {
 		delete(rc.participants, c)
 		delete(rc.joining, c)
@@ -173,6 +200,6 @@ func (rc *runnerClients) delete(c *client) (wasInJoining bool) {
 		} else {
 			rc.pendingList = sliceDelete(rc.pendingList, c)
 		}
+		return wasInJoining, !wasInJoining
 	}
-	return
 }

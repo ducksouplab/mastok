@@ -117,8 +117,8 @@ var Fixtures []models.Campaign = []models.Campaign{
 	},
 	{
 		OTreeConfigName:    "test_config_1_to_8",
-		Namespace:          "fxt_par_connect_full",
-		Slug:               "fxt_par_connect_full_slug",
+		Namespace:          "fxt_par_connect_full_busy",
+		Slug:               "fxt_par_connect_full_busy_slug",
 		PerSession:         4,
 		MaxSessions:        3,
 		ConcurrentSessions: 2,

@@ -49,12 +49,10 @@ func (c *client) read() (m Message, err error) {
 	return
 }
 
-func (c *client) unregister() {
-	c.runner.unregisterCh <- c
-}
-
 func (c *client) readLoop() {
-	defer c.unregister()
+	defer func() {
+		c.runner.unregisterCh <- c
+	}()
 
 	for {
 		m, err := c.read()

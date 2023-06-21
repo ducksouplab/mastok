@@ -81,8 +81,8 @@ func ReinitDevDB() {
 			Slug:               "dev_campaign_2_slug",
 			PerSession:         2,
 			MaxSessions:        32,
-			ConcurrentSessions: 1,
-			SessionDuration:    10,
+			ConcurrentSessions: 2,
+			SessionDuration:    1,
 			Consent:            "[accept]Accept[/accept]",
 			State:              Running,
 		}

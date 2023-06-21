@@ -39,12 +39,8 @@ type runner struct {
 	// ticker
 	checkStartTicker *time.Ticker
 	// signals end
+	done   bool
 	doneCh chan struct{}
-}
-
-// Busy is a temporary state, participants can wait
-func isRunningOrBusy(state string) bool {
-	return state == models.Running || state == models.Busy
 }
 
 func newRunner(c *models.Campaign) *runner {
@@ -69,11 +65,16 @@ func newRunner(c *models.Campaign) *runner {
 		doneCh: make(chan struct{}),
 	}
 
-	if !isRunningOrBusy(state) {
+	if !r.isRunningOrBusy() {
 		r.stopTicker()
 	}
 
 	return &r
+}
+
+// Busy is a temporary state, participants can wait
+func (r *runner) isRunningOrBusy() bool {
+	return r.state == models.Running || r.state == models.Busy
 }
 
 func (r *runner) startTicker() {
@@ -90,14 +91,17 @@ func (r *runner) isDone() chan struct{} {
 }
 
 func (r *runner) stop() {
-	r.stopTicker()
-	deleteRunner(r.campaign)
-	close(r.doneCh)
+	if !r.done {
+		r.done = true
+		r.stopTicker()
+		deleteRunner(r.campaign)
+		close(r.doneCh)
+	}
 }
 
 // when process* methods return true, the runner loop is supposed to be stopped
 func (r *runner) processRegister(target *client) (done bool) {
-	if isRunningOrBusy(r.state) || target.isSupervisor {
+	if r.isRunningOrBusy() || target.isSupervisor {
 		r.clients.add(target)
 
 		if target.isSupervisor {
@@ -120,24 +124,9 @@ func (r *runner) processRegister(target *client) (done bool) {
 	return false
 }
 
-func (r *runner) processUnregister(target *client) (done bool) {
-	// deletes client
-	if wasInJoining := r.clients.delete(target); wasInJoining {
-		r.clients.addOneToJoiningFromPending()
-		// tells the joining pool and supervisors that the room size has changed
-		for c := range r.clients.joining {
-			c.outgoingCh <- joiningSizeMessage(r)
-		}
-		for c := range r.clients.supervisors {
-			c.outgoingCh <- joiningSizeMessage(r)
-			c.outgoingCh <- pendingSizeMessage(r)
-		}
-	} else {
-		for c := range r.clients.supervisors {
-			c.outgoingCh <- pendingSizeMessage(r)
-		}
-	}
+func (r *runner) cleanupLeave(target *client) (done bool) {
 	if r.campaign.JoinOnce {
+		// doesn't touch participations, only live runner state
 		delete(r.roomFingerprints, target.fingerprint)
 	}
 	if r.clients.isEmpty() {
@@ -147,9 +136,39 @@ func (r *runner) processUnregister(target *client) (done bool) {
 	return false
 }
 
-func (r *runner) processUnregisterWithReason(target *client, m Message) (done bool) {
+// on js client connection closed
+func (r *runner) processUnregisterAndReplace(target *client) (done bool) {
+	if wasInJoining, wasInPending := r.clients.delete(target); wasInJoining && r.state != models.Busy {
+		r.clients.updateOneJoiningFromPending()
+		for c := range r.clients.joining {
+			c.outgoingCh <- joiningSizeMessage(r)
+		}
+		for c := range r.clients.supervisors {
+			c.outgoingCh <- joiningSizeMessage(r)
+			c.outgoingCh <- pendingSizeMessage(r)
+		}
+	} else if wasInPending {
+		for c := range r.clients.supervisors {
+			c.outgoingCh <- pendingSizeMessage(r)
+		}
+	}
+	return r.cleanupLeave(target)
+}
+
+// unregister because of start (then updating pool/pending is managed and not instant) or early disconnect
+func (r *runner) processManagedUnregister(target *client, m Message) (done bool) {
 	target.outgoingCh <- m
-	return r.processUnregister(target)
+
+	if wasInJoining, wasInPending := r.clients.delete(target); wasInJoining {
+		for c := range r.clients.supervisors {
+			c.outgoingCh <- joiningSizeMessage(r)
+		}
+	} else if wasInPending {
+		for c := range r.clients.supervisors {
+			c.outgoingCh <- pendingSizeMessage(r)
+		}
+	}
+	return r.cleanupLeave(target)
 }
 
 func (r *runner) processLand(target *client, fingerprint string) (done bool) {
@@ -159,17 +178,14 @@ func (r *runner) processLand(target *client, fingerprint string) (done bool) {
 		if pastSession, ok := models.GetSession(participation.SessionID); ok {
 			if pastSession.IsLive() {
 				// we assume it's a reconnect, so we redirect to oTree
-				return r.processUnregisterWithReason(target, disconnectMessage("Redirect:"+otree.ParticipantStartURL(participation.OtreeCode)))
+				return r.processManagedUnregister(target, disconnectMessage("Redirect:"+otree.ParticipantStartURL(participation.OtreeCode)))
 			}
 		}
 	}
 	if r.campaign.JoinOnce {
 		_, isAlreadyThere := r.roomFingerprints[fingerprint]
 		if isAlreadyThere || hasParticipated {
-			if done := r.processUnregisterWithReason(target, disconnectMessage("LandingFailed")); done {
-				return true
-			}
-			return false
+			return r.processManagedUnregister(target, disconnectMessage("LandingFailed"))
 		}
 		r.roomFingerprints[fingerprint] = true
 	}
@@ -179,34 +195,31 @@ func (r *runner) processLand(target *client, fingerprint string) (done bool) {
 }
 
 func (r *runner) processTentativeJoin(target *client) (done bool) {
-	addedToJoining, addedToPending := r.clients.tentativeJoin(target)
-	if !addedToJoining {
-		if addedToPending {
-			target.outgoingCh <- pendingMessage()
-			for c := range r.clients.supervisors {
-				c.outgoingCh <- pendingSizeMessage(r)
-			}
-			return false
-		} else {
-			if done := r.processUnregisterWithReason(target, disconnectMessage("Full")); done {
-				return true
-			}
+	addedToJoining, addedToPending := r.clients.tentativeJoinOrPending(target)
+	if addedToJoining {
+		// inform participants in the joining pool and supervisors about the new pool size
+		for c := range r.clients.joining {
+			c.outgoingCh <- joiningSizeMessage(r)
 		}
+		for c := range r.clients.supervisors {
+			c.outgoingCh <- joiningSizeMessage(r)
+		}
+		// inform target of instructions
+		target.outgoingCh <- instructionsMessage(r.campaign)
+		return false
+	} else if addedToPending {
+		target.outgoingCh <- pendingMessage()
+		for c := range r.clients.supervisors {
+			c.outgoingCh <- pendingSizeMessage(r)
+		}
+		return false
 	}
-	// inform participants in the joining pool and supervisors about the new room size
-	for c := range r.clients.joining {
-		c.outgoingCh <- joiningSizeMessage(r)
-	}
-	for c := range r.clients.supervisors {
-		c.outgoingCh <- joiningSizeMessage(r)
-	}
-	// inform target of instructions
-	target.outgoingCh <- instructionsMessage(r.campaign)
-	return false
+	// could not be added
+	return r.processManagedUnregister(target, disconnectMessage("Full"))
 }
 
 func (r *runner) processStateUpdate(newState string) (done bool) {
-	wasRunningOrBusy := isRunningOrBusy(r.state)
+	oldRunningOrBusy := r.isRunningOrBusy()
 	r.state = newState
 	// persist
 	r.campaign.State = newState
@@ -217,17 +230,17 @@ func (r *runner) processStateUpdate(newState string) (done bool) {
 	}
 	// may turn on runner
 	liveState := r.campaign.GetLiveState()
-	runningOrBusy := isRunningOrBusy(liveState)
-	if !wasRunningOrBusy && runningOrBusy {
+	newRunningOrBusy := liveState == models.Running || liveState == models.Busy
+	if !oldRunningOrBusy && newRunningOrBusy {
 		r.startTicker()
 	}
 	// notice or disconnect participants
 	for c := range r.clients.participants {
-		if runningOrBusy {
+		if newRunningOrBusy {
 			c.outgoingCh <- stateMessage(newState)
 		} else {
 			c.outgoingCh <- stateMessage(models.Unavailable)
-			if done := r.processUnregisterWithReason(c, disconnectMessage("Unavailable")); done {
+			if done := r.processManagedUnregister(c, disconnectMessage("Unavailable")); done {
 				return true
 			}
 		}
@@ -280,9 +293,9 @@ func (r *runner) processIfJoiningReady() (done bool, err error) {
 		c.outgoingCh <- sessionStartMessage(newSession)
 		c.outgoingCh <- stateMessage(r.state) // if state becomes Busy
 	}
-	// empty the joining pool (unregister will fill the pool from pending if possible)
+	// empty the joining pool
 	for _, c := range inSession {
-		if done := r.processUnregisterWithReason(c, disconnectMessage("Start")); done {
+		if done := r.processManagedUnregister(c, disconnectMessage("Start")); done {
 			return true, nil
 		}
 	}
@@ -297,8 +310,12 @@ func (r *runner) loop() {
 			if r.state == models.Busy {
 				r.updateStateIfNoMoreBusy()
 			} else if r.state == models.Running {
-				done, err := r.processIfJoiningReady()
-				if err != nil {
+				if updated := r.clients.updateAllJoiningFromPending(); updated {
+					for c := range r.clients.joining {
+						c.outgoingCh <- joiningSizeMessage(r)
+					}
+				}
+				if done, err := r.processIfJoiningReady(); err != nil {
 					r.processStateUpdate(models.Unavailable)
 				} else if done {
 					return
@@ -313,10 +330,11 @@ func (r *runner) loop() {
 				return
 			}
 		case c := <-r.unregisterCh:
-			if done := r.processUnregister(c); done {
+			if done := r.processUnregisterAndReplace(c); done {
 				return
 			}
 		case m := <-r.participantCh:
+			// m.From is client
 			if m.Kind == "Land" {
 				if done := r.processLand(m.From, m.Payload); done {
 					return

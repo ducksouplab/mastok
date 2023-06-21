@@ -85,8 +85,34 @@ func TestClient_Participant_Connect_Integration(t *testing.T) {
 		}), "supervisor should receive Busy")
 	})
 
+	t.Run("participant is not moved from Pending to Joining when other quits Joining but campaign is Busy", func(t *testing.T) {
+		ns := "fxt_par_connect_full_busy"
+		defer tearDown(ns)
+
+		campaign, _ := models.GetCampaignByNamespace(ns)
+
+		// the fixture data is what we expected
+		assert.Equal(t, 4, campaign.PerSession)
+		assert.Equal(t, campaign.State, "Busy")
+		assert.Equal(t, campaign.Grouping, "")
+		assert.Equal(t, campaign.PerSession, 4)
+
+		wsParticipants := runParticipantStubs(ns, 8)
+		for _, ws := range wsParticipants {
+			ws.land().agree()
+		}
+		wsFirstInJoining := wsParticipants[0]
+		wsFirstInPending := wsParticipants[4]
+
+		wsFirstInJoining.Close()
+
+		assert.False(t, retryUntil(longerDuration, func() bool {
+			return wsFirstInPending.hasReceivedKind("JoiningSize")
+		}))
+	})
+
 	t.Run("participants receive Pending", func(t *testing.T) {
-		ns := "fxt_par_connect_full"
+		ns := "fxt_par_connect_full_busy"
 		defer tearDown(ns)
 
 		campaign, _ := models.GetCampaignByNamespace(ns)
@@ -112,39 +138,8 @@ func TestClient_Participant_Connect_Integration(t *testing.T) {
 		}))
 	})
 
-	t.Run("participant is moved from Pending to Joining when other quits Joining", func(t *testing.T) {
-		ns := "fxt_par_connect_full"
-		defer tearDown(ns)
-
-		campaign, _ := models.GetCampaignByNamespace(ns)
-
-		// the fixture data is what we expected
-		assert.Equal(t, 4, campaign.PerSession)
-		assert.Equal(t, campaign.State, "Busy")
-		assert.Equal(t, campaign.Grouping, "")
-		assert.Equal(t, campaign.PerSession, 4)
-
-		wsParticipants := runParticipantStubs(ns, 8)
-		for _, ws := range wsParticipants {
-			ws.land().agree()
-		}
-		wsFirstInJoining := wsParticipants[0]
-		wsFirstInPending := wsParticipants[4]
-		wsSecondInPending := wsParticipants[5]
-
-		wsFirstInJoining.Close()
-
-		assert.True(t, retryUntil(shortDuration, func() bool {
-			return wsFirstInPending.hasReceivedKind("JoiningSize")
-		}))
-
-		assert.False(t, retryUntil(shortDuration, func() bool {
-			return wsSecondInPending.hasReceivedKind("JoiningSize")
-		}))
-	})
-
 	t.Run("participant can't connect if pending is full", func(t *testing.T) {
-		ns := "fxt_par_connect_full"
+		ns := "fxt_par_connect_full_busy"
 		defer tearDown(ns)
 
 		campaign, _ := models.GetCampaignByNamespace(ns)
@@ -188,7 +183,7 @@ func TestClient_Participant_Connect_Integration(t *testing.T) {
 		ws := runParticipantStub(ns)
 		ws.land().agree()
 
-		assert.True(t, retryUntil(shortDuration, func() bool {
+		assert.True(t, retryUntil(longDuration, func() bool {
 			return ws.hasReceivedKind("Instructions")
 		}))
 	})

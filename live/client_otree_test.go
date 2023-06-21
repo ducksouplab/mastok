@@ -157,13 +157,14 @@ func TestClient_Otree_Integration(t *testing.T) {
 		th.InterceptOtreeGetSession()
 		defer th.InterceptOff()
 
+		// up to 4 possible sessions
 		wsParticipants := runParticipantStubs(ns, 8)
 		for _, ws := range wsParticipants {
 			ws.land().agree()
 		}
 
-		// caution: timing is a bit too empiric in this test
-		time.Sleep(longDuration)
+		// TODO: timing is way too empiric in this test
+		time.Sleep(200 * time.Millisecond)
 		sessionStartCount := wsSup.countKind("SessionStart")
 		assert.Equal(t, 2, sessionStartCount)
 

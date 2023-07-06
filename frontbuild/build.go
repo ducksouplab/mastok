@@ -24,7 +24,7 @@ func Build() {
 						for _, msg := range result.Warnings {
 							log.Println("[JS] build warning: " + msg.Text)
 						}
-					} else {
+					} else { // success path
 						log.Println("[JS] build success")
 						updateTemplates()
 						cleanUpAssets()

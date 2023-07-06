@@ -192,8 +192,6 @@ const start = function (slug) {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[supervise] version 0.3.0");
-
   const slugMatch = /join\/(.*)$/.exec(window.location.pathname);
   if (slugMatch) {
     const slug = slugMatch[1];

@@ -98,7 +98,6 @@ const start = function (namespace) {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[supervise] version 0.3.1");
   const namespaceMatch = /campaigns\/supervise\/(.*)$/.exec(
     window.location.pathname
   );

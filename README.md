@@ -155,6 +155,19 @@ The server may send the following messages to a supervisor: `State`, `JoiningSiz
 
 A supervisor may send the following messages to the server: `State` (to update it).
 
+## Joining and fingerprinting
+
+JS fingerprinting is used to identify unique users (even if it's not 100% reliable). It is both helpful for:
+
+- #1 preventing the same participant to be involved several times (= in several sessions) of the same campaign. This applies only if `JoinOnce` is true for this campaign
+- #2 helping a user reconnecting to a live (= currently running) session if, by mistake, they closed their tab and come back using mastok's slug (that will then redirect on oTree). This is mastok default's behaviour and can be disabled by setting the env variable: `MASTOK_DISABLE_LIVE_REDIRECT=true`
+
+As a result for developers/testers (that open many tabs with the same fingerprint):
+
+- Due to #1 and if `JoinOnce` is true, they will face un `Unavailable` page the second time they use the public slug
+
+- If `JoinOnce` is false, they can open many tabs if the session is not started, and join oTree "separately" (as a different participant) from each tab. But due to #2, if the session is running, the will be redirected to oTree
+
 ## Credits
 
 This projects is in particular built upon [Gin](https://gin-gonic.com/), [GORM](https://gorm.io/), [esbuild](https://esbuild.github.io/) and [gorilla](https://github.com/gorilla/websocket) following this chat [example](https://github.com/gorilla/websocket/tree/master/examples/chat).

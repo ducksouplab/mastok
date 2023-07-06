@@ -59,6 +59,7 @@ func ReinitDevDB() {
 			Namespace:          "dev_campaign_1",
 			Slug:               "dev_campaign_1_slug",
 			PerSession:         2,
+			JoinOnce:           true,
 			MaxSessions:        6,
 			ConcurrentSessions: 1,
 			Consent:            consentString,

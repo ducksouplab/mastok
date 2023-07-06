@@ -40,9 +40,8 @@ func init() {
 	OTreeAPIURL = os.Getenv("MASTOK_OTREE_API_URL")
 	OTreePublicURL = os.Getenv("MASTOK_OTREE_PUBLIC_URL")
 	OTreeKey = os.Getenv("MASTOK_OTREE_API_KEY")
-	// constrained settings that apply can be changed only in DEV mode
 	LiveRedirect = true
-	if Mode == "DEV" && os.Getenv("MASTOK_DEV_LIVE_REDIRECT") == "false" {
+	if os.Getenv("MASTOK_DISABLE_LIVE_REDIRECT") == "true" {
 		LiveRedirect = false
 	}
 	// derived

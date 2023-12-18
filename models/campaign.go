@@ -41,7 +41,9 @@ type Campaign struct {
 	// extra configuration
 	Consent      string `form:"consent" binding:"required,consentValidate" gorm:"size:65535"`
 	Grouping     string `form:"grouping" binding:"groupingValidate=PerSession" gorm:"size:1024"`
-	Instructions string `form:"instructions" gorm:"size:65535"`
+	Instructions string `form:"instructions" gorm:"size:65535"` // markdown message
+	Paused       string `form:"paused" gorm:"size:65535"`       // markdown message
+	Completed    string `form:"completed" gorm:"size:65535"`    // markdown message
 	// evolving
 	State           string `gorm:"default:Paused"`
 	StartedSessions int    `gorm:"default:0"`

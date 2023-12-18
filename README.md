@@ -145,7 +145,7 @@ When we switch from `Busy` to `Running` state (a session has finished):
 
 ## Participant messages
 
-The server may send the following messages to a participant: `State`, `Consent`, `Grouping`, `Pending`, `Joining`, `Instructions`, `SessionStart`, `Disconnect`.
+The server may send the following messages to a participant: `State`, `Consent`, `Grouping`, `Pending`, `Joining`, `Instructions`, `SessionStart`, `Paused`, `Completed`, `Disconnect`.
 
 A participant may send the following messages to the server: `Land`, `Agree`, `Connect`.
 
@@ -170,4 +170,4 @@ As a result for developers/testers (that open many tabs with the same fingerprin
 
 ## Credits
 
-This projects is in particular built upon [Gin](https://gin-gonic.com/), [GORM](https://gorm.io/), [esbuild](https://esbuild.github.io/) and [gorilla](https://github.com/gorilla/websocket) following this chat [example](https://github.com/gorilla/websocket/tree/master/examples/chat).
+This projects is in particular built upon [Gin](https://gin-gonic.com/), [GORM](https://gorm.io/), [esbuild](https://esbuild.github.io/) and [gorilla](https://github.com/gorilla/websocket).

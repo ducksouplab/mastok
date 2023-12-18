@@ -68,28 +68,6 @@
         <div class="form-text">If participants room is incomplete after this limit, participants will be disconnected
         </div>
       </div>
-    </div>
-    <div class="col">
-      <div class="mb-4">
-        <label for="consent" class="form-label">Consent in markdown*</label>
-        <textarea name="consent" id="consent" class="form-control" rows="7" required>{{ or .Campaign.Consent "# Optional Title\n\n...details...\n\n[accept]Consent[/accept]"}}</textarea>
-        <div class="form-text">
-          <div class="row">
-            <div class="col-6">
-              <p class="m-0">Write markdown</p>
-              <code># Title</code><br/>
-              <code>- [X] pre-checked checkbox</code><br/>
-              <code>- [ ] paragraph that needs to be checked...</code><br/>
-              <p class="m-0">It must end with this tag ("Consent" can be changed)</p>
-              <code>[accept]Consent[/accept]</code><br/>
-            </div>
-            <div class="col-6">
-              <p class="m-0">An alert tag should be added if checkboxes are used (this alert will only be shown if the participant tries to consent without ticking checkboxes)</p>
-              <code>[alert]Accepting conditions above is required before starting[/alert]</code><br/>
-            </div>
-          </div>
-        </div>
-      </div>
       <div class="mb-3">
         <label for="grouping" class="form-label">Grouping rule (optional, leave empty if no grouping is needed)</label>
         <textarea name="grouping" id="grouping" class="form-control" rows="4">{{ or .Campaign.Grouping ""}}</textarea>
@@ -115,13 +93,43 @@
           <p class="m-0"><code>Action</code> is the text displayed in the button that validates the participant choice.</p>
         </div>
       </div>
+    </div>
+    <div class="col">
+      <div class="mb-4">
+        <label for="consent" class="form-label">Consent in markdown*</label>
+        <textarea name="consent" id="consent" class="form-control" rows="7" required>{{ or .Campaign.Consent "# Optional Title\n\n...details...\n\n[accept]Consent[/accept]"}}</textarea>
+        <div class="form-text">
+          <div class="row">
+            <div class="col-6">
+              <p class="m-0">Write markdown</p>
+              <code># Title</code><br/>
+              <code>- [X] pre-checked checkbox</code><br/>
+              <code>- [ ] paragraph that needs to be checked...</code><br/>
+              <p class="m-0">It must end with this tag ("Consent" can be changed)</p>
+              <code>[accept]Consent[/accept]</code><br/>
+            </div>
+            <div class="col-6">
+              <p class="m-0">An alert tag should be added if checkboxes are used (this alert will only be shown if the participant tries to consent without ticking checkboxes)</p>
+              <code>[alert]Accepting conditions above is required before starting[/alert]</code><br/>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="mb-3">
         <label for="instructions" class="form-label">Instructions in markdown (optional, displayed when waiting)</label>
         <textarea name="instructions" id="instructions" class="form-control" rows="4">{{ or .Campaign.Instructions ""}}</textarea>
       </div>
+      <div class="mb-3">
+        <label for="paused" class="form-label">Paused message in markdown (optional)</label>
+        <textarea name="paused" id="paused" class="form-control" rows="4">{{ or .Campaign.Paused ""}}</textarea>
+      </div>
+      <div class="mb-3">
+        <label for="completed" class="form-label">Completed message in markdown (optional)</label>
+        <textarea name="completed" id="completed" class="form-control" rows="4">{{ or .Campaign.Completed ""}}</textarea>
+      </div>
     </div>
   </div>
-  <div class="row">
+  <div class="row mt-4">
     <div class="col">
       <button type="submit" class="btn btn-primary">Create</button>
     </div>

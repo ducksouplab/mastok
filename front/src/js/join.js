@@ -19,6 +19,8 @@ const containers = [
   "joining-container",
   "instructions-container",
   "pending-container",
+  "paused-container",
+  "completed-container",
   "full-container",
   "unavailable-container",
   "landing-failed-container",
@@ -79,13 +81,6 @@ const start = function (slug) {
   ws.onopen = async () => {
     const uid = await fingerprint();
     ws.send(JSON.stringify({ kind: "Land", payload: uid }));
-  };
-
-  ws.onclose = (event) => {
-    if (!state.starting) {
-      showOnly("unavailable-container");
-    }
-    console.log(event);
   };
 
   ws.onerror = (event) => {
@@ -177,6 +172,22 @@ const start = function (slug) {
       document.location.href = target;
     } else if (kind === "Disconnect" && payload == "Full") {
       showOnly("full-container");
+      ws.close();
+    } else if (kind === "Paused" && payload != "") {
+      if (payload == "") {
+        showOnly("unavailable-container");
+      } else {
+        document.querySelector("#paused-container div").innerHTML = payload;
+        showOnly("paused-container");
+      }
+      ws.close();
+    } else if (kind === "Completed" && payload != "") {
+      if (payload == "") {
+        showOnly("unavailable-container");
+      } else {
+        document.querySelector("#completed-container div").innerHTML = payload;
+        showOnly("completed-container");
+      }
       ws.close();
     } else if (kind === "State" && payload == "Unavailable") {
       document.title = "Unavailable Experiment";

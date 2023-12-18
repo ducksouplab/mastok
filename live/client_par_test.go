@@ -55,7 +55,7 @@ func TestClient_Participant_Integration(t *testing.T) {
 		ws := runParticipantStub(ns)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			ok := ws.hasReceived(Message{"State", "Unavailable"})
+			ok := ws.hasReceived(Message{"Disconnect", "Paused"})
 			return ok
 		}), "participant should receive State:Unavailable")
 		assert.True(t, retryUntil(shortDuration, func() bool {
@@ -74,7 +74,7 @@ func TestClient_Participant_Integration(t *testing.T) {
 		ws := runParticipantStub(ns)
 
 		assert.True(t, retryUntil(shortDuration, func() bool {
-			ok := ws.hasReceived(Message{"State", "Unavailable"})
+			ok := ws.hasReceived(Message{"Disconnect", "Completed"})
 			return ok
 		}), "participant should receive State:Unavailable")
 		assert.True(t, retryUntil(shortDuration, func() bool {

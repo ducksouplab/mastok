@@ -21,18 +21,18 @@ label {
   border-radius: 8px;
 }
 
-#instructions-container h1 {
+.md-container h1 {
   font-size: 1.5em;
 }
 
-#instructions-container h2 {
+.md-container h2 {
   font-size: 1.3em;
 }
 
-#instructions-container h3 {
+.md-container h3 {
   font-size: 1.1em;
 }
 
-#instructions-container h4, #instructions-container h5, #instructions-container h6 {
+.md-container h4, .md-container h5, .md-container h6 {
   font-size: 1em;
 }

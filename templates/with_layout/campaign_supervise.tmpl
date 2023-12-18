@@ -67,6 +67,20 @@
 							data-bs-target="#instructions-modal">preview</button>
 					</td>
 				</tr>
+				<tr>
+					<th class="align-middle" scope="row">Paused</th>
+					<td>
+						<button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
+							data-bs-target="#paused-modal">preview</button>
+					</td>
+				</tr>
+				<tr>
+					<th class="align-middle" scope="row">Completed</th>
+					<td>
+						<button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
+							data-bs-target="#completed-modal">preview</button>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 	</div>
@@ -160,6 +174,38 @@
 			</div>
 			<div class="modal-body instructions">
 				{{ .RenderedInstructions }}
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="paused-modal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5">Paused Preview</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body paused">
+				{{ .RenderedPaused }}
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="completed-modal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5">Completed Preview</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body completed">
+				{{ .RenderedCompleted }}
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

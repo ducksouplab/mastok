@@ -79,6 +79,20 @@ func instructionsMessage(c *models.Campaign) Message {
 	}
 }
 
+func pausedMessage(c *models.Campaign) Message {
+	return Message{
+		Kind:    "Paused",
+		Payload: helpers.MarkdownToHTML(c.Paused),
+	}
+}
+
+func completedMessage(c *models.Campaign) Message {
+	return Message{
+		Kind:    "Completed",
+		Payload: helpers.MarkdownToHTML(c.Completed),
+	}
+}
+
 // Disconnect messages below
 
 // campaign is not running or after SessionStart

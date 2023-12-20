@@ -173,7 +173,7 @@ const start = function (slug) {
     } else if (kind === "Disconnect" && payload == "Full") {
       showOnly("full-container");
       ws.close();
-    } else if (kind === "Paused" && payload != "") {
+    } else if (kind === "Paused") {
       if (payload == "") {
         showOnly("unavailable-container");
       } else {
@@ -181,7 +181,7 @@ const start = function (slug) {
         showOnly("paused-container");
       }
       ws.close();
-    } else if (kind === "Completed" && payload != "") {
+    } else if (kind === "Completed") {
       if (payload == "") {
         showOnly("unavailable-container");
       } else {

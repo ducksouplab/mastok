@@ -64,7 +64,7 @@
       </div>
       <div class="mb-3">
         <label for="waiting_limit" class="form-label">Maximum waiting time before session (in minutes)*</label>
-        <input value="{{ or .Campaign.WaitingLimit "5"}}" type="number" name="waiting_limit" id="waiting_limit" min=1 max=12 class="form-control" required>
+        <input value="{{ or .Campaign.WaitingLimit "5"}}" type="number" name="waiting_limit" id="waiting_limit" min=1 max=30 class="form-control" required>
         <div class="form-text">If participants room is incomplete after this limit, participants will be disconnected
         </div>
       </div>

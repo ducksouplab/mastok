@@ -152,11 +152,13 @@ const start = function (slug) {
         s.innerHTML = payload;
       }
       showOnly("waiting-container");
+      show("instructions-container");
     } else if (kind === "Starting") {
       document.title = "Starting...";
       state.starting = true;
       // participant is joining experiment
       showOnly("joining-container");
+      show("instructions-container");
       setTimeout(() => {
         document.location.href = payload;
       }, 3000);

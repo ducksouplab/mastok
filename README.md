@@ -104,6 +104,11 @@ Build image:
 docker build -f docker/Dockerfile.build -t mastok:latest .
 ```
 
+If you are building from mac add the --platform linux/amd64 so it works in linux:
+```
+docker build -f docker/Dockerfile.build -t mastok:latest . --platform linux/amd64
+```
+
 As an aside, this image is published on Docker Hub as `ducksouplab/mastok`, let's tag it and push it:
 
 ```

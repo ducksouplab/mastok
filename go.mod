@@ -1,11 +1,13 @@
 module github.com/ducksouplab/mastok
 
-go 1.20
+go 1.21
+
+toolchain go1.21.0
 
 require (
-	github.com/evanw/esbuild v0.19.9
+	github.com/evanw/esbuild v0.19.11
 	github.com/gin-contrib/gzip v0.0.6
-	github.com/gin-contrib/multitemplate v0.0.0-20231211133547-5f8f48f9d29f
+	github.com/gin-contrib/multitemplate v0.0.0-20231230012943-32b233489a81
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/gorilla/websocket v1.5.1
@@ -60,12 +62,12 @@ require (
 	github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	golang.org/x/arch v0.6.0 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/arch v0.7.0 // indirect
+	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

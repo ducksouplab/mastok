@@ -115,6 +115,10 @@
         <label for="completed" class="form-label">Completed message in markdown (optional)</label>
         <textarea name="completed" id="completed" class="form-control" rows="4">{{ .Campaign.Completed}}</textarea>
       </div>
+      <div class="mb-3">
+        <label for="pending" class="form-label">Pending message in markdown—the one shown if all sessions are running concurrently (optional)</label>
+        <textarea name="pending" id="pending" class="form-control" rows="4">{{ .Campaign.Pending}}</textarea>
+      </div>      
     </div>
   </div>
   <div class="row mt-4">

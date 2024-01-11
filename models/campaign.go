@@ -44,6 +44,7 @@ type Campaign struct {
 	Instructions string `form:"instructions" gorm:"size:65535"` // markdown message
 	Paused       string `form:"paused" gorm:"size:65535"`       // markdown message
 	Completed    string `form:"completed" gorm:"size:65535"`    // markdown message
+	Pending      string `form:"pending" gorm:"size:65535"`    // markdown message
 	// evolving
 	State           string `gorm:"default:Paused"`
 	StartedSessions int    `gorm:"default:0"`

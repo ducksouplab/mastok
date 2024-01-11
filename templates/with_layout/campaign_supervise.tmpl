@@ -81,6 +81,13 @@
 							data-bs-target="#completed-modal">preview</button>
 					</td>
 				</tr>
+				<tr>
+					<th class="align-middle" scope="row">Pending</th>
+					<td>
+						<button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
+							data-bs-target="#pending-modal">preview</button>
+					</td>
+				</tr>				
 			</tbody>
 		</table>
 	</div>
@@ -213,6 +220,22 @@
 		</div>
 	</div>
 </div>
+<div class="modal fade" id="pending-modal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5">Pending Preview</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body pending">
+				{{ .RenderedPending }}
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
 
-<script src="{{ WebPrefix }}/assets/v1.31/js/supervise.js"></script>
+<script src="{{ WebPrefix }}/assets/v1.32/js/supervise.js"></script>
 {{end}}

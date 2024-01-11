@@ -121,6 +121,8 @@ func (r *runner) processRegister(target *client) (done bool) {
 			target.outgoingCh <- pausedMessage(r.campaign)
 		} else if r.state == models.Completed {
 			target.outgoingCh <- completedMessage(r.campaign)
+		} else if r.state == models.Completed {
+			target.outgoingCh <- pendingMessage(r.campaign)
 		}
 		target.outgoingCh <- disconnectMessage(r.state) // should be either Paused, Completed or Unavailable
 		if r.clients.isEmpty() {
@@ -220,7 +222,7 @@ func (r *runner) processTentativeJoinOrPending(target *client) (done bool) {
 	}
 	// second: try adding to pending
 	if r.clients.tentativePending(target) {
-		target.outgoingCh <- pendingMessage()
+		target.outgoingCh <- pendingMessage(r.campaign)
 		for c := range r.clients.supervisors {
 			c.outgoingCh <- pendingSizeMessage(r)
 		}

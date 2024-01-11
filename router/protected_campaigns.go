@@ -51,6 +51,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 			"RenderedInstructions": helpers.MarkdownToHTML(model.Instructions),
 			"RenderedPaused":       helpers.MarkdownToHTML(model.Paused),
 			"RenderedCompleted":    helpers.MarkdownToHTML(model.Completed),
+			"RenderedPending":      helpers.MarkdownToHTML(model.Pending),
 		})
 	})
 	g.GET("/ws/campaigns/supervise", func(c *gin.Context) {
@@ -122,7 +123,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		// pick fields to update:
 		// - exclude Namespace and OTreeConfigName
 		// - and force zero values updates for Grouping and Consent
-		selecteds := []string{"Slug", "PerSession", "JoinOnce", "MaxSessions", "ConcurrentSessions", "SessionDuration", "WaitingLimit", "Grouping", "Consent", "Instructions", "Paused", "Completed"}
+		selecteds := []string{"Slug", "PerSession", "JoinOnce", "MaxSessions", "ConcurrentSessions", "SessionDuration", "WaitingLimit", "Grouping", "Consent", "Instructions", "Paused", "Completed", "Pending"}
 		if err := models.DB.Model(&model).Select(selecteds).Updates(input).Error; err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaign_edit.tmpl", gin.H{
 				"Error":    changeErrorMessage(err.Error()),

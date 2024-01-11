@@ -52,9 +52,10 @@ func startingMessage(code string) Message {
 	}
 }
 
-func pendingMessage() Message {
+func pendingMessage(c *models.Campaign) Message {
 	return Message{
 		Kind: "Pending",
+		Payload: helpers.MarkdownToHTML(c.Pending),
 	}
 }
 
@@ -92,6 +93,7 @@ func completedMessage(c *models.Campaign) Message {
 		Payload: helpers.MarkdownToHTML(c.Completed),
 	}
 }
+
 
 // Disconnect messages below
 

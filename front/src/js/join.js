@@ -19,6 +19,7 @@ const containers = [
   "joining-container",
   "instructions-container",
   "pending-container",
+  "pending-container-instructions",
   "paused-container",
   "completed-container",
   "full-container",
@@ -168,6 +169,8 @@ const start = function (slug) {
     } else if (kind === "Pending") {
       document.title = "Waiting";
       showOnly("pending-container");
+      document.querySelector("#pending-container-instructions div").innerHTML = payload;
+      show("pending-container-instructions");
     } else if (kind === "Disconnect" && payload.startsWith("Redirect")) {
       // instant redirect since participant is rejoining experiment
       const target = payload.replace("Redirect:", "");
@@ -195,6 +198,7 @@ const start = function (slug) {
       document.title = "Unavailable Experiment";
       showOnly("unavailable-container");
       ws.close();
+      location.reload(); // This is to reload the page to print the paused message
     } else if (kind === "State" && payload == "LandingFailed") {
       showOnly("landing-failed-container");
       ws.close();

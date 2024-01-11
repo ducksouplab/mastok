@@ -121,9 +121,7 @@ func (r *runner) processRegister(target *client) (done bool) {
 			target.outgoingCh <- pausedMessage(r.campaign)
 		} else if r.state == models.Completed {
 			target.outgoingCh <- completedMessage(r.campaign)
-		} else if r.state == models.Completed {
-			target.outgoingCh <- pendingMessage(r.campaign)
-		}
+		} 
 		target.outgoingCh <- disconnectMessage(r.state) // should be either Paused, Completed or Unavailable
 		if r.clients.isEmpty() {
 			r.stop()

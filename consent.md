@@ -10,3 +10,5 @@ Before participating in the experiment, it is required to read and accept the fo
 
 [accept]Accept[/accept]
 [alert]Accepting conditions above is required before starting[/alert]
+
+To use the ducsoup technical test use : [ducksoup_test]

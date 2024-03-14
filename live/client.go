@@ -79,6 +79,9 @@ func (c *client) readLoop() {
 			} else if m.Kind == "Agree" {
 				if c.hasLanded { // can't agree before landing
 					c.hasAgreed = true
+					if c.runner.state == models.Completed { // campaign may have completed while agreeing
+						c.outgoingCh <- completedMessage(c.runner.campaign)
+					}
 					if c.runner.grouping != nil {
 						// direct reply without forwarding to runner
 						c.outgoingCh <- groupingMessage(c.runner.campaign)
@@ -89,6 +92,9 @@ func (c *client) readLoop() {
 					}
 				}
 			} else if m.Kind == "Connect" {
+				if c.runner.state == models.Completed { // campaign may have completed while grouping
+					c.outgoingCh <- completedMessage(c.runner.campaign)
+				}
 				groupLabel := m.Payload.(string)
 				if len(groupLabel) != 0 && c.hasAgreed { // can't agree before landing
 					c.groupLabel = groupLabel

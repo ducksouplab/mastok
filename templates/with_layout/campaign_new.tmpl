@@ -48,6 +48,10 @@
         <div class="form-text">Relies on device fingerprinting</div>
       </div>
       <div class="mb-3">
+        <input {{if .Campaign.ShowNbParticipants}}checked{{end}} value="true" class="form-check-input" type="checkbox" name="ShowNbParticipants" id="show_nb_of_participants">
+        <label for="ShowNbParticipants" class="form-label">Show to participants how many participants are connected while waiting</label>
+      </div> 
+      <div class="mb-3">
         <label for="max_sessions" class="form-label">Total number of sessions for the campaign*</label>
         <input value="{{ or .Campaign.MaxSessions "" }}" type="number" name="max_sessions" id="max_sessions" min=1 max=32 class="form-control" required>
       </div>
@@ -67,7 +71,7 @@
         <input value="{{ or .Campaign.WaitingLimit "5"}}" type="number" name="waiting_limit" id="waiting_limit" min=1 max=30 class="form-control" required>
         <div class="form-text">If participants room is incomplete after this limit, participants will be disconnected
         </div>
-      </div>
+      </div>    
       <div class="mb-3">
         <label for="grouping" class="form-label">Grouping rule (optional, leave empty if no grouping is needed)</label>
         <textarea name="grouping" id="grouping" class="form-control" rows="4">{{ or .Campaign.Grouping ""}}</textarea>

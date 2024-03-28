@@ -123,7 +123,7 @@ func addCampaignsRoutesTo(g *gin.RouterGroup) {
 		// pick fields to update:
 		// - exclude Namespace and OTreeConfigName
 		// - and force zero values updates for Grouping and Consent
-		selecteds := []string{"Slug", "PerSession", "JoinOnce", "MaxSessions", "ConcurrentSessions", "SessionDuration", "WaitingLimit", "Grouping", "Consent", "Instructions", "Paused", "Completed", "Pending"}
+		selecteds := []string{"Slug", "PerSession", "JoinOnce", "ShowNbParticipants", "MaxSessions", "ConcurrentSessions", "SessionDuration", "WaitingLimit", "Grouping", "Consent", "Instructions", "Paused", "Completed", "Pending"}
 		if err := models.DB.Model(&model).Select(selecteds).Updates(input).Error; err != nil {
 			c.HTML(http.StatusUnprocessableEntity, "campaign_edit.tmpl", gin.H{
 				"Error":    changeErrorMessage(err.Error()),

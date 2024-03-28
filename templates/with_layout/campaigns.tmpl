@@ -10,6 +10,7 @@
 					<th>Experiment</th>
 					<th>Per session</th>
 					<th>Join once</th>
+					<th>Show Nb Participants</th>
 					<th>Max sessions</th>
 					<th>Grouping</th>
 					<th>Sessions started</th>
@@ -25,6 +26,7 @@
 					<td>{{ .OTreeConfigName }}</td>
 					<td>{{ .PerSession }}</td>
 					<td>{{if .JoinOnce}}yes{{else}}no{{end}}</td>
+					<td>{{if .ShowNbParticipants}}yes{{else}}no{{end}}</td>
 					<td>{{ .MaxSessions }}</td>
 					<td>{{if .Grouping}}yes{{else}}no{{end}}</td>
 					<td>{{ .StartedSessions }}</td>

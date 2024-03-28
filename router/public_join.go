@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/ducksouplab/mastok/live"
+	"github.com/ducksouplab/mastok/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,10 +24,20 @@ func wsJoinHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func addJoinRoutesTo(g *gin.RouterGroup) {
+
 	g.GET("/join/:slug", func(c *gin.Context) {
+		slug := c.Param("slug")
+		model, ok := models.GetCampaignBySlug(slug)
+		if !ok {
+			log.Printf("[router] find campaign failed for namespace %v", slug)
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+
 		c.HTML(http.StatusOK, "join.tmpl", gin.H{
-			"Slug": c.Param("slug"),
-			"Hash": getClientHash(c),
+			"Campaign": model,
+			"Slug":     c.Param("slug"),
+			"Hash":     getClientHash(c),
 		})
 	})
 	g.GET("/ws/join", func(c *gin.Context) {

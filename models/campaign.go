@@ -34,6 +34,7 @@ type Campaign struct {
 	Slug               string `form:"slug" binding:"required,namespaceValidate,min=2,max=128" gorm:"uniqueIndex"`
 	PerSession         int    `form:"per_session" binding:"perSessionValidate=OTreeConfigName,required,gte=1,lte=32"`
 	JoinOnce           bool   `form:"join_once" gorm:"default:false" ` // don't <require> due to https://github.com/go-playground/validator/issues/1040
+	ShowNbParticipants bool   `form:"ShowNbParticipants" gorm:"default:true" `
 	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`
 	ConcurrentSessions int    `form:"concurrent_sessions" binding:"required,gte=1,lte=99" gorm:"default:1"`
 	SessionDuration    int    `form:"session_duration" binding:"required" gorm:"default:10"`
@@ -44,7 +45,7 @@ type Campaign struct {
 	Instructions string `form:"instructions" gorm:"size:65535"` // markdown message
 	Paused       string `form:"paused" gorm:"size:65535"`       // markdown message
 	Completed    string `form:"completed" gorm:"size:65535"`    // markdown message
-	Pending      string `form:"pending" gorm:"size:65535"`    // markdown message
+	Pending      string `form:"pending" gorm:"size:65535"`      // markdown message
 	// evolving
 	State           string `gorm:"default:Paused"`
 	StartedSessions int    `gorm:"default:0"`

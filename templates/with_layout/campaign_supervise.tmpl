@@ -38,6 +38,10 @@
 					<td>{{if .Campaign.JoinOnce}}yes{{else}}no{{end}}</td>
 				</tr>
 				<tr>
+					<th scope="row">Show Nb of Participants</th>
+					<td>{{if .Campaign.ShowNbParticipants}}yes{{else}}no{{end}}</td>
+				</tr>				
+				<tr>
 					<th scope="row">Max sessions</th>
 					<td>{{ .Campaign.MaxSessions }}</td>
 				</tr>

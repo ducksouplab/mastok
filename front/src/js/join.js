@@ -147,7 +147,8 @@ const start = function (slug) {
       // show
       showOnly("grouping-container");
     } else if (kind === "JoiningSize" && !state.starting) {
-      document.title = `Joining [${payload}]`;
+      //document.title = `Joining [${payload}]`;
+      document.title = `Joining`;
       let sizes = document.querySelectorAll(".joining-size");
       for (let s of sizes) {
         s.innerHTML = payload;

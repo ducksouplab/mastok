@@ -35,7 +35,7 @@ type Campaign struct {
 	PerSession         int    `form:"per_session" binding:"perSessionValidate=OTreeConfigName,required,gte=1,lte=32"`
 	JoinOnce           bool   `form:"join_once" gorm:"default:false" ` // don't <require> due to https://github.com/go-playground/validator/issues/1040
 	ShowNbParticipants bool   `form:"ShowNbParticipants" gorm:"default:true" `
-	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=32"`
+	MaxSessions        int    `form:"max_sessions" binding:"required,gte=1,lte=128"`
 	ConcurrentSessions int    `form:"concurrent_sessions" binding:"required,gte=1,lte=99" gorm:"default:1"`
 	SessionDuration    int    `form:"session_duration" binding:"required" gorm:"default:10"`
 	WaitingLimit       int    `form:"waiting_limit" binding:"gte=1,lte=30" gorm:"default:5"`

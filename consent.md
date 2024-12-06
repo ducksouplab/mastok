@@ -10,5 +10,6 @@ Before participating in the experiment, it is required to read and accept the fo
 
 [accept]Accept[/accept]
 [alert]Accepting conditions above is required before starting[/alert]
+[technical_code_alert]The technical code is incorrect[/technical_code_alert]
 
 To use the ducksoup technical test use : [ducksoup_test] or [ducksoup_audio_test]

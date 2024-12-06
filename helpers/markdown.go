@@ -23,6 +23,9 @@ func MarkdownToHTML(markdown string) template.HTML {
 	out = strings.Replace(out, "[/alert]", "</div>", 1)
 	out = strings.Replace(out, "[ducksoup_test]", "<a href=\"https://ducksoup.psy.gla.ac.uk/test/direct/\" target=\"_blank\">this link</a>", 1)
 	out = strings.Replace(out, "[ducksoup_audio_test]", "<a href=\"https://ducksoup.psy.gla.ac.uk/test/audio_direct/\" target=\"_blank\">this link</a>", 1)
+	out = strings.Replace(out, "[technical_code]", "<input type=\"text\" id=\"technical_code\" name=\"technical_code\"/>", 1)
+	out = strings.Replace(out, "[technical_code_alert]", "<div id=\"technical-code-alert-container\" class=\"alert alert-danger\" role=\"alert\">", 1)
+	out = strings.Replace(out, "[/technical_code_alert]", "</div>", 1)
 
 	re = regexp.MustCompile(`<a href="(https?://.*?)"[^>]*>(.*?)</a>`)
 	out = re.ReplaceAllString(out, `<a href="$1" target="_blank">$2</a>`)

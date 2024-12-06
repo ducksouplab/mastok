@@ -58,16 +58,35 @@ const processConsent = (html) => {
 
 const submitConsent = (ws) => {
   const checkboxes = document.querySelectorAll("#consent-container input[type=\"checkbox\"]");
+  let code_correct;
+  let code_not_required;
   let accepted = true
   for (const c of checkboxes) {
     accepted = accepted && c.checked
   }
+  
+  const technicalCodeInput = document.querySelector("#technical_code");
+  if (technicalCodeInput ){
+    if (technicalCodeInput.value === "2025") {
+      hide("technical-code-alert-container");
+      code_correct = true
+    } else {
+      code_correct = false
+      show("technical-code-alert-container");
+    }
+  } else {
+    code_not_required = true
+  }
+
   if(accepted) {
     hide("alert-container");
-    ws.send(JSON.stringify({ kind: "Agree" }));
   } else {
     show("alert-container");
   }
+  if ((accepted && code_correct) || (code_not_required && accepted)){
+    ws.send(JSON.stringify({ kind: "Agree" }));
+  }
+
 }
 
 const start = function (slug) {
@@ -96,6 +115,7 @@ const start = function (slug) {
       document.querySelector("#consent-container").innerHTML =
         processConsent(payload);
       hide("alert-container");
+      hide("technical-code-alert-container");
       // ease checkboxes clicking
       const lis = document.querySelectorAll("#consent-container li");
       for (const li of lis) {
